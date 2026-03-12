@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
+import { useEmpresaContext } from "@/components/EmpresaContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   LayoutDashboard, Building2, Users, FileText, CalendarDays, ClipboardList,
   Receipt, Umbrella, Activity, Gift, LogOut as LogOutIcon, Settings, Search,
@@ -94,6 +96,7 @@ function NavItem({ item, collapsed, location }) {
 export default function Layout() {
   const location = useLocation();
   const { user } = useAuth();
+  const { isAdmin, empresas, selectedEmpresaId, setSelectedEmpresaId, empresaActual } = useEmpresaContext();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -177,12 +180,34 @@ export default function Layout() {
             <button className="lg:hidden text-gray-500 hover:text-gray-700" onClick={() => setMobileOpen(true)}>
               <Menu className="w-5 h-5" />
             </button>
+            {/* Selector de empresa — solo para super admin */}
+            {isAdmin && empresas.length > 0 && (
+              <div className="hidden md:flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-gray-400" />
+                <Select value={selectedEmpresaId || "todas"} onValueChange={v => setSelectedEmpresaId(v === "todas" ? null : v)}>
+                  <SelectTrigger className="w-52 h-8 text-sm border-gray-200">
+                    <SelectValue placeholder="Todas las empresas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Todas las empresas</SelectItem>
+                    {empresas.map(e => <SelectItem key={e.id} value={e.id}>{e.nombre_comercial || e.nombre_legal}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {/* Empresa fija para admin_rrhh */}
+            {!isAdmin && empresaActual && (
+              <div className="hidden md:flex items-center gap-2 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg">
+                <Building2 className="w-3.5 h-3.5 text-blue-600" />
+                <span className="text-sm text-blue-700 font-medium">{empresaActual.nombre_comercial || empresaActual.nombre_legal}</span>
+              </div>
+            )}
             <div className="relative hidden md:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Buscar..."
-                className="pl-9 pr-4 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+                className="pl-9 pr-4 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
               />
             </div>
           </div>
