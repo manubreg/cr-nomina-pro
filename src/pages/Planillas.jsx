@@ -1,201 +1,169 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Plus, RefreshCw, Eye, CheckCircle, DollarSign, XCircle, Calculator, FileText, ChevronDown } from "lucide-react";
-import PlanillaModal from "@/components/planillas/PlanillaModal";
-import PlanillaDetalleModal from "@/components/planillas/PlanillaDetalleModal";
+import { Plus, Receipt, Eye, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const estadoColors = {
+const estadoColor = {
   borrador: "bg-gray-100 text-gray-600",
-  calculado: "bg-yellow-100 text-yellow-700",
-  en_revision: "bg-orange-100 text-orange-700",
-  aprobado: "bg-blue-100 text-blue-700",
-  pagado: "bg-green-100 text-green-700",
+  calculado: "bg-blue-100 text-blue-700",
+  en_revision: "bg-amber-100 text-amber-700",
+  aprobado: "bg-emerald-100 text-emerald-700",
+  pagado: "bg-purple-100 text-purple-700",
   anulado: "bg-red-100 text-red-600",
 };
 
-const estadoFlow = ["borrador", "calculado", "en_revision", "aprobado", "pagado"];
-
-const formatCRC = (v) => `₡${Number(v || 0).toLocaleString("es-CR")}`;
+const emptyPlanilla = { empresa_id: "", periodo_id: "", tipo_planilla: "ordinaria", estado: "borrador", observacion: "" };
 
 export default function Planillas() {
-  const [planillas, setPlanillas] = useState([]);
-  const [periodos, setPeriodos] = useState([]);
-  const [empleados, setEmpleados] = useState([]);
-  const [conceptos, setConceptos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [showDetalle, setShowDetalle] = useState(null);
-  const [filterEstado, setFilterEstado] = useState("todos");
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState(emptyPlanilla);
+  const [editing, setEditing] = useState(null);
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const load = async () => {
-    setLoading(true);
-    const [pl, per, emp, con] = await Promise.all([
-      base44.entities.Planilla.list("-created_date", 100),
-      base44.entities.PeriodoPlanilla.list(),
-      base44.entities.Empleado.filter({ estado: "activo" }),
-      base44.entities.ConceptoPago.filter({ estado: "activo" }),
-    ]);
-    setPlanillas(pl);
-    setPeriodos(per);
-    setEmpleados(emp);
-    setConceptos(con);
-    setLoading(false);
-  };
+  const { data: planillas = [], isLoading } = useQuery({
+    queryKey: ["planillas"],
+    queryFn: () => base44.entities.Planilla.list("-created_date"),
+  });
+  const { data: empresas = [] } = useQuery({ queryKey: ["empresas"], queryFn: () => base44.entities.Empresa.list() });
+  const { data: periodos = [] } = useQuery({ queryKey: ["periodos"], queryFn: () => base44.entities.PeriodoPlanilla.list("-fecha_inicio") });
 
-  useEffect(() => { load(); }, []);
+  const empresaMap = Object.fromEntries(empresas.map(e => [e.id, e.nombre_comercial || e.nombre_legal]));
+  const periodoMap = Object.fromEntries(periodos.map(p => [p.id, `${p.tipo_periodo} · ${p.fecha_inicio} → ${p.fecha_fin}`]));
 
-  const filtered = filterEstado === "todos" ? planillas : planillas.filter(p => p.estado === filterEstado);
+  const save = useMutation({
+    mutationFn: (data) => editing ? base44.entities.Planilla.update(editing, data) : base44.entities.Planilla.create(data),
+    onSuccess: () => { qc.invalidateQueries(["planillas"]); setOpen(false); },
+  });
 
-  const avanzarEstado = async (planilla) => {
-    const idx = estadoFlow.indexOf(planilla.estado);
-    if (idx < 0 || idx >= estadoFlow.length - 1) return;
-    const nextEstado = estadoFlow[idx + 1];
-    const updates = { estado: nextEstado };
-    if (nextEstado === "aprobado") updates.fecha_aprobacion = new Date().toISOString().split("T")[0];
-    if (nextEstado === "pagado") updates.fecha_pago = new Date().toISOString().split("T")[0];
-    await base44.entities.Planilla.update(planilla.id, updates);
-    load();
-  };
-
-  const anular = async (id) => {
-    if (!confirm("¿Anular esta planilla? Esta acción no se puede deshacer fácilmente.")) return;
-    await base44.entities.Planilla.update(id, { estado: "anulado" });
-    load();
-  };
-
-  const nextLabel = (estado) => {
-    const map = { borrador: "Calcular", calculado: "Enviar a Revisión", en_revision: "Aprobar", aprobado: "Marcar Pagado" };
-    return map[estado];
-  };
+  const openNew = () => { setForm(emptyPlanilla); setEditing(null); setOpen(true); };
+  const openEdit = (p) => { setForm(p); setEditing(p.id); setOpen(true); };
 
   return (
-    <div className="p-6 space-y-5 max-w-screen-2xl mx-auto">
+    <div className="p-6 space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Planillas</h1>
-          <p className="text-sm text-gray-500">{planillas.length} planillas registradas</p>
+          <p className="text-gray-500 text-sm mt-1">{planillas.length} planillas registradas</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-          <Plus className="w-4 h-4" /> Nueva Planilla
-        </button>
+        <Button onClick={openNew} className="bg-blue-700 hover:bg-blue-800">
+          <Plus className="w-4 h-4 mr-2" /> Nueva Planilla
+        </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: "Total Planillas", val: planillas.length, color: "text-gray-800" },
-          { label: "Pendientes", val: planillas.filter(p => ["borrador","calculado","en_revision"].includes(p.estado)).length, color: "text-yellow-600" },
-          { label: "Aprobadas", val: planillas.filter(p => p.estado === "aprobado").length, color: "text-blue-600" },
-          { label: "Pagadas", val: planillas.filter(p => p.estado === "pagado").length, color: "text-green-600" },
-        ].map(s => (
-          <div key={s.label} className="bg-white rounded-xl border border-gray-100 p-4">
-            <div className={`text-2xl font-bold ${s.color}`}>{s.val}</div>
-            <div className="text-xs text-gray-500 mt-1">{s.label}</div>
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        {isLoading ? (
+          <div className="p-8 text-center text-gray-400">Cargando planillas...</div>
+        ) : planillas.length === 0 ? (
+          <div className="p-12 text-center">
+            <Receipt className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+            <p className="text-gray-400">No hay planillas registradas</p>
           </div>
-        ))}
-      </div>
-
-      {/* Filter */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4 flex gap-3 items-center">
-        <span className="text-sm text-gray-500">Filtrar por estado:</span>
-        {["todos", "borrador", "calculado", "en_revision", "aprobado", "pagado", "anulado"].map(e => (
-          <button
-            key={e}
-            onClick={() => setFilterEstado(e)}
-            className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
-              filterEstado === e ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            {e === "todos" ? "Todos" : e}
-          </button>
-        ))}
-        <button onClick={load} className="ml-auto p-2 text-gray-400 hover:text-gray-600 border border-gray-200 rounded-lg">
-          <RefreshCw className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Código</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Tipo</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Periodo</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Empleados</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Bruto</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Deducciones</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Neto</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Estado</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {loading ? (
-                <tr><td colSpan={9} className="text-center py-12 text-gray-400">
-                  <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" /> Cargando...
-                </td></tr>
-              ) : filtered.length === 0 ? (
-                <tr><td colSpan={9} className="text-center py-12 text-gray-400 text-sm">No hay planillas con ese filtro.</td></tr>
-              ) : filtered.map(p => {
-                const periodo = periodos.find(per => per.id === p.periodo_id);
-                return (
-                  <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-700">{p.codigo_planilla || "—"}</td>
-                    <td className="px-4 py-3 text-gray-600 capitalize">{p.tipo_planilla}</td>
-                    <td className="px-4 py-3 text-gray-600 text-xs">
-                      {periodo ? `${periodo.fecha_inicio} → ${periodo.fecha_fin}` : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-center text-gray-600">{p.cantidad_empleados || 0}</td>
-                    <td className="px-4 py-3 text-right font-medium text-gray-800">{formatCRC(p.total_ingresos)}</td>
-                    <td className="px-4 py-3 text-right text-red-600">{formatCRC(p.total_deducciones)}</td>
-                    <td className="px-4 py-3 text-right font-bold text-blue-700">{formatCRC(p.total_neto)}</td>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Código / Empresa</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Tipo</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Período</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Total Neto</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Estado</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {planillas.map(p => (
+                  <tr key={p.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${estadoColors[p.estado] || "bg-gray-100 text-gray-600"}`}>
-                        {p.estado}
-                      </span>
+                      <div className="font-medium text-gray-900">{p.codigo_planilla || "—"}</div>
+                      <div className="text-xs text-gray-400">{empresaMap[p.empresa_id] || "—"}</div>
+                    </td>
+                    <td className="px-4 py-3 hidden md:table-cell capitalize text-gray-600">{p.tipo_planilla}</td>
+                    <td className="px-4 py-3 hidden lg:table-cell text-xs text-gray-500">{periodoMap[p.periodo_id] || "—"}</td>
+                    <td className="px-4 py-3 text-right hidden md:table-cell font-mono text-gray-800">
+                      {p.total_neto ? `₡ ${Number(p.total_neto).toLocaleString()}` : "—"}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => setShowDetalle(p)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        {nextLabel(p.estado) && (
-                          <button onClick={() => avanzarEstado(p)}
-                            className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg font-medium">
-                            {p.estado === "borrador" ? <Calculator className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
-                            {nextLabel(p.estado)}
-                          </button>
-                        )}
-                        {p.estado !== "anulado" && p.estado !== "pagado" && (
-                          <button onClick={() => anular(p.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
-                            <XCircle className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
+                      <Badge className={estadoColor[p.estado]}>{p.estado}</Badge>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => openEdit(p)} className="text-gray-400 hover:text-blue-600 p-1.5 rounded hover:bg-blue-50 transition-colors">
+                        <Eye className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {showModal && (
-        <PlanillaModal
-          periodos={periodos}
-          empleados={empleados}
-          conceptos={conceptos}
-          onClose={() => setShowModal(false)}
-          onSaved={load}
-        />
-      )}
-
-      {showDetalle && (
-        <PlanillaDetalleModal planilla={showDetalle} onClose={() => setShowDetalle(null)} />
-      )}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editing ? "Editar Planilla" : "Nueva Planilla"}</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 mt-2">
+            <div className="space-y-1">
+              <Label>Empresa *</Label>
+              <Select value={form.empresa_id} onValueChange={v => set("empresa_id", v)}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                <SelectContent>{empresas.map(e => <SelectItem key={e.id} value={e.id}>{e.nombre_comercial || e.nombre_legal}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Período</Label>
+              <Select value={form.periodo_id} onValueChange={v => set("periodo_id", v)}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                <SelectContent>{periodos.map(p => <SelectItem key={p.id} value={p.id}>{p.tipo_periodo} · {p.fecha_inicio}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Tipo Planilla</Label>
+              <Select value={form.tipo_planilla} onValueChange={v => set("tipo_planilla", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ordinaria">Ordinaria</SelectItem>
+                  <SelectItem value="extraordinaria">Extraordinaria</SelectItem>
+                  <SelectItem value="aguinaldo">Aguinaldo</SelectItem>
+                  <SelectItem value="liquidacion">Liquidación</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Estado</Label>
+              <Select value={form.estado} onValueChange={v => set("estado", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.keys(estadoColor).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2 space-y-1">
+              <Label>Código</Label>
+              <Input value={form.codigo_planilla || ""} onChange={e => set("codigo_planilla", e.target.value)} placeholder="PLN-001" />
+            </div>
+            <div className="col-span-2 space-y-1">
+              <Label>Observación</Label>
+              <Input value={form.observacion || ""} onChange={e => set("observacion", e.target.value)} />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button className="bg-blue-700 hover:bg-blue-800" onClick={() => save.mutate(form)} disabled={save.isPending}>
+              {save.isPending ? "Guardando..." : "Guardar"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
