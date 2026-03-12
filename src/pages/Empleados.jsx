@@ -8,20 +8,23 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import EmpleadoForm from "@/components/empleados/EmpleadoForm";
+import { useEmpresaContext } from "@/components/EmpresaContext";
 
 const estadoColor = { activo: "bg-emerald-100 text-emerald-700", suspendido: "bg-amber-100 text-amber-700", inactivo: "bg-gray-100 text-gray-600", liquidado: "bg-red-100 text-red-600" };
 
 export default function Empleados() {
   const qc = useQueryClient();
+  const { empresaId, filterByEmpresa } = useEmpresaContext();
   const [search, setSearch] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("activo");
   const [formOpen, setFormOpen] = useState(false);
   const [editId, setEditId] = useState(null);
 
-  const { data: empleados = [], isLoading } = useQuery({
-    queryKey: ["empleados"],
+  const { data: empleadosRaw = [], isLoading } = useQuery({
+    queryKey: ["empleados", empresaId],
     queryFn: () => base44.entities.Empleado.list("-created_date"),
   });
+  const empleados = filterByEmpresa(empleadosRaw);
 
   const { data: empresas = [] } = useQuery({
     queryKey: ["empresas"],
