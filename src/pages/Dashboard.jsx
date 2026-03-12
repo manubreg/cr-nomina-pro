@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
+import { useEmpresaContext } from "@/components/EmpresaContext";
 import {
   Users, UserX, Clock, AlertTriangle, TrendingUp, TrendingDown,
   DollarSign, Calendar, Activity, Gift, Briefcase, Bell, ArrowRight,
@@ -49,6 +50,7 @@ function StatCard({ title, value, subtitle, icon: Icon, color, trend, linkTo }) 
 }
 
 export default function Dashboard() {
+  const { empresaId, filterByEmpresa, empresaActual, isAdmin } = useEmpresaContext();
   const [empleados, setEmpleados] = useState([]);
   const [planillas, setPlanillas] = useState([]);
   const [periodos, setPeriodos] = useState([]);
@@ -68,16 +70,16 @@ export default function Dashboard() {
       base44.entities.VacacionSaldo.list("-created_date", 100),
       base44.entities.Incapacidad.list("-created_date", 50),
     ]).then(([emp, plan, per, nov, cont, vac, inc]) => {
-      setEmpleados(emp);
-      setPlanillas(plan);
-      setPeriodos(per);
-      setNovedades(nov);
-      setContratos(cont);
-      setVacaciones(vac);
-      setIncapacidades(inc);
+      setEmpleados(filterByEmpresa(emp));
+      setPlanillas(filterByEmpresa(plan));
+      setPeriodos(filterByEmpresa(per));
+      setNovedades(filterByEmpresa(nov));
+      setContratos(filterByEmpresa(cont));
+      setVacaciones(filterByEmpresa(vac));
+      setIncapacidades(filterByEmpresa(inc));
       setLoading(false);
     });
-  }, []);
+  }, [empresaId]);
 
   const activos = empleados.filter(e => e.estado === "activo").length;
   const inactivos = empleados.filter(e => e.estado !== "activo").length;
@@ -127,7 +129,9 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Resumen ejecutivo de nómina</p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {empresaActual ? empresaActual.nombre_comercial || empresaActual.nombre_legal : isAdmin ? "Todas las empresas" : "Resumen ejecutivo de nómina"}
+          </p>
         </div>
         <div className="text-sm text-gray-500 bg-white border border-gray-200 px-4 py-2 rounded-lg">
           {new Date().toLocaleDateString("es-CR", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
