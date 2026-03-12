@@ -1,47 +1,83 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-// Add page imports here
+import Layout from './Layout';
+
+// Pages
+import Dashboard from './pages/Dashboard';
+import Empresas from './pages/Empresas';
+import Empleados from './pages/Empleados';
+import EmpleadoPerfil from './pages/EmpleadoPerfil';
+import Contratos from './pages/Contratos';
+import Documentos from './pages/Documentos';
+import Periodos from './pages/Periodos';
+import Planillas from './pages/Planillas';
+import Novedades from './pages/Novedades';
+import Conceptos from './pages/Conceptos';
+import Vacaciones from './pages/Vacaciones';
+import Incapacidades from './pages/Incapacidades';
+import AguinaldoPage from './pages/AguinaldoPage';
+import Liquidaciones from './pages/Liquidaciones';
+import Reportes from './pages/Reportes';
+import Parametros from './pages/Parametros';
+import Usuarios from './pages/Usuarios';
+import AuditoriaPage from './pages/Auditoria';
+import Notificaciones from './pages/Notificaciones';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
-  // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      <div className="fixed inset-0 flex items-center justify-center bg-white">
+        <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-800 rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  // Handle authentication errors
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
       navigateToLogin();
       return null;
     }
   }
 
-  // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
+      <Route path="/" element={<Navigate to="/Dashboard" replace />} />
+      <Route element={<Layout />}>
+        <Route path="/Dashboard" element={<Dashboard />} />
+        <Route path="/Empresas" element={<Empresas />} />
+        <Route path="/Empleados" element={<Empleados />} />
+        <Route path="/EmpleadoPerfil" element={<EmpleadoPerfil />} />
+        <Route path="/Contratos" element={<Contratos />} />
+        <Route path="/Documentos" element={<Documentos />} />
+        <Route path="/Periodos" element={<Periodos />} />
+        <Route path="/Planillas" element={<Planillas />} />
+        <Route path="/Novedades" element={<Novedades />} />
+        <Route path="/Conceptos" element={<Conceptos />} />
+        <Route path="/Vacaciones" element={<Vacaciones />} />
+        <Route path="/Incapacidades" element={<Incapacidades />} />
+        <Route path="/Aguinaldo" element={<AguinaldoPage />} />
+        <Route path="/Liquidaciones" element={<Liquidaciones />} />
+        <Route path="/Reportes" element={<Reportes />} />
+        <Route path="/Parametros" element={<Parametros />} />
+        <Route path="/Usuarios" element={<Usuarios />} />
+        <Route path="/Auditoria" element={<AuditoriaPage />} />
+        <Route path="/Notificaciones" element={<Notificaciones />} />
+      </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
 };
 
-
 function App() {
-
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
