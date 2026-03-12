@@ -6,8 +6,10 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from './Layout';
+import PortalLayout from './components/PortalLayout';
+import { EmpresaProvider } from './components/EmpresaContext';
 
-// Pages
+// Admin pages
 import Dashboard from './pages/Dashboard';
 import Empresas from './pages/Empresas';
 import Empleados from './pages/Empleados';
@@ -28,8 +30,13 @@ import Usuarios from './pages/Usuarios';
 import AuditoriaPage from './pages/Auditoria';
 import Notificaciones from './pages/Notificaciones';
 
+// Portal empleado
+import MisDatos from './pages/portal/MisDatos';
+import MisColillas from './pages/portal/MisColillas';
+import MisVacaciones from './pages/portal/MisVacaciones';
+
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -40,12 +47,23 @@ const AuthenticatedApp = () => {
   }
 
   if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      navigateToLogin();
-      return null;
-    }
+    if (authError.type === 'user_not_registered') return <UserNotRegisteredError />;
+    if (authError.type === 'auth_required') { navigateToLogin(); return null; }
+  }
+
+  // Redirigir empleados al portal
+  if (user?.role === "empleado") {
+    return (
+      <Routes>
+        <Route path="/" element={<Navigate to="/portal/datos" replace />} />
+        <Route element={<PortalLayout />}>
+          <Route path="/portal/datos" element={<MisDatos />} />
+          <Route path="/portal/colillas" element={<MisColillas />} />
+          <Route path="/portal/vacaciones" element={<MisVacaciones />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/portal/datos" replace />} />
+      </Routes>
+    );
   }
 
   return (
@@ -81,10 +99,12 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
+        <EmpresaProvider>
+          <Router>
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+        </EmpresaProvider>
       </QueryClientProvider>
     </AuthProvider>
   )
