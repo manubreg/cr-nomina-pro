@@ -201,19 +201,24 @@ Deno.serve(async (req) => {
 
     // ─ Base CCSS = total ingresos brutos del período ─────────────────────────
     const baseCCSS = Math.max(0, totalIngresos);
-    const totalCCSSEmp = Math.round(baseCCSS * ((ccssEmpleado.sem + ccssEmpleado.ivm + ccssEmpleado.banco_popular) / 100));
-    const montoCCSSEmp = {
-      sem:   Math.round(baseCCSS * (ccssEmpleado.sem / 100)),
-      ivm:   Math.round(baseCCSS * (ccssEmpleado.ivm / 100)),
-      bp:    Math.round(baseCCSS * (ccssEmpleado.banco_popular / 100)),
-    };
+    const esAsegurado = emp.asegurado_ccss !== false; // true por defecto
 
-    // ─ Deducciones CCSS empleado ─────────────────────────────────────────────
-    movs.push({ tipo_movimiento: 'deduccion', descripcion: `CCSS - SEM (${ccssEmpleado.sem}%)`,          monto: montoCCSSEmp.sem, porcentaje: ccssEmpleado.sem,          base_calculo: baseCCSS, orden_calculo: 20, origen: 'automatico' });
-    movs.push({ tipo_movimiento: 'deduccion', descripcion: `CCSS - IVM (${ccssEmpleado.ivm}%)`,          monto: montoCCSSEmp.ivm, porcentaje: ccssEmpleado.ivm,          base_calculo: baseCCSS, orden_calculo: 21, origen: 'automatico' });
-    movs.push({ tipo_movimiento: 'deduccion', descripcion: `Banco Popular (${ccssEmpleado.banco_popular}%)`, monto: montoCCSSEmp.bp, porcentaje: ccssEmpleado.banco_popular, base_calculo: baseCCSS, orden_calculo: 22, origen: 'automatico' });
+    let totalCCSSEmp = 0;
+    if (esAsegurado) {
+      const montoCCSSEmp = {
+        sem: Math.round(baseCCSS * (ccssEmpleado.sem / 100)),
+        ivm: Math.round(baseCCSS * (ccssEmpleado.ivm / 100)),
+        bp:  Math.round(baseCCSS * (ccssEmpleado.banco_popular / 100)),
+      };
+      totalCCSSEmp = montoCCSSEmp.sem + montoCCSSEmp.ivm + montoCCSSEmp.bp;
 
-    // ─ Base ISR = ingresos - CCSS empleado ───────────────────────────────────
+      // ─ Deducciones CCSS empleado ───────────────────────────────────────────
+      movs.push({ tipo_movimiento: 'deduccion', descripcion: `CCSS - SEM (${ccssEmpleado.sem}%)`,             monto: montoCCSSEmp.sem, porcentaje: ccssEmpleado.sem,          base_calculo: baseCCSS, orden_calculo: 20, origen: 'automatico' });
+      movs.push({ tipo_movimiento: 'deduccion', descripcion: `CCSS - IVM (${ccssEmpleado.ivm}%)`,             monto: montoCCSSEmp.ivm, porcentaje: ccssEmpleado.ivm,          base_calculo: baseCCSS, orden_calculo: 21, origen: 'automatico' });
+      movs.push({ tipo_movimiento: 'deduccion', descripcion: `Banco Popular (${ccssEmpleado.banco_popular}%)`, monto: montoCCSSEmp.bp,  porcentaje: ccssEmpleado.banco_popular, base_calculo: baseCCSS, orden_calculo: 22, origen: 'automatico' });
+    }
+
+    // ─ Base ISR = ingresos - CCSS empleado (si aplica) ───────────────────────
     const baseISR = Math.max(0, baseCCSS - totalCCSSEmp);
     const montoISR = calcISR(baseISR);
 
