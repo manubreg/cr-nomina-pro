@@ -30,7 +30,16 @@ Deno.serve(async (req) => {
 
     const fechaIngreso = new Date(emp.fecha_ingreso);
     const hoy = new Date();
-    const salarioBase = Number(emp.salario_base) || 0;
+    // Convertir salario a CRC si está en USD, usando TC de hoy (o viernes anterior si fin de semana)
+    const salarioBaseOrig = Number(emp.salario_base) || 0;
+    let salarioBase = salarioBaseOrig;
+    if (emp.moneda === "USD") {
+      try {
+        const tcRes = await base44.functions.invoke("obtenerTipoCambio", {});
+        const tc = tcRes?.venta || tcRes?.compra || 1;
+        salarioBase = Math.round(salarioBaseOrig * tc);
+      } catch { /* usa valor original */ }
+    }
 
     // Calcular días trabajados totales
     const diasTotales = Math.floor((hoy - fechaIngreso) / (1000 * 60 * 60 * 24));
