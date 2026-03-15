@@ -75,9 +75,14 @@ export default function Vacaciones() {
           <h1 className="text-2xl font-bold text-gray-900">Vacaciones</h1>
           <p className="text-gray-500 text-sm mt-1">Solicitudes y saldos de vacaciones</p>
         </div>
-        <Button onClick={openNew} className="bg-blue-700 hover:bg-blue-800">
-          <Plus className="w-4 h-4 mr-2" /> Nueva Solicitud
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50" onClick={() => { setSaldoForm({ empleado_id: "", empresa_id: empresaId || "" }); setDetalleCalculo(null); setOpenSaldo(true); }}>
+            <Calculator className="w-4 h-4 mr-2" /> Calcular Saldo
+          </Button>
+          <Button onClick={openNew} className="bg-blue-700 hover:bg-blue-800">
+            <Plus className="w-4 h-4 mr-2" /> Nueva Solicitud
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="solicitudes">
