@@ -23,6 +23,9 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
   const qc = useQueryClient();
   const [form, setForm] = useState(empty);
   const [jefaturaBusqueda, setJefaturaBusqueda] = useState("");
+  const [departamentoBusqueda, setDepartamentoBusqueda] = useState("");
+  const [centroCostoBusqueda, setCentroCostoBusqueda] = useState("");
+  const [puestoBusqueda, setPuestoBusqueda] = useState("");
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const { data: departamentosApi = [] } = useQuery({
@@ -147,30 +150,99 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
             </div>
             <div className="space-y-1">
               <Label>Puesto</Label>
-              <Select value={form.puesto} onValueChange={v => set("puesto", v)}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar puesto" /></SelectTrigger>
-                <SelectContent>
-                  {puestosFinal.map(p => <SelectItem key={p.id} value={p.nombre}>{p.nombre}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <Input
+                  placeholder="Buscar puesto..."
+                  value={puestoBusqueda}
+                  onChange={e => setPuestoBusqueda(e.target.value)}
+                />
+                {puestoBusqueda && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                    {puestosFinal
+                      .filter(p => p.nombre.toLowerCase().includes(puestoBusqueda.toLowerCase()))
+                      .map(p => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            set("puesto", p.nombre);
+                            setPuestoBusqueda(p.nombre);
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm border-b border-gray-100 last:border-b-0"
+                        >
+                          {p.nombre}
+                        </button>
+                      ))}
+                      {puestosFinal.filter(p => p.nombre.toLowerCase().includes(puestoBusqueda.toLowerCase())).length === 0 && (
+                      <div className="px-3 py-2 text-sm text-gray-400">Sin resultados</div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="space-y-1">
               <Label>Departamento</Label>
-              <Select value={form.departamento_id} onValueChange={v => set("departamento_id", v)}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                <SelectContent>
-                  {departamentos.map(d => <SelectItem key={d.id} value={d.id}>{d.nombre}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <Input
+                  placeholder="Buscar departamento..."
+                  value={departamentoBusqueda}
+                  onChange={e => setDepartamentoBusqueda(e.target.value)}
+                />
+                {departamentoBusqueda && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                    {departamentos
+                      .filter(d => d.nombre.toLowerCase().includes(departamentoBusqueda.toLowerCase()))
+                      .map(d => (
+                        <button
+                          key={d.id}
+                          type="button"
+                          onClick={() => {
+                            set("departamento_id", d.id);
+                            setDepartamentoBusqueda(d.nombre);
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm border-b border-gray-100 last:border-b-0"
+                        >
+                          {d.nombre}
+                        </button>
+                      ))}
+                      {departamentos.filter(d => d.nombre.toLowerCase().includes(departamentoBusqueda.toLowerCase())).length === 0 && (
+                      <div className="px-3 py-2 text-sm text-gray-400">Sin resultados</div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="space-y-1">
               <Label>Centro de Costos</Label>
-              <Select value={form.centro_costo_id} onValueChange={v => set("centro_costo_id", v)}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar centro" /></SelectTrigger>
-                <SelectContent>
-                  {centrosCostoFinal.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <Input
+                  placeholder="Buscar centro..."
+                  value={centroCostoBusqueda}
+                  onChange={e => setCentroCostoBusqueda(e.target.value)}
+                />
+                {centroCostoBusqueda && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                    {centrosCostoFinal
+                      .filter(c => c.nombre.toLowerCase().includes(centroCostoBusqueda.toLowerCase()))
+                      .map(c => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => {
+                            set("centro_costo_id", c.id);
+                            setCentroCostoBusqueda(c.nombre);
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm border-b border-gray-100 last:border-b-0"
+                        >
+                          {c.nombre}
+                        </button>
+                      ))}
+                      {centrosCostoFinal.filter(c => c.nombre.toLowerCase().includes(centroCostoBusqueda.toLowerCase())).length === 0 && (
+                      <div className="px-3 py-2 text-sm text-gray-400">Sin resultados</div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="space-y-1">
               <Label>Jefatura</Label>
