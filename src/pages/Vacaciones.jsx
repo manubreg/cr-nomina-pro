@@ -172,6 +172,44 @@ export default function Vacaciones() {
         </TabsContent>
       </Tabs>
 
+      {/* Modal Calcular Saldo Vacaciones */}
+      <Dialog open={openSaldo} onOpenChange={setOpenSaldo}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><Calculator className="w-4 h-4 text-blue-600" /> Calcular Saldo de Vacaciones</DialogTitle></DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1">
+              <Label>Empleado *</Label>
+              <Select value={saldoForm.empleado_id} onValueChange={v => setSaldoForm(f => ({ ...f, empleado_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
+                <SelectContent>{empleados.map(e => <SelectItem key={e.id} value={e.id}>{e.nombre} {e.apellidos}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <Button type="button" variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
+              onClick={calcularSaldoAuto} disabled={calculando || !saldoForm.empleado_id}>
+              {calculando ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Calculando...</> : <><Calculator className="w-4 h-4 mr-2" /> Calcular (Código Trabajo CR)</>}
+            </Button>
+            {detalleCalculo && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-800 space-y-1">
+                <p className="font-semibold flex items-center gap-1"><Info className="w-3 h-3" /> Resultado del cálculo</p>
+                <p>Fecha ingreso: <strong>{detalleCalculo.fecha_ingreso}</strong></p>
+                <p>Días trabajados: <strong>{detalleCalculo.dias_trabajados}</strong> ({detalleCalculo.anios_completos} años)</p>
+                <p>Días ganados: <strong>{saldoForm.dias_ganados}</strong> | Días usados: <strong>{saldoForm.dias_usados}</strong></p>
+                <p>Saldo actual: <strong>{saldoForm.saldo_actual} días</strong></p>
+                <p>Valor en colones: <strong>₡ {Number(detalleCalculo.valor_saldo_total).toLocaleString()}</strong></p>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setOpenSaldo(false)}>Cancelar</Button>
+            {detalleCalculo && (
+              <Button className="bg-blue-700 hover:bg-blue-800" onClick={() => saveSaldo.mutate(saldoForm)} disabled={saveSaldo.isPending}>
+                {saveSaldo.isPending ? "Guardando..." : "Guardar Saldo"}
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>{editing ? "Editar Solicitud" : "Nueva Solicitud de Vacaciones"}</DialogTitle></DialogHeader>
