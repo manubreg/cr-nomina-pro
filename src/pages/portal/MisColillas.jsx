@@ -131,7 +131,7 @@ export default function MisColillas() {
             const planilla = planillaMap[det.planilla_id];
             const periodo = planilla ? periodoMap[planilla.periodo_id] : null;
             const movsDet = movimientos.filter(m => m.planilla_id === det.planilla_id);
-            return <ColillaCard key={det.id} detalle={det} movimientos={movsDet} periodo={periodo} />;
+            return <ColillaCard key={det.id} detalle={det} movimientos={movsDet} periodo={periodo} monedaEmpleado={monedaEmpleado} />;
           })}
         </div>
       )}
