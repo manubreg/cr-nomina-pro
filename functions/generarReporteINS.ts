@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
-import { Workbook } from 'npm:exceljs@4.4.0';
+import ExcelJS from 'npm:exceljs@4.4.0';
 
 Deno.serve(async (req) => {
   try {
@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     });
 
     // Crear Excel
-    const wb = new Workbook();
+    const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet('INS');
 
     // Encabezados
