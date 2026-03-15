@@ -114,9 +114,6 @@ export default function Liquidaciones() {
           <div className="grid grid-cols-2 gap-4 mt-2">
             <div className="col-span-2 space-y-1">
               <Label>Empleado *</Label>
-            </div>
-            <div className="col-span-2 space-y-1">
-              <Label>Empleado *</Label>
               <Select value={form.empleado_id} onValueChange={v => set("empleado_id", v)}>
                 <SelectTrigger><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
                 <SelectContent>{empleados.map(e => <SelectItem key={e.id} value={e.id}>{e.nombre} {e.apellidos}</SelectItem>)}</SelectContent>
@@ -133,6 +130,21 @@ export default function Liquidaciones() {
                 <SelectContent>{motivos.map(m => <SelectItem key={m} value={m}>{m.replace(/_/g," ")}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+            {/* Botón calcular automático */}
+            <div className="col-span-2">
+              <Button type="button" variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
+                onClick={calcularAuto} disabled={calculando || !form.empleado_id || !form.fecha_salida}>
+                {calculando ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Calculando...</> : <><Calculator className="w-4 h-4 mr-2" /> Calcular Automáticamente (Ley CR)</>}
+              </Button>
+            </div>
+            {detalleCalculo && (
+              <div className="col-span-2 bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-800 space-y-1">
+                <p className="font-semibold flex items-center gap-1"><Info className="w-3 h-3" /> Detalle del cálculo</p>
+                <p>Antigüedad: <strong>{detalleCalculo.anios_servicio} años</strong> ({detalleCalculo.dias_servicio} días)</p>
+                <p>Salario diario: <strong>₡ {Number(detalleCalculo.salario_diario).toLocaleString()}</strong></p>
+                <p>Meses aguinaldo: <strong>{detalleCalculo.meses_aguinaldo}</strong></p>
+              </div>
+            )}
             <div className="space-y-1">
               <Label>Salario Promedio (₡)</Label>
               <Input type="number" value={form.salario_promedio} onChange={e => set("salario_promedio", Number(e.target.value))} />
