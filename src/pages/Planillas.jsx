@@ -187,6 +187,62 @@ export default function Planillas() {
         )}
       </div>
 
+      {/* Modal Planilla Automática */}
+      <Dialog open={autoModal} onOpenChange={setAutoModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-emerald-600" /> Crear Planilla Automática
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-500 -mt-2">
+            Crea la planilla y ejecuta el cálculo completo (CCSS, ISR, novedades) en un solo paso.
+          </p>
+          <div className="grid gap-4 mt-1">
+            <div className="space-y-1">
+              <Label>Empresa *</Label>
+              <Select value={autoForm.empresa_id} onValueChange={v => setAutoForm(f => ({ ...f, empresa_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar empresa" /></SelectTrigger>
+                <SelectContent>{empresas.map(e => <SelectItem key={e.id} value={e.id}>{e.nombre_comercial || e.nombre_legal}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Período *</Label>
+              <Select value={autoForm.periodo_id} onValueChange={v => setAutoForm(f => ({ ...f, periodo_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar período" /></SelectTrigger>
+                <SelectContent>
+                  {periodos
+                    .filter(p => !autoForm.empresa_id || p.empresa_id === autoForm.empresa_id)
+                    .map(p => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.tipo_periodo} · {p.fecha_inicio} → {p.fecha_fin}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Tipo de Planilla</Label>
+              <Select value={autoForm.tipo_planilla} onValueChange={v => setAutoForm(f => ({ ...f, tipo_planilla: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ordinaria">Ordinaria</SelectItem>
+                  <SelectItem value="extraordinaria">Extraordinaria</SelectItem>
+                  <SelectItem value="aguinaldo">Aguinaldo</SelectItem>
+                  <SelectItem value="liquidacion">Liquidación</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" onClick={() => setAutoModal(false)} disabled={creandoAuto}>Cancelar</Button>
+            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={handleCrearAutomatica} disabled={creandoAuto}>
+              {creandoAuto ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Procesando...</> : <><Zap className="w-4 h-4 mr-2" /> Crear y Calcular</>}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Modal detalle */}
       {detalleModal && (
         <PlanillaDetalleModal planilla={detalleModal} onClose={() => setDetalleModal(null)} />
