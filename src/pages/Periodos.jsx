@@ -91,6 +91,19 @@ export default function Periodos() {
     load();
   };
 
+  const handleOpenEdit = (p) => {
+    setEditForm({ tipo_periodo: p.tipo_periodo, fecha_inicio: p.fecha_inicio, fecha_fin: p.fecha_fin, fecha_pago: p.fecha_pago || "", estado: p.estado, empresa_id: p.empresa_id, observaciones: p.observaciones || "" });
+    setEditModal(p);
+  };
+
+  const handleEditSave = async () => {
+    setEditSaving(true);
+    await base44.entities.PeriodoPlanilla.update(editModal.id, editForm);
+    setEditSaving(false);
+    setEditModal(null);
+    load();
+  };
+
   const handleFileChange = (e) => {
     setFileError("");
     setPreview([]);
