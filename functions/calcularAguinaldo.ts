@@ -24,9 +24,8 @@ Deno.serve(async (req) => {
     }
 
     // Cargar empleado
-    const empleados = await base44.entities.Empleado.filter({ id: empleado_id });
-    if (!empleados || empleados.length === 0) return Response.json({ error: 'Empleado no encontrado' }, { status: 404 });
-    const emp = empleados[0];
+    const emp = await base44.entities.Empleado.get(empleado_id);
+    if (!emp) return Response.json({ error: 'Empleado no encontrado' }, { status: 404 });
 
     const salarioBase = Number(emp.salario_base) || 0;
     const fechaIngreso = new Date(emp.fecha_ingreso);
