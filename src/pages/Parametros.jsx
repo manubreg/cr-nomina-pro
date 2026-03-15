@@ -307,20 +307,6 @@ function ReglaLiquidacionEditor({ value, onChange }) {
   );
 }
 
-// ── Tope base (monto máximo) ──────────────────────────────────────────────────
-function TopeBaseEditor({ value, onChange }) {
-  const obj = parseJson(value, { monto: "" });
-  const set = (k, v) => onChange(JSON.stringify({ ...obj, [k]: v }));
-  return (
-    <div className="rounded-lg border border-gray-200 p-3 bg-gray-50 space-y-3">
-      <div className="flex items-center gap-3">
-        <Label className="w-44 text-xs">Monto tope (₡)</Label>
-        <Input type="number" className="h-8 text-sm flex-1" placeholder="1000000" value={obj.monto ?? ""} onChange={e => set("monto", e.target.value === "" ? "" : Number(e.target.value))} />
-      </div>
-    </div>
-  );
-}
-
 // ── Tipo de cambio ────────────────────────────────────────────────────────────
 function TipoCambioEditor({ value, onChange }) {
   const obj = parseJson(value, { compra: "", venta: "", moneda: "USD" });
