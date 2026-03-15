@@ -5,7 +5,7 @@ import MoneyInput from "./MoneyInput";
 
 const TABS = ["Personal", "Laboral", "Bancario", "Otros"];
 
-export default function EmpleadoModal({ empleado, departamentos, onClose, onSaved }) {
+export default function EmpleadoModal({ empleado, departamentos = [], centrosCosto = [], puestos = [], onClose, onSaved }) {
   const [tab, setTab] = useState(0);
   const [form, setForm] = useState(empleado || {
     empresa_id: "empresa_demo",
@@ -142,15 +142,27 @@ export default function EmpleadoModal({ empleado, departamentos, onClose, onSave
                   <Input field="fecha_fin_contrato" type="date" />
                 </F>
               )}
-              <F label="Puesto" required><Input field="puesto" placeholder="Ej. Analista de TI" /></F>
+              <F label="Puesto">
+                <select value={form.puesto || ""} onChange={e => set("puesto", e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="">— Seleccionar puesto —</option>
+                  {puestos.map(p => <option key={p.id} value={p.nombre}>{p.nombre}</option>)}
+                </select>
+              </F>
               <F label="Departamento">
                 <select value={form.departamento_id || ""} onChange={e => set("departamento_id", e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">— Sin departamento —</option>
+                  <option value="">— Seleccionar departamento —</option>
                   {departamentos.map(d => <option key={d.id} value={d.id}>{d.nombre}</option>)}
                 </select>
               </F>
-              <F label="Centro de Costos"><Input field="centro_costo_id" placeholder="Seleccionar centro" /></F>
+              <F label="Centro de Costos">
+                <select value={form.centro_costo_id || ""} onChange={e => set("centro_costo_id", e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="">— Seleccionar centro —</option>
+                  {centrosCosto.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                </select>
+              </F>
               <F label="Salario Base" required>
                 <MoneyInput value={form.salario_base || ""} onChange={v => set("salario_base", v)} moneda={form.moneda} placeholder="750000.00" />
               </F>
