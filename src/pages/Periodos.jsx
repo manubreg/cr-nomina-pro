@@ -60,7 +60,7 @@ export default function Periodos() {
       {showForm && (
         <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
           <h3 className="text-sm font-semibold text-gray-700 mb-4">Crear Nuevo Periodo</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="space-y-1">
               <label className="text-xs font-medium text-gray-600">Empresa</label>
               <Select value={form.empresa_id} onValueChange={v => setForm(p => ({ ...p, empresa_id: v }))}>
