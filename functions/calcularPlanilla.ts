@@ -56,13 +56,14 @@ Deno.serve(async (req) => {
   ];
 
   // ── 3. Empleados activos de la empresa ────────────────────────────────────
-  const [empleados, novedades, conceptosPago] = await Promise.all([
-    base44.entities.Empleado.filter({ empresa_id, estado: 'activo' }),
-    periodo
-      ? base44.entities.Novedad.filter({ empresa_id, periodo_id: planilla.periodo_id, estado: 'aprobada' })
-      : Promise.resolve([]),
-    base44.entities.ConceptoPago.filter({ empresa_id, estado: 'activo' }),
+  const [todosEmpleados, todasNovedades, todosConceptos] = await Promise.all([
+    base44.entities.Empleado.list(),
+    base44.entities.Novedad.list(),
+    base44.entities.ConceptoPago.list(),
   ]);
+  const empleados    = todosEmpleados.filter(e => e.empresa_id === empresa_id && e.estado === 'activo');
+  const novedades    = todasNovedades.filter(n => n.empresa_id === empresa_id && n.periodo_id === planilla.periodo_id && n.estado === 'aprobada');
+  const conceptosPago = todosConceptos.filter(c => c.empresa_id === empresa_id && c.estado === 'activo');
 
   // ── 4. Helpers ────────────────────────────────────────────────────────────
   const calcISR = (baseImponible) => {
