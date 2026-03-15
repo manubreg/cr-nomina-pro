@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Plus, Receipt, Eye, Calculator, Loader2, Zap } from "lucide-react";
+import { Receipt, Eye, Calculator, Loader2, Zap, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEmpresaContext } from "@/components/EmpresaContext";
 import PlanillaDetalleModal from "@/components/planillas/PlanillaDetalleModal";
+import { generarBoletaPDF } from "@/components/planillas/BoletaPagoGenerator";
 import { useToast } from "@/components/ui/use-toast";
 
 const estadoColor = {
@@ -21,21 +21,29 @@ const estadoColor = {
   anulado: "bg-red-100 text-red-600",
 };
 
-const emptyPlanilla = { empresa_id: "", periodo_id: "", tipo_planilla: "ordinaria", estado: "borrador", observacion: "" };
-
 export default function Planillas() {
   const qc = useQueryClient();
   const { empresaId, filterByEmpresa } = useEmpresaContext();
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState(emptyPlanilla);
-  const [editing, setEditing] = useState(null);
   const [detalleModal, setDetalleModal] = useState(null);
   const [calculando, setCalculando] = useState(null);
+  const [descargando, setDescargando] = useState(null);
   const [autoModal, setAutoModal] = useState(false);
   const [autoForm, setAutoForm] = useState({ empresa_id: "", periodo_id: "", tipo_planilla: "ordinaria" });
   const [creandoAuto, setCreandoAuto] = useState(false);
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const { data: planillasRaw = [], isLoading } = useQuery({
+    queryKey: ["planillas", empresaId],
+    queryFn: () => base44.entities.Planilla.list("-created_date"),
+  });
+  const planillas = filterByEmpresa(planillasRaw);
+
+  const { data: empresas = [] } = useQuery({ queryKey: ["empresas"], queryFn: () => base44.entities.Empresa.list() });
+  const { data: periodos = [] } = useQuery({ queryKey: ["periodos"], queryFn: () => base44.entities.PeriodoPlanilla.list("-fecha_inicio") });
+  const { data: empleadosAll = [] } = useQuery({ queryKey: ["empleados"], queryFn: () => base44.entities.Empleado.list() });
+
+  const empresaMap = Object.fromEntries(empresas.map(e => [e.id, e]));
+  const periodoMap = Object.fromEntries(periodos.map(p => [p.id, p]));
 
   const handleCrearAutomatica = async () => {
     if (!autoForm.empresa_id || !autoForm.periodo_id) {
@@ -43,7 +51,6 @@ export default function Planillas() {
       return;
     }
     setCreandoAuto(true);
-    // 1. Crear la planilla
     const nueva = await base44.entities.Planilla.create({
       empresa_id: autoForm.empresa_id,
       periodo_id: autoForm.periodo_id,
@@ -51,10 +58,10 @@ export default function Planillas() {
       estado: "borrador",
       codigo_planilla: `PLN-AUTO-${Date.now().toString().slice(-6)}`,
     });
-    // 2. Calcular automáticamente
     const res = await base44.functions.invoke('calcularPlanilla', { planilla_id: nueva.id });
     setCreandoAuto(false);
     setAutoModal(false);
+    setAutoForm({ empresa_id: "", periodo_id: "", tipo_planilla: "ordinaria" });
     qc.invalidateQueries(["planillas"]);
     if (res.data?.ok) {
       toast({
@@ -72,46 +79,43 @@ export default function Planillas() {
     setCalculando(null);
     if (res.data?.ok) {
       qc.invalidateQueries(["planillas"]);
-      toast({ title: "Planilla calculada", description: `${res.data.empleados_procesados} empleados procesados. Neto: ₡${Number(res.data.total_neto).toLocaleString()}` });
+      toast({ title: "Planilla calculada", description: `${res.data.empleados_procesados} empleados · Neto: ₡${Number(res.data.total_neto).toLocaleString()}` });
     } else {
       toast({ title: "Error al calcular", description: res.data?.error || "Error desconocido", variant: "destructive" });
     }
   };
 
-  const { data: planillasRaw = [], isLoading } = useQuery({
-    queryKey: ["planillas", empresaId],
-    queryFn: () => base44.entities.Planilla.list("-created_date"),
-  });
-  const planillas = filterByEmpresa(planillasRaw);
-  const { data: empresas = [] } = useQuery({ queryKey: ["empresas"], queryFn: () => base44.entities.Empresa.list() });
-  const { data: periodos = [] } = useQuery({ queryKey: ["periodos"], queryFn: () => base44.entities.PeriodoPlanilla.list("-fecha_inicio") });
+  // Descargar boletas PDF de todos los empleados de la planilla
+  const handleDescargarTodas = async (planilla) => {
+    setDescargando(planilla.id);
+    const empresa = empresaMap[planilla.empresa_id];
+    const periodo = periodoMap[planilla.periodo_id];
 
-  const empresaMap = Object.fromEntries(empresas.map(e => [e.id, e.nombre_comercial || e.nombre_legal]));
-  const periodoMap = Object.fromEntries(periodos.map(p => [p.id, `${p.tipo_periodo} · ${p.fecha_inicio} → ${p.fecha_fin}`]));
+    const detalles = await base44.entities.PlanillaDetalle.list();
+    const movimientos = await base44.entities.MovimientoPlanilla.list();
 
-  const save = useMutation({
-    mutationFn: (data) => editing ? base44.entities.Planilla.update(editing, data) : base44.entities.Planilla.create(data),
-    onSuccess: () => { qc.invalidateQueries(["planillas"]); setOpen(false); },
-  });
+    const detallesPlanilla = detalles.filter(d => d.planilla_id === planilla.id);
 
-  const openNew = () => { setForm(emptyPlanilla); setEditing(null); setOpen(true); };
-  const openEdit = (p) => { setForm(p); setEditing(p.id); setOpen(true); };
+    for (const detalle of detallesPlanilla) {
+      const empleado = empleadosAll.find(e => e.id === detalle.empleado_id);
+      const movs = movimientos.filter(m => m.planilla_id === planilla.id && m.empleado_id === detalle.empleado_id);
+      await generarBoletaPDF(empresa, empleado, periodo, detalle, movs, []);
+    }
+
+    setDescargando(null);
+    toast({ title: "Descarga completa", description: `${detallesPlanilla.length} boletas generadas` });
+  };
 
   return (
     <div className="p-6 space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Planillas</h1>
-          <p className="text-gray-500 text-sm mt-1">{planillas.length} planillas encontradas</p>
+          <p className="text-gray-500 text-sm mt-1">{planillas.length} planillas registradas</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={() => setAutoModal(true)} className="bg-emerald-600 hover:bg-emerald-700">
-            <Zap className="w-4 h-4 mr-2" /> Planilla Automática
-          </Button>
-          <Button onClick={openNew} variant="outline">
-            <Plus className="w-4 h-4 mr-2" /> Nueva Planilla
-          </Button>
-        </div>
+        <Button onClick={() => setAutoModal(true)} className="bg-emerald-600 hover:bg-emerald-700">
+          <Zap className="w-4 h-4 mr-2" /> Planilla Automática
+        </Button>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -120,7 +124,8 @@ export default function Planillas() {
         ) : planillas.length === 0 ? (
           <div className="p-12 text-center">
             <Receipt className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-            <p className="text-gray-400">No hay planillas registradas</p>
+            <p className="text-gray-500 font-medium">No hay planillas registradas</p>
+            <p className="text-gray-400 text-sm mt-1">Crea una planilla automática para comenzar</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -140,10 +145,12 @@ export default function Planillas() {
                   <tr key={p.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-900">{p.codigo_planilla || "—"}</div>
-                      <div className="text-xs text-gray-400">{empresaMap[p.empresa_id] || "—"}</div>
+                      <div className="text-xs text-gray-400">{empresaMap[p.empresa_id]?.nombre_comercial || empresaMap[p.empresa_id]?.nombre_legal || "—"}</div>
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell capitalize text-gray-600">{p.tipo_planilla}</td>
-                    <td className="px-4 py-3 hidden lg:table-cell text-xs text-gray-500">{periodoMap[p.periodo_id] || "—"}</td>
+                    <td className="px-4 py-3 hidden lg:table-cell text-xs text-gray-500">
+                      {periodoMap[p.periodo_id] ? `${periodoMap[p.periodo_id].tipo_periodo} · ${periodoMap[p.periodo_id].fecha_inicio} → ${periodoMap[p.periodo_id].fecha_fin}` : "—"}
+                    </td>
                     <td className="px-4 py-3 text-right hidden md:table-cell font-mono text-gray-800">
                       {p.total_neto ? `₡ ${Number(p.total_neto).toLocaleString()}` : "—"}
                     </td>
@@ -151,33 +158,40 @@ export default function Planillas() {
                       <Badge className={estadoColor[p.estado]}>{p.estado}</Badge>
                     </td>
                     <td className="px-4 py-3 text-right">
-                     <div className="flex items-center justify-end gap-1">
-                       {/* Calcular */}
-                       {!['pagado','anulado'].includes(p.estado) && (
-                         <button
-                           onClick={() => handleCalcular(p)}
-                           disabled={calculando === p.id}
-                           title="Calcular planilla automáticamente"
-                           className="text-gray-400 hover:text-emerald-600 p-1.5 rounded hover:bg-emerald-50 transition-colors disabled:opacity-50"
-                         >
-                           {calculando === p.id
-                             ? <Loader2 className="w-4 h-4 animate-spin" />
-                             : <Calculator className="w-4 h-4" />}
-                         </button>
-                       )}
-                       {/* Ver detalle */}
-                       <button
-                         onClick={() => setDetalleModal(p)}
-                         title="Ver detalle"
-                         className="text-gray-400 hover:text-blue-600 p-1.5 rounded hover:bg-blue-50 transition-colors"
-                       >
-                         <Eye className="w-4 h-4" />
-                       </button>
-                       {/* Editar */}
-                       <button onClick={() => openEdit(p)} className="text-gray-400 hover:text-gray-600 p-1.5 rounded hover:bg-gray-50 transition-colors">
-                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                       </button>
-                     </div>
+                      <div className="flex items-center justify-end gap-1">
+                        {/* Recalcular */}
+                        {!['pagado', 'anulado'].includes(p.estado) && (
+                          <button
+                            onClick={() => handleCalcular(p)}
+                            disabled={calculando === p.id}
+                            title="Recalcular planilla"
+                            className="text-gray-400 hover:text-emerald-600 p-1.5 rounded hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                          >
+                            {calculando === p.id
+                              ? <Loader2 className="w-4 h-4 animate-spin" />
+                              : <Calculator className="w-4 h-4" />}
+                          </button>
+                        )}
+                        {/* Visualizar */}
+                        <button
+                          onClick={() => setDetalleModal(p)}
+                          title="Visualizar detalle"
+                          className="text-gray-400 hover:text-blue-600 p-1.5 rounded hover:bg-blue-50 transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        {/* Descargar boletas */}
+                        <button
+                          onClick={() => handleDescargarTodas(p)}
+                          disabled={descargando === p.id}
+                          title="Descargar boletas PDF de todos los empleados"
+                          className="text-gray-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
+                        >
+                          {descargando === p.id
+                            ? <Loader2 className="w-4 h-4 animate-spin" />
+                            : <FileText className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -201,7 +215,7 @@ export default function Planillas() {
           <div className="grid gap-4 mt-1">
             <div className="space-y-1">
               <Label>Empresa *</Label>
-              <Select value={autoForm.empresa_id} onValueChange={v => setAutoForm(f => ({ ...f, empresa_id: v }))}>
+              <Select value={autoForm.empresa_id} onValueChange={v => setAutoForm(f => ({ ...f, empresa_id: v, periodo_id: "" }))}>
                 <SelectTrigger><SelectValue placeholder="Seleccionar empresa" /></SelectTrigger>
                 <SelectContent>{empresas.map(e => <SelectItem key={e.id} value={e.id}>{e.nombre_comercial || e.nombre_legal}</SelectItem>)}</SelectContent>
               </Select>
@@ -247,65 +261,6 @@ export default function Planillas() {
       {detalleModal && (
         <PlanillaDetalleModal planilla={detalleModal} onClose={() => setDetalleModal(null)} />
       )}
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar Planilla" : "Nueva Planilla"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <div className="space-y-1">
-              <Label>Empresa *</Label>
-              <Select value={form.empresa_id} onValueChange={v => set("empresa_id", v)}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                <SelectContent>{empresas.map(e => <SelectItem key={e.id} value={e.id}>{e.nombre_comercial || e.nombre_legal}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>Período</Label>
-              <Select value={form.periodo_id} onValueChange={v => set("periodo_id", v)}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                <SelectContent>{periodos.map(p => <SelectItem key={p.id} value={p.id}>{p.tipo_periodo} · {p.fecha_inicio}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>Tipo Planilla</Label>
-              <Select value={form.tipo_planilla} onValueChange={v => set("tipo_planilla", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ordinaria">Ordinaria</SelectItem>
-                  <SelectItem value="extraordinaria">Extraordinaria</SelectItem>
-                  <SelectItem value="aguinaldo">Aguinaldo</SelectItem>
-                  <SelectItem value="liquidacion">Liquidación</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>Estado</Label>
-              <Select value={form.estado} onValueChange={v => set("estado", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.keys(estadoColor).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="col-span-2 space-y-1">
-              <Label>Código</Label>
-              <Input value={form.codigo_planilla || ""} onChange={e => set("codigo_planilla", e.target.value)} placeholder="PLN-001" />
-            </div>
-            <div className="col-span-2 space-y-1">
-              <Label>Observación</Label>
-              <Input value={form.observacion || ""} onChange={e => set("observacion", e.target.value)} />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button className="bg-blue-700 hover:bg-blue-800" onClick={() => save.mutate(form)} disabled={save.isPending}>
-              {save.isPending ? "Guardando..." : "Guardar"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
