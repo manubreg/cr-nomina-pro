@@ -188,6 +188,17 @@ export default function ReportesLegales() {
           selectedPeriodo={selectedPeriodo}
           empresa_id={empresaId}
         />
+
+        {/* Reporte Banco Popular */}
+        <ReporteRetenciones 
+          titulo="Retenciones Banco Popular"
+          descripcion="Retenciones del Banco Popular por seguro y servicios bancarios."
+          color="text-blue-600"
+          colorBg="bg-blue-100"
+          funcionName="generarReporteBancoPopular"
+          selectedPeriodo={selectedPeriodo}
+          empresa_id={empresaId}
+        />
       </div>
     </div>
   );
