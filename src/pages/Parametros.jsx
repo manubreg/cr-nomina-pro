@@ -299,7 +299,7 @@ export default function Parametros() {
     onSuccess: () => { qc.invalidateQueries(["parametros"]); setOpen(false); },
   });
 
-  const openNew = () => { setForm(emptyParam); setEditing(null); setOpen(true); };
+  const openNew = () => { setForm({ ...emptyParam, datos_json: "" }); setEditing(null); setOpen(true); };
   const openEdit = (p) => { setForm(p); setEditing(p.id); setOpen(true); };
   const filtered = tipoFiltro === "todos" ? params : params.filter(p => p.tipo === tipoFiltro);
 
