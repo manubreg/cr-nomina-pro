@@ -76,6 +76,7 @@ export default function ReportesLegales() {
         </CardContent>
       </Card>
 
+      <h2 className="text-xl font-semibold mt-8 mb-4">Reportes de Gobierno</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Reporte CCSS */}
         <Card>
@@ -141,6 +142,103 @@ export default function ReportesLegales() {
           </CardContent>
         </Card>
       </div>
+
+      <h2 className="text-xl font-semibold mt-8 mb-4">Reportes de Retenciones</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Reporte ISR */}
+        <ReporteRetenciones 
+          titulo="Retenciones ISR"
+          descripcion="Retenciones de Impuesto sobre la Renta por empleado."
+          color="text-red-600"
+          colorBg="bg-red-100"
+          funcionName="generarReporteISR"
+          selectedPeriodo={selectedPeriodo}
+          empresa_id={empresaId}
+        />
+
+        {/* Reporte Embargos */}
+        <ReporteRetenciones 
+          titulo="Embargos y Pensiones"
+          descripcion="Embargos judiciales y retenciones por pensiones."
+          color="text-orange-600"
+          colorBg="bg-orange-100"
+          funcionName="generarReporteEmbargos"
+          selectedPeriodo={selectedPeriodo}
+          empresa_id={empresaId}
+        />
+
+        {/* Reporte Solidarista */}
+        <ReporteRetenciones 
+          titulo="Asociación Solidarista"
+          descripcion="Aportes a asociación solidarista del empleado."
+          color="text-purple-600"
+          colorBg="bg-purple-100"
+          funcionName="generarReporteSolidarista"
+          selectedPeriodo={selectedPeriodo}
+          empresa_id={empresaId}
+        />
+
+        {/* Reporte Otras Deducciones */}
+        <ReporteRetenciones 
+          titulo="Otras Deducciones"
+          descripcion="Deducciones varias no clasificadas en otras categorías."
+          color="text-gray-600"
+          colorBg="bg-gray-100"
+          funcionName="generarReporteOtrasDeducciones"
+          selectedPeriodo={selectedPeriodo}
+          empresa_id={empresaId}
+        />
+      </div>
     </div>
+  );
+}
+
+function ReporteRetenciones({ titulo, descripcion, color, colorBg, funcionName, selectedPeriodo, empresa_id }) {
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const res = await base44.functions.invoke(funcionName, {
+        periodo_id: selectedPeriodo,
+        empresa_id,
+      });
+      const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${funcionName}_${selectedPeriodo}.xlsx`;
+      a.click();
+    },
+    onSuccess: () => toast.success('Reporte descargado'),
+    onError: (err) => toast.error(err.message),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className={`w-5 h-5 ${color}`} />
+          {titulo}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-gray-600">{descripcion}</p>
+        <Button
+          onClick={() => mutation.mutate()}
+          disabled={!selectedPeriodo || mutation.isPending}
+          className="w-full gap-2"
+        >
+          {mutation.isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Generando...
+            </>
+          ) : (
+            <>
+              <Download className="w-4 h-4" />
+              Descargar Excel
+            </>
+          )}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
