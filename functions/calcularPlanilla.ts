@@ -19,11 +19,11 @@ Deno.serve(async (req) => {
   if (!planilla_id) return Response.json({ error: 'planilla_id requerido' }, { status: 400 });
 
   // ── 1. Cargar planilla y período ─────────────────────────────────────────
-  const [planillas, periodos] = await Promise.all([
-    base44.entities.Planilla.filter({ id: planilla_id }),
+  const [todasPlanillas, periodos] = await Promise.all([
+    base44.entities.Planilla.list(),
     base44.entities.PeriodoPlanilla.list(),
   ]);
-  const planilla = planillas[0];
+  const planilla = todasPlanillas.find(p => p.id === planilla_id);
   if (!planilla) return Response.json({ error: 'Planilla no encontrada' }, { status: 404 });
   if (planilla.estado === 'pagado' || planilla.estado === 'anulado') {
     return Response.json({ error: 'No se puede recalcular una planilla pagada o anulada' }, { status: 400 });
