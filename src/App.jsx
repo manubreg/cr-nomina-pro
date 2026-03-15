@@ -25,6 +25,7 @@ import Incapacidades from './pages/Incapacidades';
 import AguinaldoPage from './pages/AguinaldoPage';
 import Liquidaciones from './pages/Liquidaciones';
 import Reportes from './pages/Reportes';
+import ReportesLegales from './pages/ReportesLegales';
 import Parametros from './pages/Parametros';
 import Usuarios from './pages/Usuarios';
 import AuditoriaPage from './pages/Auditoria';
@@ -85,6 +86,7 @@ const AuthenticatedApp = () => {
         <Route path="/Aguinaldo" element={<AguinaldoPage />} />
         <Route path="/Liquidaciones" element={<Liquidaciones />} />
         <Route path="/Reportes" element={<Reportes />} />
+        <Route path="/ReportesLegales" element={<ReportesLegales />} />
         <Route path="/Parametros" element={<Parametros />} />
         <Route path="/Usuarios" element={<Usuarios />} />
         <Route path="/Auditoria" element={<AuditoriaPage />} />
