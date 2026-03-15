@@ -33,7 +33,8 @@ Deno.serve(async (req) => {
   const empresa_id = planilla.empresa_id;
 
   // ── 2. Cargar parámetros legales vigentes ────────────────────────────────
-  const parametros = await base44.entities.ParametroLegal.filter({ empresa_id, estado: 'vigente' });
+  const todosParams = await base44.entities.ParametroLegal.list();
+  const parametros = todosParams.filter(p => p.empresa_id === empresa_id && p.estado === 'vigente');
 
   const getParam = (tipo) => {
     const p = parametros.find(p => p.tipo === tipo);
