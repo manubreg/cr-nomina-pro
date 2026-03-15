@@ -150,6 +150,7 @@ export default function EmpleadoModal({ empleado, departamentos, onClose, onSave
                   {departamentos.map(d => <option key={d.id} value={d.id}>{d.nombre}</option>)}
                 </select>
               </F>
+              <F label="Centro de Costos"><Input field="centro_costo_id" placeholder="Seleccionar centro" /></F>
               <F label="Salario Base" required>
                 <MoneyInput value={form.salario_base || ""} onChange={v => set("salario_base", v)} moneda={form.moneda} placeholder="750000.00" />
               </F>
