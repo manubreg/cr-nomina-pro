@@ -14,27 +14,28 @@ const estadoColors = {
 };
 
 export default function Periodos() {
+  const { empresaId, filterByEmpresa, empresas } = useEmpresaContext();
   const [periodos, setPeriodos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ tipo_periodo: "mensual", fecha_inicio: "", fecha_fin: "", fecha_pago: "", estado: "abierto", empresa_id: "empresa_demo" });
+  const [form, setForm] = useState({ tipo_periodo: "mensual", fecha_inicio: "", fecha_fin: "", fecha_pago: "", estado: "abierto", empresa_id: "" });
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
     setLoading(true);
     const data = await base44.entities.PeriodoPlanilla.list("-created_date", 100);
-    setPeriodos(data);
+    setPeriodos(filterByEmpresa(data));
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [empresaId]);
 
   const handleSave = async () => {
     setSaving(true);
     await base44.entities.PeriodoPlanilla.create(form);
     setSaving(false);
     setShowForm(false);
-    setForm({ tipo_periodo: "mensual", fecha_inicio: "", fecha_fin: "", fecha_pago: "", estado: "abierto", empresa_id: "empresa_demo" });
+    setForm({ tipo_periodo: "mensual", fecha_inicio: "", fecha_fin: "", fecha_pago: "", estado: "abierto", empresa_id: empresaId || "" });
     load();
   };
 
@@ -60,6 +61,13 @@ export default function Periodos() {
         <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
           <h3 className="text-sm font-semibold text-gray-700 mb-4">Crear Nuevo Periodo</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-gray-600">Empresa</label>
+              <Select value={form.empresa_id} onValueChange={v => setForm(p => ({ ...p, empresa_id: v }))}>
+                <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar empresa" /></SelectTrigger>
+                <SelectContent>{empresas.map(e => <SelectItem key={e.id} value={e.id}>{e.nombre_comercial || e.nombre_legal}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
             <div className="space-y-1">
               <label className="text-xs font-medium text-gray-600">Tipo</label>
               <select value={form.tipo_periodo} onChange={e => setForm(p => ({ ...p, tipo_periodo: e.target.value }))}
