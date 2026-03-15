@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Building2, Users, FileText, CalendarDays, ClipboardList,
   Receipt, Umbrella, Activity, Gift, LogOut as LogOutIcon, Settings, Search,
   Bell, ChevronDown, Menu, X, ShieldCheck, BookOpen, BarChart3, Briefcase,
-  ChevronRight, UserCog
+  ChevronRight, UserCog, Calendar
 } from "lucide-react";
 
 const navItems = [
