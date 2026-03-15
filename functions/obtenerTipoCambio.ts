@@ -41,6 +41,7 @@ async function fetchBCCR(codigo, fecha, email, token) {
   });
   const res = await fetch(`${BCCR_WS}?${params.toString()}`);
   const text = await res.text();
+  console.log(`BCCR [${codigo}] ${fechaStr}:`, text.substring(0, 300));
   const match = text.match(/<NUM_VALOR>([\d.,]+)<\/NUM_VALOR>/);
   if (!match) return null;
   return parseFloat(match[1].replace(",", "."));
