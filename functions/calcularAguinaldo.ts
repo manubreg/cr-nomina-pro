@@ -27,7 +27,16 @@ Deno.serve(async (req) => {
     const emp = await base44.entities.Empleado.get(empleado_id);
     if (!emp) return Response.json({ error: 'Empleado no encontrado' }, { status: 404 });
 
-    const salarioBase = Number(emp.salario_base) || 0;
+    // Convertir salario a CRC si está en USD, usando TC de hoy (o viernes anterior si fin de semana)
+    const salarioBaseOrig = Number(emp.salario_base) || 0;
+    let salarioBase = salarioBaseOrig;
+    if (emp.moneda === "USD") {
+      try {
+        const tcRes = await base44.functions.invoke("obtenerTipoCambio", {});
+        const tc = tcRes?.venta || tcRes?.compra || 1;
+        salarioBase = Math.round(salarioBaseOrig * tc);
+      } catch { /* usa valor original */ }
+    }
     const fechaIngreso = new Date(emp.fecha_ingreso);
     const anioNum = Number(anio);
 
