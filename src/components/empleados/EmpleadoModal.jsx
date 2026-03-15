@@ -5,7 +5,7 @@ import MoneyInput from "./MoneyInput";
 
 const TABS = ["Personal", "Laboral", "Bancario", "Otros"];
 
-export default function EmpleadoModal({ empleado, departamentos = [], centrosCosto = [], puestos = [], onClose, onSaved }) {
+export default function EmpleadoModal({ empleado, departamentos = [], centrosCosto = [], puestos = [], empleados = [], onClose, onSaved }) {
   const [tab, setTab] = useState(0);
   const [form, setForm] = useState(empleado || {
     empresa_id: "empresa_demo",
@@ -13,13 +13,14 @@ export default function EmpleadoModal({ empleado, departamentos = [], centrosCos
     tipo_identificacion: "cedula", fecha_nacimiento: "",
     fecha_ingreso: "", estado: "activo", genero: "no_especificado",
     nacionalidad: "costarricense", puesto: "", departamento_id: "",
-    salario_base: "", frecuencia_pago: "mensual", moneda: "CRC",
+    jefatura_id: "", salario_base: "", frecuencia_pago: "mensual", moneda: "CRC",
     tipo_jornada: "diurna", horas_jornada: 8, correo: "", telefono: "",
     banco: "", cuenta_bancaria: "", cuenta_iban: "",
     asegurado_ccss: true, observaciones: "",
     tipo_contrato: "indefinido", fecha_fin_contrato: ""
   });
   const [saving, setSaving] = useState(false);
+  const [jefaturaBusqueda, setJefaturaBusqueda] = useState("");
 
   const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
 
@@ -162,6 +163,48 @@ export default function EmpleadoModal({ empleado, departamentos = [], centrosCos
                   <option value="">— Seleccionar centro —</option>
                   {centrosCosto.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                 </select>
+              </F>
+              <F label="Jefatura">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Buscar empleado..."
+                    value={jefaturaBusqueda}
+                    onChange={e => setJefaturaBusqueda(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {jefaturaBusqueda && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                      {empleados
+                        .filter(e => `${e.nombre} ${e.apellidos}`.toLowerCase().includes(jefaturaBusqueda.toLowerCase()))
+                        .map(e => (
+                          <button
+                            key={e.id}
+                            type="button"
+                            onClick={() => {
+                              set("jefatura_id", e.id);
+                              setJefaturaBusqueda(`${e.nombre} ${e.apellidos}`);
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm border-b border-gray-100 last:border-b-0"
+                          >
+                            {e.nombre} {e.apellidos}
+                          </button>
+                        ))}
+                      {empleados.filter(e => `${e.nombre} ${e.apellidos}`.toLowerCase().includes(jefaturaBusqueda.toLowerCase())).length === 0 && (
+                        <div className="px-3 py-2 text-sm text-gray-400">Sin resultados</div>
+                      )}
+                    </div>
+                  )}
+                  {form.jefatura_id && (
+                    <button
+                      type="button"
+                      onClick={() => { set("jefatura_id", ""); setJefaturaBusqueda(""); }}
+                      className="text-xs text-red-500 mt-1 hover:text-red-700"
+                    >
+                      Limpiar selección
+                    </button>
+                  )}
+                </div>
               </F>
               <F label="Salario Base" required>
                 <MoneyInput value={form.salario_base || ""} onChange={v => set("salario_base", v)} moneda={form.moneda} placeholder="750000.00" />
