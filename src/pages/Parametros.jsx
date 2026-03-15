@@ -400,17 +400,8 @@ export default function Parametros() {
               </Select>
             </div>
             <div className="col-span-2 space-y-1">
-              <Label>{form.tipo === "tramo_impuesto" ? "Tramos de Impuesto" : "Datos (configuración)"}</Label>
-              {form.tipo === "tramo_impuesto" ? (
-                <TramosEditor value={form.datos_json} onChange={v => set("datos_json", v)} />
-              ) : (
-                <textarea
-                  className="w-full border border-gray-200 rounded-lg p-2 text-xs font-mono resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={form.datos_json}
-                  onChange={e => set("datos_json", e.target.value)}
-                  placeholder='{"porcentaje": 5.5}'
-                />
-              )}
+              <Label>Configuración</Label>
+              <DatosEditor tipo={form.tipo} value={form.datos_json} onChange={v => set("datos_json", v)} />
             </div>
             <div className="col-span-2 space-y-1">
               <Label>Observación</Label>
