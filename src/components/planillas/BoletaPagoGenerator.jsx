@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, FileSpreadsheet, Download, Loader2 } from "lucide-react";
+import { FileText, FileSpreadsheet, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 
