@@ -113,6 +113,31 @@ Deno.serve(async (req) => {
       return Response.json({ error: `No se encontró tipo de cambio para ${fechaISO}` }, { status: 404 });
     }
 
+    // Guardar automáticamente en BD para no volver a consultar el BCCR
+    const datos_json = JSON.stringify({ moneda: "USD", compra, venta });
+    const existentes = await base44.asServiceRole.entities.ParametroLegal.filter({
+      tipo: "tipo_cambio",
+      fecha_inicio_vigencia: fechaEncontrada,
+    });
+    if (existentes.length > 0) {
+      await base44.asServiceRole.entities.ParametroLegal.update(existentes[0].id, {
+        datos_json,
+        nombre: `Tipo de Cambio BCCR ${fechaEncontrada}`,
+        estado: "vigente",
+        version: new Date().toISOString(),
+      });
+    } else {
+      await base44.asServiceRole.entities.ParametroLegal.create({
+        tipo: "tipo_cambio",
+        nombre: `Tipo de Cambio BCCR ${fechaEncontrada}`,
+        version: "auto",
+        datos_json,
+        fecha_inicio_vigencia: fechaEncontrada,
+        estado: "vigente",
+        observacion: "Guardado automáticamente al consultar el BCCR en tiempo real",
+      });
+    }
+
     return Response.json({
       fecha: fechaEncontrada,
       compra,
