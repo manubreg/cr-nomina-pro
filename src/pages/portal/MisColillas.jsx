@@ -32,7 +32,8 @@ function ColillaCard({ detalle, movimientos, periodo, monedaEmpleado }) {
         <div className="flex items-center gap-4">
           <div className="text-right">
             <p className="text-xs text-gray-400">Neto a pagar</p>
-            <p className="font-bold text-blue-700">{formatCRC(detalle.neto_pagar)}</p>
+            <p className="font-bold text-blue-700">{formatCurrency(detalle.neto_pagar, monedaEmpleado)}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{monedaEmpleado}</p>
           </div>
           {expanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
         </div>
