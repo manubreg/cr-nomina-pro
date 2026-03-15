@@ -39,7 +39,33 @@ export default function Vacaciones() {
     onSuccess: () => qc.invalidateQueries(["vacSolicitudes"]),
   });
 
-  const openNew = () => { setForm(emptySolicitud); setEditing(null); setOpen(true); };
+  const [calculando, setCalculando] = useState(false);
+  const [detalleCalculo, setDetalleCalculo] = useState(null);
+  const [openSaldo, setOpenSaldo] = useState(false);
+  const [saldoForm, setSaldoForm] = useState({ empleado_id: "", empresa_id: "" });
+
+  const calcularSaldoAuto = async () => {
+    if (!saldoForm.empleado_id) return;
+    setCalculando(true);
+    setDetalleCalculo(null);
+    const res = await base44.functions.invoke('calcularVacaciones', {
+      empleado_id: saldoForm.empleado_id,
+      empresa_id: saldoForm.empresa_id || empresaId,
+    });
+    if (res.data?.ok) {
+      const r = res.data.resultado;
+      setSaldoForm(f => ({ ...f, ...r }));
+      setDetalleCalculo(r._detalle);
+    }
+    setCalculando(false);
+  };
+
+  const saveSaldo = useMutation({
+    mutationFn: (data) => base44.entities.VacacionSaldo.create(data),
+    onSuccess: () => { qc.invalidateQueries(["vacSaldos"]); setOpenSaldo(false); setDetalleCalculo(null); },
+  });
+
+  const openNew = () => { setForm({ ...emptySolicitud, empresa_id: empresaId || "" }); setEditing(null); setOpen(true); };
   const openEdit = (s) => { setForm(s); setEditing(s.id); setOpen(true); };
 
   return (

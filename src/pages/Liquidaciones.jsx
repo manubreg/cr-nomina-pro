@@ -39,8 +39,29 @@ export default function Liquidaciones() {
     onSuccess: () => { qc.invalidateQueries(["liquidaciones"]); setOpen(false); },
   });
 
-  const openNew = () => { setForm(emptyLiq); setEditing(null); setOpen(true); };
-  const openEdit = (l) => { setForm(l); setEditing(l.id); setOpen(true); };
+  const [calculando, setCalculando] = useState(false);
+  const [detalleCalculo, setDetalleCalculo] = useState(null);
+
+  const calcularAuto = async () => {
+    if (!form.empleado_id || !form.fecha_salida || !form.motivo_salida) return;
+    setCalculando(true);
+    setDetalleCalculo(null);
+    const res = await base44.functions.invoke('calcularLiquidacion', {
+      empleado_id: form.empleado_id,
+      fecha_salida: form.fecha_salida,
+      motivo_salida: form.motivo_salida,
+      empresa_id: form.empresa_id || empresaId,
+    });
+    if (res.data?.ok) {
+      const r = res.data.resultado;
+      setForm(f => recalcularNeto({ ...f, ...r }));
+      setDetalleCalculo(r._detalle);
+    }
+    setCalculando(false);
+  };
+
+  const openNew = () => { setForm({ ...emptyLiq, empresa_id: empresaId || "" }); setEditing(null); setDetalleCalculo(null); setOpen(true); };
+  const openEdit = (l) => { setForm(l); setEditing(l.id); setDetalleCalculo(null); setOpen(true); };
 
   return (
     <div className="p-6 space-y-5">

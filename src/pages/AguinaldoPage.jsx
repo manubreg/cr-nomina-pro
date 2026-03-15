@@ -31,8 +31,28 @@ export default function AguinaldoPage() {
     onSuccess: () => { qc.invalidateQueries(["aguinaldos"]); setOpen(false); },
   });
 
-  const openNew = () => { setForm(emptyAg); setEditing(null); setOpen(true); };
-  const openEdit = (a) => { setForm(a); setEditing(a.id); setOpen(true); };
+  const [calculando, setCalculando] = useState(false);
+  const [detalleCalculo, setDetalleCalculo] = useState(null);
+
+  const calcularAuto = async () => {
+    if (!form.empleado_id || !form.anio) return;
+    setCalculando(true);
+    setDetalleCalculo(null);
+    const res = await base44.functions.invoke('calcularAguinaldo', {
+      empleado_id: form.empleado_id,
+      anio: form.anio,
+      empresa_id: form.empresa_id || empresaId,
+    });
+    if (res.data?.ok) {
+      const r = res.data.resultado;
+      setForm(f => ({ ...f, ...r }));
+      setDetalleCalculo(r._detalle);
+    }
+    setCalculando(false);
+  };
+
+  const openNew = () => { setForm({ ...emptyAg, empresa_id: empresaId || "" }); setEditing(null); setDetalleCalculo(null); setOpen(true); };
+  const openEdit = (a) => { setForm(a); setEditing(a.id); setDetalleCalculo(null); setOpen(true); };
 
   return (
     <div className="p-6 space-y-5">

@@ -32,8 +32,30 @@ export default function Incapacidades() {
     onSuccess: () => { qc.invalidateQueries(["incapacidades"]); setOpen(false); },
   });
 
-  const openNew = () => { setForm(emptyInc); setEditing(null); setOpen(true); };
-  const openEdit = (i) => { setForm(i); setEditing(i.id); setOpen(true); };
+  const [calculando, setCalculando] = useState(false);
+  const [detalleCalculo, setDetalleCalculo] = useState(null);
+
+  const calcularAuto = async () => {
+    if (!form.empleado_id || !form.fecha_inicio || !form.fecha_fin || !form.tipo_incapacidad) return;
+    setCalculando(true);
+    setDetalleCalculo(null);
+    const res = await base44.functions.invoke('calcularIncapacidad', {
+      empleado_id: form.empleado_id,
+      fecha_inicio: form.fecha_inicio,
+      fecha_fin: form.fecha_fin,
+      tipo_incapacidad: form.tipo_incapacidad,
+      empresa_id: form.empresa_id || empresaId,
+    });
+    if (res.data?.ok) {
+      const r = res.data.resultado;
+      setForm(f => ({ ...f, porcentaje_reconocimiento: r.porcentaje_reconocimiento, entidad_emisora: r.entidad_emisora, dias: r.dias }));
+      setDetalleCalculo(r._detalle);
+    }
+    setCalculando(false);
+  };
+
+  const openNew = () => { setForm({ ...emptyInc, empresa_id: empresaId || "" }); setEditing(null); setDetalleCalculo(null); setOpen(true); };
+  const openEdit = (i) => { setForm(i); setEditing(i.id); setDetalleCalculo(null); setOpen(true); };
 
   return (
     <div className="p-6 space-y-5">
