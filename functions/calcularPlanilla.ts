@@ -224,9 +224,9 @@ Deno.serve(async (req) => {
       totalCCSSEmp = montoCCSSEmp.sem + montoCCSSEmp.ivm + montoCCSSEmp.bp;
 
       // ─ Deducciones CCSS empleado ───────────────────────────────────────────
-      movs.push({ tipo_movimiento: 'deduccion', descripcion: `CCSS - SEM (${ccssEmpleado.sem}%)`,             monto: montoCCSSEmp.sem, porcentaje: ccssEmpleado.sem,          base_calculo: baseCCSS, orden_calculo: 20, origen: 'automatico' });
-      movs.push({ tipo_movimiento: 'deduccion', descripcion: `CCSS - IVM (${ccssEmpleado.ivm}%)`,             monto: montoCCSSEmp.ivm, porcentaje: ccssEmpleado.ivm,          base_calculo: baseCCSS, orden_calculo: 21, origen: 'automatico' });
-      movs.push({ tipo_movimiento: 'deduccion', descripcion: `Banco Popular (${ccssEmpleado.banco_popular}%)`, monto: montoCCSSEmp.bp,  porcentaje: ccssEmpleado.banco_popular, base_calculo: baseCCSS, orden_calculo: 22, origen: 'automatico' });
+      movs.push({ tipo_movimiento: 'deduccion', descripcion: `CCSS - SEM (${ccssEmpleado.sem}%)`,             monto: montoCCSSEmp.sem, cantidad: 1, tarifa: 0, porcentaje: ccssEmpleado.sem,          base_calculo: baseCCSS, orden_calculo: 20, origen: 'automatico' });
+      movs.push({ tipo_movimiento: 'deduccion', descripcion: `CCSS - IVM (${ccssEmpleado.ivm}%)`,             monto: montoCCSSEmp.ivm, cantidad: 1, tarifa: 0, porcentaje: ccssEmpleado.ivm,          base_calculo: baseCCSS, orden_calculo: 21, origen: 'automatico' });
+      movs.push({ tipo_movimiento: 'deduccion', descripcion: `Banco Popular (${ccssEmpleado.banco_popular}%)`, monto: montoCCSSEmp.bp,  cantidad: 1, tarifa: 0, porcentaje: ccssEmpleado.banco_popular, base_calculo: baseCCSS, orden_calculo: 22, origen: 'automatico' });
     }
 
     // ─ Base ISR = ingresos - CCSS empleado (si aplica) ───────────────────────
