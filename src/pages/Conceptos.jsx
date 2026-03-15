@@ -14,13 +14,15 @@ const emptyConcept = { codigo: "", nombre: "", tipo: "ingreso", categoria: "ordi
 
 export default function Conceptos() {
   const qc = useQueryClient();
+  const { empresaId, filterByEmpresa } = useEmpresaContext();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyConcept);
   const [editing, setEditing] = useState(null);
   const [tipoFiltro, setTipoFiltro] = useState("todos");
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const { data: conceptos = [], isLoading } = useQuery({ queryKey: ["conceptos"], queryFn: () => base44.entities.ConceptoPago.list("prioridad_calculo") });
+  const { data: conceptosRaw = [], isLoading } = useQuery({ queryKey: ["conceptos", empresaId], queryFn: () => base44.entities.ConceptoPago.list("prioridad_calculo") });
+  const conceptos = filterByEmpresa(conceptosRaw);
 
   const save = useMutation({
     mutationFn: (data) => editing ? base44.entities.ConceptoPago.update(editing, data) : base44.entities.ConceptoPago.create(data),

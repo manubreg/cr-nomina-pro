@@ -16,13 +16,15 @@ const emptyParam = { tipo: "", nombre: "", version: "1.0", datos_json: "", fecha
 
 export default function Parametros() {
   const qc = useQueryClient();
+  const { empresaId, filterByEmpresa } = useEmpresaContext();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyParam);
   const [editing, setEditing] = useState(null);
   const [tipoFiltro, setTipoFiltro] = useState("todos");
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const { data: params = [], isLoading } = useQuery({ queryKey: ["parametros"], queryFn: () => base44.entities.ParametroLegal.list("-fecha_inicio_vigencia") });
+  const { data: paramsRaw = [], isLoading } = useQuery({ queryKey: ["parametros", empresaId], queryFn: () => base44.entities.ParametroLegal.list("-fecha_inicio_vigencia") });
+  const params = filterByEmpresa(paramsRaw);
 
   const save = useMutation({
     mutationFn: (data) => editing ? base44.entities.ParametroLegal.update(editing, data) : base44.entities.ParametroLegal.create(data),
