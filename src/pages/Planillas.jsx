@@ -104,9 +104,14 @@ export default function Planillas() {
           <h1 className="text-2xl font-bold text-gray-900">Planillas</h1>
           <p className="text-gray-500 text-sm mt-1">{planillas.length} planillas encontradas</p>
         </div>
-        <Button onClick={openNew} className="bg-blue-700 hover:bg-blue-800">
-          <Plus className="w-4 h-4 mr-2" /> Nueva Planilla
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setAutoModal(true)} className="bg-emerald-600 hover:bg-emerald-700">
+            <Zap className="w-4 h-4 mr-2" /> Planilla Automática
+          </Button>
+          <Button onClick={openNew} variant="outline">
+            <Plus className="w-4 h-4 mr-2" /> Nueva Planilla
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
