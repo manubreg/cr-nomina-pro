@@ -30,7 +30,7 @@ export default function Planillas() {
   const [calculando, setCalculando] = useState(null);
   const [descargando, setDescargando] = useState(null);
   const [autoModal, setAutoModal] = useState(false);
-  const [autoForm, setAutoForm] = useState({ empresa_id: "", periodo_id: "", tipo_planilla: "ordinaria" });
+  const [autoForm, setAutoForm] = useState({ empresa_id: "", periodo_id: "", tipo_planilla: "ordinaria", empleados_ids: [] });
   const [creandoAuto, setCreandoAuto] = useState(false);
   const [eliminando, setEliminando] = useState(null);
 
@@ -60,10 +60,13 @@ export default function Planillas() {
       estado: "borrador",
       codigo_planilla: `PLN-AUTO-${Date.now().toString().slice(-6)}`,
     });
-    const res = await base44.functions.invoke('calcularPlanilla', { planilla_id: nueva.id });
+    const res = await base44.functions.invoke('calcularPlanilla', { 
+      planilla_id: nueva.id,
+      empleados_ids: autoForm.empleados_ids.length > 0 ? autoForm.empleados_ids : undefined
+    });
     setCreandoAuto(false);
     setAutoModal(false);
-    setAutoForm({ empresa_id: "", periodo_id: "", tipo_planilla: "ordinaria" });
+    setAutoForm({ empresa_id: "", periodo_id: "", tipo_planilla: "ordinaria", empleados_ids: [] });
     qc.invalidateQueries(["planillas"]);
     if (res.data?.ok) {
       toast({
@@ -284,17 +287,47 @@ export default function Planillas() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label>Tipo de Planilla</Label>
-              <Select value={autoForm.tipo_planilla} onValueChange={v => setAutoForm(f => ({ ...f, tipo_planilla: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ordinaria">Ordinaria</SelectItem>
-                  <SelectItem value="extraordinaria">Extraordinaria</SelectItem>
-                  <SelectItem value="aguinaldo">Aguinaldo</SelectItem>
-                  <SelectItem value="liquidacion">Liquidación</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+               <Label>Tipo de Planilla</Label>
+               <Select value={autoForm.tipo_planilla} onValueChange={v => setAutoForm(f => ({ ...f, tipo_planilla: v }))}>
+                 <SelectTrigger><SelectValue /></SelectTrigger>
+                 <SelectContent>
+                   <SelectItem value="ordinaria">Ordinaria</SelectItem>
+                   <SelectItem value="extraordinaria">Extraordinaria</SelectItem>
+                   <SelectItem value="aguinaldo">Aguinaldo</SelectItem>
+                   <SelectItem value="liquidacion">Liquidación</SelectItem>
+                 </SelectContent>
+               </Select>
+             </div>
+             <div className="space-y-2">
+               <Label>Empleados (opcional: si no selecciona se procesa toda la nómina)</Label>
+               <div className="border border-gray-200 rounded-lg p-3 max-h-48 overflow-y-auto bg-gray-50">
+                 {empleadosAll
+                   .filter(e => e.empresa_id === autoForm.empresa_id && e.estado === "activo")
+                   .length === 0 ? (
+                   <p className="text-xs text-gray-500">No hay empleados activos</p>
+                 ) : (
+                   empleadosAll
+                     .filter(e => e.empresa_id === autoForm.empresa_id && e.estado === "activo")
+                     .map(emp => (
+                       <label key={emp.id} className="flex items-center gap-2 py-2 cursor-pointer hover:bg-white px-2 rounded text-sm">
+                         <input
+                           type="checkbox"
+                           checked={autoForm.empleados_ids.includes(emp.id)}
+                           onChange={(e) => {
+                             if (e.target.checked) {
+                               setAutoForm(f => ({ ...f, empleados_ids: [...f.empleados_ids, emp.id] }));
+                             } else {
+                               setAutoForm(f => ({ ...f, empleados_ids: f.empleados_ids.filter(id => id !== emp.id) }));
+                             }
+                           }}
+                           className="w-4 h-4"
+                         />
+                         <span>{emp.nombre} {emp.apellidos}</span>
+                       </label>
+                     ))
+                 )}
+               </div>
+             </div>
           </div>
           <div className="flex justify-end gap-2 mt-2">
             <Button variant="outline" onClick={() => setAutoModal(false)} disabled={creandoAuto}>Cancelar</Button>
