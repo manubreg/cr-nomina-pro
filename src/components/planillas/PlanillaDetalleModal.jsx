@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { X, RefreshCw, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import BoletaPagoGenerator from "./BoletaPagoGenerator";
+import BoletaPagoGenerator, { generarBoletaPDF } from "./BoletaPagoGenerator";
 
 const formatCRC = (v) => `₡${Number(v || 0).toLocaleString("es-CR")}`;
 
