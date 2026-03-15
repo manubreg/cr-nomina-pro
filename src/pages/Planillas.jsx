@@ -114,9 +114,33 @@ export default function Planillas() {
                       <Badge className={estadoColor[p.estado]}>{p.estado}</Badge>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => openEdit(p)} className="text-gray-400 hover:text-blue-600 p-1.5 rounded hover:bg-blue-50 transition-colors">
-                        <Eye className="w-4 h-4" />
-                      </button>
+                     <div className="flex items-center justify-end gap-1">
+                       {/* Calcular */}
+                       {!['pagado','anulado'].includes(p.estado) && (
+                         <button
+                           onClick={() => handleCalcular(p)}
+                           disabled={calculando === p.id}
+                           title="Calcular planilla automáticamente"
+                           className="text-gray-400 hover:text-emerald-600 p-1.5 rounded hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                         >
+                           {calculando === p.id
+                             ? <Loader2 className="w-4 h-4 animate-spin" />
+                             : <Calculator className="w-4 h-4" />}
+                         </button>
+                       )}
+                       {/* Ver detalle */}
+                       <button
+                         onClick={() => setDetalleModal(p)}
+                         title="Ver detalle"
+                         className="text-gray-400 hover:text-blue-600 p-1.5 rounded hover:bg-blue-50 transition-colors"
+                       >
+                         <Eye className="w-4 h-4" />
+                       </button>
+                       {/* Editar */}
+                       <button onClick={() => openEdit(p)} className="text-gray-400 hover:text-gray-600 p-1.5 rounded hover:bg-gray-50 transition-colors">
+                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                       </button>
+                     </div>
                     </td>
                   </tr>
                 ))}
