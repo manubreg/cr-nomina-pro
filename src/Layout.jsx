@@ -40,6 +40,7 @@ const navItems = [
   { label: "Parámetros", path: "/Parametros", icon: Settings },
   { label: "Usuarios", path: "/Usuarios", icon: UserCog },
   { label: "Auditoría", path: "/Auditoria", icon: ShieldCheck },
+  { label: "Actualización Mensual", path: "/ReporteActualizacionMensual", icon: Calendar },
 ];
 
 function NavItem({ item, collapsed, location }) {
