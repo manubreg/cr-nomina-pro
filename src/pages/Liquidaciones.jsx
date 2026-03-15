@@ -114,6 +114,9 @@ export default function Liquidaciones() {
           <div className="grid grid-cols-2 gap-4 mt-2">
             <div className="col-span-2 space-y-1">
               <Label>Empleado *</Label>
+            </div>
+            <div className="col-span-2 space-y-1">
+              <Label>Empleado *</Label>
               <Select value={form.empleado_id} onValueChange={v => set("empleado_id", v)}>
                 <SelectTrigger><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
                 <SelectContent>{empleados.map(e => <SelectItem key={e.id} value={e.id}>{e.nombre} {e.apellidos}</SelectItem>)}</SelectContent>
