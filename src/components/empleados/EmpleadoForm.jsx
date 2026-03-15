@@ -16,7 +16,8 @@ const empty = {
   correo: "", telefono: "", direccion: "", salario_base: "",
   frecuencia_pago: "mensual", moneda: "CRC", tipo_jornada: "diurna", horas_jornada: 8,
   banco: "", cuenta_bancaria: "", cuenta_iban: "", sinpe_movil: "",
-  asegurado_ccss: true, observaciones: "", codigo_empleado: "", centro_costo_id: "", jefatura_id: ""
+  asegurado_ccss: true, observaciones: "", codigo_empleado: "", centro_costo_id: "", jefatura_id: "",
+  tipo_contrato: "indefinido", fecha_fin_contrato: ""
 };
 
 export default function EmpleadoForm({ open, onClose, editId, empresas = [], departamentos: depsPropsssss = [], centrosCosto = [], puestos = [], empleados = [] }) {
@@ -135,6 +136,22 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
               <Label>Código Empleado</Label>
               <Input value={form.codigo_empleado} onChange={e => set("codigo_empleado", e.target.value)} placeholder="EMP-001" />
             </div>
+            <div className="space-y-1">
+              <Label>Tipo de Contrato</Label>
+              <Select value={form.tipo_contrato} onValueChange={v => set("tipo_contrato", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="indefinido">Indefinido</SelectItem>
+                  <SelectItem value="temporal">Temporal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {form.tipo_contrato === "temporal" && (
+              <div className="space-y-1">
+                <Label>Fecha Fin de Contrato</Label>
+                <Input type="date" value={form.fecha_fin_contrato} onChange={e => set("fecha_fin_contrato", e.target.value)} />
+              </div>
+            )}
             <div className="space-y-1">
               <Label>Empresa *</Label>
               <Select value={form.empresa_id} onValueChange={v => set("empresa_id", v)}>
