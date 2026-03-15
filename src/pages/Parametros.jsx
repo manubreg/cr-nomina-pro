@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const estadoColor = { vigente: "bg-emerald-100 text-emerald-700", vencido: "bg-red-100 text-red-600", borrador: "bg-gray-100 text-gray-500" };
-const tipos = ["tramo_impuesto","cuota_ccss_empleado","cuota_ccss_patrono","regla_vacaciones","regla_aguinaldo","regla_horas_extra","regla_liquidacion","tope_base","tipo_cambio"];
+const tipos = ["tramo_impuesto","cuota_ccss_empleado","cuota_ccss_patrono","regla_vacaciones","regla_aguinaldo","regla_horas_extra","regla_liquidacion","tipo_cambio"];
 const emptyParam = { tipo: "", nombre: "", version: "1.0", datos_json: "", fecha_inicio_vigencia: "", fecha_fin_vigencia: "", estado: "vigente", observacion: "" };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
