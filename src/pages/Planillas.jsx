@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Receipt, Eye, Calculator, Loader2, Zap, Download, FileText } from "lucide-react";
+import { Receipt, Eye, Calculator, Loader2, Zap, Download, FileText, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -26,11 +26,13 @@ export default function Planillas() {
   const { empresaId, filterByEmpresa } = useEmpresaContext();
   const { toast } = useToast();
   const [detalleModal, setDetalleModal] = useState(null);
+  const [editandoModal, setEditandoModal] = useState(null);
   const [calculando, setCalculando] = useState(null);
   const [descargando, setDescargando] = useState(null);
   const [autoModal, setAutoModal] = useState(false);
   const [autoForm, setAutoForm] = useState({ empresa_id: "", periodo_id: "", tipo_planilla: "ordinaria" });
   const [creandoAuto, setCreandoAuto] = useState(false);
+  const [eliminando, setEliminando] = useState(null);
 
   const { data: planillasRaw = [], isLoading } = useQuery({
     queryKey: ["planillas", empresaId],
@@ -104,6 +106,31 @@ export default function Planillas() {
 
     setDescargando(null);
     toast({ title: "Descarga completa", description: `${detallesPlanilla.length} boletas generadas` });
+  };
+
+  const handleEliminar = async (planilla) => {
+    if (!confirm(`¿Eliminar planilla ${planilla.codigo_planilla}? Esta acción no se puede deshacer.`)) return;
+    setEliminando(planilla.id);
+    
+    try {
+      // Eliminar detalles y movimientos
+      const detalles = await base44.entities.PlanillaDetalle.filter({ planilla_id: planilla.id });
+      const movimientos = await base44.entities.MovimientoPlanilla.filter({ planilla_id: planilla.id });
+      
+      await Promise.all([
+        ...detalles.map(d => base44.entities.PlanillaDetalle.delete(d.id)),
+        ...movimientos.map(m => base44.entities.MovimientoPlanilla.delete(m.id)),
+      ]);
+      
+      // Eliminar planilla
+      await base44.entities.Planilla.delete(planilla.id);
+      qc.invalidateQueries(["planillas"]);
+      toast({ title: "Planilla eliminada", description: `${planilla.codigo_planilla} ha sido eliminada` });
+    } catch (err) {
+      toast({ title: "Error al eliminar", description: err.message, variant: "destructive" });
+    } finally {
+      setEliminando(null);
+    }
   };
 
   return (
@@ -191,6 +218,27 @@ export default function Planillas() {
                             ? <Loader2 className="w-4 h-4 animate-spin" />
                             : <FileText className="w-4 h-4" />}
                         </button>
+                        {/* Editar */}
+                        {!['pagado', 'anulado'].includes(p.estado) && (
+                          <button
+                            onClick={() => setEditandoModal(p)}
+                            title="Editar planilla"
+                            className="text-gray-400 hover:text-orange-600 p-1.5 rounded hover:bg-orange-50 transition-colors"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        {/* Eliminar */}
+                        <button
+                          onClick={() => handleEliminar(p)}
+                          disabled={eliminando === p.id}
+                          title="Eliminar planilla"
+                          className="text-gray-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
+                        >
+                          {eliminando === p.id
+                            ? <Loader2 className="w-4 h-4 animate-spin" />
+                            : <Trash2 className="w-4 h-4" />}
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -260,6 +308,69 @@ export default function Planillas() {
       {/* Modal detalle */}
       {detalleModal && (
         <PlanillaDetalleModal planilla={detalleModal} onClose={() => setDetalleModal(null)} />
+      )}
+
+      {/* Modal editar */}
+      {editandoModal && (
+        <Dialog open={!!editandoModal} onOpenChange={(open) => { if (open) return; setEditandoModal(null); }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Edit2 className="w-5 h-5 text-orange-600" /> Editar Planilla
+              </DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4">
+              <div className="space-y-1">
+                <Label>Código Planilla</Label>
+                <input
+                  type="text"
+                  value={editandoModal.codigo_planilla || ""}
+                  onChange={(e) => setEditandoModal({ ...editandoModal, codigo_planilla: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Estado</Label>
+                <Select value={editandoModal.estado} onValueChange={(v) => setEditandoModal({ ...editandoModal, estado: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="borrador">Borrador</SelectItem>
+                    <SelectItem value="calculado">Calculado</SelectItem>
+                    <SelectItem value="en_revision">En Revisión</SelectItem>
+                    <SelectItem value="aprobado">Aprobado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Observaciones</Label>
+                <textarea
+                  value={editandoModal.observacion || ""}
+                  onChange={(e) => setEditandoModal({ ...editandoModal, observacion: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                  rows="3"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-2">
+              <Button variant="outline" onClick={() => setEditandoModal(null)}>Cancelar</Button>
+              <Button 
+                className="bg-orange-600 hover:bg-orange-700"
+                onClick={async () => {
+                  await base44.entities.Planilla.update(editandoModal.id, {
+                    codigo_planilla: editandoModal.codigo_planilla,
+                    estado: editandoModal.estado,
+                    observacion: editandoModal.observacion,
+                  });
+                  qc.invalidateQueries(["planillas"]);
+                  setEditandoModal(null);
+                  toast({ title: "Planilla actualizada" });
+                }}
+              >
+                <Edit2 className="w-4 h-4 mr-2" /> Guardar Cambios
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
