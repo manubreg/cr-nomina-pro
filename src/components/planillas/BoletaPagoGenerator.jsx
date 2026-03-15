@@ -139,7 +139,7 @@ function drawDeduccionesHeader(doc, y) {
 }
 
 // ─── Generador principal PDF ──────────────────────────────────────────────────
-async function generarBoletaPDF(empresa, empleado, periodo, detalle, movimientos, tramosISR) {
+export async function generarBoletaPDF(empresa, empleado, periodo, detalle, movimientos, tramosISR) {
   const { jsPDF } = await import("jspdf");
 
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
