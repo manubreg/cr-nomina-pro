@@ -55,6 +55,15 @@ Deno.serve(async (req) => {
     { limite_inferior: 4727000,    limite_superior: 999999999,   porcentaje: 25  },
   ];
 
+  // ── 2b. Tipo de cambio del día del período ───────────────────────────────
+  // Si es sábado/domingo se usa el viernes anterior (lógica en obtenerTipoCambio)
+  let tipoCambioVenta = 1;
+  try {
+    const fechaRef = periodo?.fecha_fin || new Date().toISOString().split("T")[0];
+    const tcRes = await base44.functions.invoke("obtenerTipoCambio", { fecha: fechaRef });
+    tipoCambioVenta = tcRes?.venta || tcRes?.compra || 1;
+  } catch { /* si falla, usa 1 (CRC nativo) */ }
+
   // ── 3. Empleados activos de la empresa ────────────────────────────────────
   const [todosEmpleados, todasNovedades, todosConceptos] = await Promise.all([
     base44.entities.Empleado.list(),
