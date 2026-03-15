@@ -118,7 +118,9 @@ Deno.serve(async (req) => {
   let cantidadEmpleados = 0;
 
   for (const emp of empleados) {
-    const salarioMensual = emp.salario_base || 0;
+    // Convertir salario a CRC si está en USD
+    const salarioMensualBase = emp.salario_base || 0;
+    const salarioMensual = emp.moneda === "USD" ? Math.round(salarioMensualBase * tipoCambioVenta) : salarioMensualBase;
     const salarioPeriodo = Math.round(salarioMensual * tipoPlanillaFactor);
 
     const movs = [];
