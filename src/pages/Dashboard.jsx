@@ -115,22 +115,30 @@ export default function Dashboard() {
 
   const sinCuentaBancaria = empleados.filter(e => e.estado === "activo" && !e.cuenta_iban && !e.cuenta_bancaria).length;
 
-  const monthlyData = [
-    { mes: "Ago", neto: 4800000, bruto: 6200000 },
-    { mes: "Sep", neto: 4900000, bruto: 6350000 },
-    { mes: "Oct", neto: 5100000, bruto: 6600000 },
-    { mes: "Nov", neto: 5050000, bruto: 6500000 },
-    { mes: "Dic", neto: 5800000, bruto: 7500000 },
-    { mes: "Ene", neto: planillas[0]?.total_neto || 5300000, bruto: planillas[0]?.total_ingresos || 6800000 },
-  ];
+  // Gráfico evolución planilla — calculado desde los datos filtrados
+  const monthlyData = (() => {
+    const sorted = [...planillas].sort((a, b) => new Date(a.fecha_calculo) - new Date(b.fecha_calculo));
+    const last6 = sorted.slice(-6);
+    return last6.map(p => ({
+      mes: p.codigo_planilla
+        ? p.codigo_planilla.replace("PL-", "").replace(/(\d{4})-(\d{2})/, (_, y, m) => {
+            const months = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+            return `${months[parseInt(m, 10) - 1]} ${y.slice(2)}`;
+          })
+        : p.fecha_calculo?.slice(0, 7) || "—",
+      neto: p.total_neto || 0,
+      bruto: p.total_ingresos || 0,
+    }));
+  })();
 
-  const deptData = [
-    { name: "TI", value: 3 },
-    { name: "RRHH", value: 2 },
-    { name: "Finanzas", value: 2 },
-    { name: "Ventas", value: 2 },
-    { name: "Ops", value: activos - 9 > 0 ? activos - 9 : 1 },
-  ];
+  // Distribución empleados por departamento — calculado desde los datos filtrados
+  const deptMap = {};
+  empleados.filter(e => e.estado === "activo").forEach(e => {
+    const dept = e.departamento_id || "Sin depto";
+    deptMap[dept] = (deptMap[dept] || 0) + 1;
+  });
+  const deptData = Object.entries(deptMap).map(([id, value]) => ({ name: id.length > 15 ? id.slice(0, 10) + "…" : id, value }))
+    .sort((a, b) => b.value - a.value).slice(0, 6);
 
   if (loading) return (
     <div className="flex items-center justify-center h-96">
