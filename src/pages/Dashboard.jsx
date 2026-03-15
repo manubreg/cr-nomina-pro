@@ -88,6 +88,7 @@ export default function Dashboard() {
       setAllIncapacidades(inc);
       setLoading(false);
     });
+    base44.entities.Departamento.list("-created_date", 100).then(setDepartamentos);
   }, []);
 
   useEffect(() => {
