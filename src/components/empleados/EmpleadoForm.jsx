@@ -12,8 +12,8 @@ const empty = {
   nombre: "", apellidos: "", identificacion: "", tipo_identificacion: "cedula",
   fecha_nacimiento: "", fecha_ingreso: "", estado: "activo", genero: "no_especificado",
   nacionalidad: "Costa Rica", puesto: "", departamento_id: "", empresa_id: "",
-  correo: "", telefono: "", direccion: "", salario_base: "", tipo_salario: "mensual",
-  frecuencia_pago: "mensual", tipo_jornada: "diurna", horas_jornada: 8,
+  correo: "", telefono: "", direccion: "", salario_base: "",
+  frecuencia_pago: "mensual", moneda: "CRC", tipo_jornada: "diurna", horas_jornada: 8,
   banco: "", cuenta_bancaria: "", cuenta_iban: "", sinpe_movil: "",
   asegurado_ccss: true, observaciones: ""
 };
