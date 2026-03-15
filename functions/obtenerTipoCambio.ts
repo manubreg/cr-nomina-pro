@@ -51,8 +51,16 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    const body = await req.json().catch(() => ({}));
+    let body = {};
+    try {
+      const text = await req.text();
+      console.log("Raw body:", text);
+      body = text ? JSON.parse(text) : {};
+    } catch(e) {
+      console.log("Body parse error:", e.message);
+    }
     const fechaInput = body.fecha || new Date().toISOString().split("T")[0];
+    console.log("fechaInput:", fechaInput);
 
     // Construir fecha y ajustar si es fin de semana
     let fechaDate = new Date(fechaInput + "T12:00:00Z");
