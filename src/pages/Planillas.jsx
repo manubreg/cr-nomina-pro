@@ -26,10 +26,25 @@ const emptyPlanilla = { empresa_id: "", periodo_id: "", tipo_planilla: "ordinari
 export default function Planillas() {
   const qc = useQueryClient();
   const { empresaId, filterByEmpresa } = useEmpresaContext();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyPlanilla);
   const [editing, setEditing] = useState(null);
+  const [detalleModal, setDetalleModal] = useState(null);
+  const [calculando, setCalculando] = useState(null);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleCalcular = async (planilla) => {
+    setCalculando(planilla.id);
+    const res = await base44.functions.invoke('calcularPlanilla', { planilla_id: planilla.id });
+    setCalculando(null);
+    if (res.data?.ok) {
+      qc.invalidateQueries(["planillas"]);
+      toast({ title: "Planilla calculada", description: `${res.data.empleados_procesados} empleados procesados. Neto: ₡${Number(res.data.total_neto).toLocaleString()}` });
+    } else {
+      toast({ title: "Error al calcular", description: res.data?.error || "Error desconocido", variant: "destructive" });
+    }
+  };
 
   const { data: planillasRaw = [], isLoading } = useQuery({
     queryKey: ["planillas", empresaId],
