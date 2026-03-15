@@ -16,18 +16,21 @@ const empty = {
   correo: "", telefono: "", direccion: "", salario_base: "",
   frecuencia_pago: "mensual", moneda: "CRC", tipo_jornada: "diurna", horas_jornada: 8,
   banco: "", cuenta_bancaria: "", cuenta_iban: "", sinpe_movil: "",
-  asegurado_ccss: true, observaciones: ""
+  asegurado_ccss: true, observaciones: "", codigo_empleado: "", centro_costo_id: "", jefatura_id: ""
 };
 
-export default function EmpleadoForm({ open, onClose, editId, empresas = [] }) {
+export default function EmpleadoForm({ open, onClose, editId, empresas = [], departamentos: depsPropsssss = [], centrosCosto = [], puestos = [], empleados = [] }) {
   const qc = useQueryClient();
   const [form, setForm] = useState(empty);
+  const [jefaturaBusqueda, setJefaturaBusqueda] = useState("");
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const { data: departamentos = [] } = useQuery({
+  const { data: departamentosApi = [] } = useQuery({
     queryKey: ["departamentos"],
     queryFn: () => base44.entities.Departamento.list(),
   });
+  
+  const departamentos = depsPropsssss?.length > 0 ? depsPropsssss : departamentosApi;
 
   useEffect(() => {
     if (editId) {
@@ -114,6 +117,10 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [] }) {
           {/* Laboral */}
           <TabsContent value="laboral" className="grid grid-cols-2 gap-4 mt-4">
             <div className="space-y-1">
+              <Label>Código Empleado</Label>
+              <Input value={form.codigo_empleado} onChange={e => set("codigo_empleado", e.target.value)} placeholder="EMP-001" />
+            </div>
+            <div className="space-y-1">
               <Label>Empresa *</Label>
               <Select value={form.empresa_id} onValueChange={v => set("empresa_id", v)}>
                 <SelectTrigger><SelectValue placeholder="Seleccionar empresa" /></SelectTrigger>
@@ -128,7 +135,12 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [] }) {
             </div>
             <div className="space-y-1">
               <Label>Puesto</Label>
-              <Input value={form.puesto} onChange={e => set("puesto", e.target.value)} />
+              <Select value={form.puesto} onValueChange={v => set("puesto", v)}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar puesto" /></SelectTrigger>
+                <SelectContent>
+                  {puestos.map(p => <SelectItem key={p.id} value={p.nombre}>{p.nombre}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1">
               <Label>Departamento</Label>
@@ -138,6 +150,47 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [] }) {
                   {departamentos.map(d => <SelectItem key={d.id} value={d.id}>{d.nombre}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Centro de Costos</Label>
+              <Select value={form.centro_costo_id} onValueChange={v => set("centro_costo_id", v)}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar centro" /></SelectTrigger>
+                <SelectContent>
+                  {centrosCosto.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Jefatura</Label>
+              <div className="relative">
+                <Input
+                  placeholder="Buscar empleado..."
+                  value={jefaturaBusqueda}
+                  onChange={e => setJefaturaBusqueda(e.target.value)}
+                />
+                {jefaturaBusqueda && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                    {empleados
+                      .filter(e => `${e.nombre} ${e.apellidos}`.toLowerCase().includes(jefaturaBusqueda.toLowerCase()))
+                      .map(e => (
+                        <button
+                          key={e.id}
+                          type="button"
+                          onClick={() => {
+                            set("jefatura_id", e.id);
+                            setJefaturaBusqueda(`${e.nombre} ${e.apellidos}`);
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm border-b border-gray-100 last:border-b-0"
+                        >
+                          {e.nombre} {e.apellidos}
+                        </button>
+                      ))}
+                      {empleados.filter(e => `${e.nombre} ${e.apellidos}`.toLowerCase().includes(jefaturaBusqueda.toLowerCase())).length === 0 && (
+                      <div className="px-3 py-2 text-sm text-gray-400">Sin resultados</div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="space-y-1">
               <Label>Tipo Jornada</Label>

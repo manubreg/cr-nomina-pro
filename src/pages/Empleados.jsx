@@ -147,7 +147,7 @@ export default function Empleados() {
         )}
       </div>
 
-      <EmpleadoForm open={formOpen} onClose={() => setFormOpen(false)} editId={editId} empresas={empresas} departamentos={departamentos} centrosCosto={centrosCosto} puestos={puestos} empleados={empleados} />
+      <EmpleadoForm open={formOpen} onClose={() => setFormOpen(false)} editId={editId} empresas={empresas} departamentos={departamentos} centrosCosto={centrosCosto} puestos={puestos} empleados={empleados.filter(e => e.estado === 'activo')} />
     </div>
   );
 }
