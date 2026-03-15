@@ -38,6 +38,7 @@ const navItems = [
   { label: "Reportes", path: "/Reportes", icon: BarChart3 },
   { label: "Reportes Legales", path: "/ReportesLegales", icon: BookOpen },
   { label: "Parámetros", path: "/Parametros", icon: Settings },
+  { label: "Configuración", path: "/Configuracion", icon: Settings },
   { label: "Usuarios", path: "/Usuarios", icon: UserCog },
   { label: "Auditoría", path: "/Auditoria", icon: ShieldCheck },
   { label: "Actualización Mensual", path: "/ReporteActualizacionMensual", icon: Calendar },
