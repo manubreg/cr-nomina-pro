@@ -23,15 +23,17 @@ const emptyPlanilla = { empresa_id: "", periodo_id: "", tipo_planilla: "ordinari
 
 export default function Planillas() {
   const qc = useQueryClient();
+  const { empresaId, filterByEmpresa } = useEmpresaContext();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyPlanilla);
   const [editing, setEditing] = useState(null);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const { data: planillas = [], isLoading } = useQuery({
-    queryKey: ["planillas"],
+  const { data: planillasRaw = [], isLoading } = useQuery({
+    queryKey: ["planillas", empresaId],
     queryFn: () => base44.entities.Planilla.list("-created_date"),
   });
+  const planillas = filterByEmpresa(planillasRaw);
   const { data: empresas = [] } = useQuery({ queryKey: ["empresas"], queryFn: () => base44.entities.Empresa.list() });
   const { data: periodos = [] } = useQuery({ queryKey: ["periodos"], queryFn: () => base44.entities.PeriodoPlanilla.list("-fecha_inicio") });
 
@@ -51,7 +53,7 @@ export default function Planillas() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Planillas</h1>
-          <p className="text-gray-500 text-sm mt-1">{planillas.length} planillas registradas</p>
+          <p className="text-gray-500 text-sm mt-1">{planillas.length} planillas encontradas</p>
         </div>
         <Button onClick={openNew} className="bg-blue-700 hover:bg-blue-800">
           <Plus className="w-4 h-4 mr-2" /> Nueva Planilla

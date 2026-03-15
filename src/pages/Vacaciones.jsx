@@ -16,13 +16,16 @@ const emptySolicitud = { empleado_id: "", empresa_id: "", fecha_solicitud: new D
 
 export default function Vacaciones() {
   const qc = useQueryClient();
+  const { empresaId, filterByEmpresa } = useEmpresaContext();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptySolicitud);
   const [editing, setEditing] = useState(null);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const { data: solicitudes = [], isLoading } = useQuery({ queryKey: ["vacSolicitudes"], queryFn: () => base44.entities.VacacionSolicitud.list("-fecha_solicitud") });
-  const { data: saldos = [] } = useQuery({ queryKey: ["vacSaldos"], queryFn: () => base44.entities.VacacionSaldo.list("-fecha_generacion") });
+  const { data: solicitudesRaw = [], isLoading } = useQuery({ queryKey: ["vacSolicitudes", empresaId], queryFn: () => base44.entities.VacacionSolicitud.list("-fecha_solicitud") });
+  const solicitudes = filterByEmpresa(solicitudesRaw);
+  const { data: saldosRaw = [] } = useQuery({ queryKey: ["vacSaldos", empresaId], queryFn: () => base44.entities.VacacionSaldo.list("-fecha_generacion") });
+  const saldos = filterByEmpresa(saldosRaw);
   const { data: empleados = [] } = useQuery({ queryKey: ["empleados"], queryFn: () => base44.entities.Empleado.list() });
   const empleadoMap = Object.fromEntries(empleados.map(e => [e.id, `${e.nombre} ${e.apellidos}`]));
 

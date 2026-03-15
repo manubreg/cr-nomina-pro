@@ -15,12 +15,14 @@ const emptyAg = { empleado_id: "", empresa_id: "", anio: new Date().getFullYear(
 
 export default function AguinaldoPage() {
   const qc = useQueryClient();
+  const { empresaId, filterByEmpresa } = useEmpresaContext();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyAg);
   const [editing, setEditing] = useState(null);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const { data: aguinaldos = [], isLoading } = useQuery({ queryKey: ["aguinaldos"], queryFn: () => base44.entities.Aguinaldo.list("-anio") });
+  const { data: aguinaldosRaw = [], isLoading } = useQuery({ queryKey: ["aguinaldos", empresaId], queryFn: () => base44.entities.Aguinaldo.list("-anio") });
+  const aguinaldos = filterByEmpresa(aguinaldosRaw);
   const { data: empleados = [] } = useQuery({ queryKey: ["empleados"], queryFn: () => base44.entities.Empleado.list() });
   const empleadoMap = Object.fromEntries(empleados.map(e => [e.id, `${e.nombre} ${e.apellidos}`]));
 

@@ -15,12 +15,14 @@ const emptyContrato = { empleado_id: "", empresa_id: "", tipo_contrato: "indefin
 
 export default function Contratos() {
   const qc = useQueryClient();
+  const { empresaId, filterByEmpresa } = useEmpresaContext();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyContrato);
   const [editing, setEditing] = useState(null);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const { data: contratos = [], isLoading } = useQuery({ queryKey: ["contratos"], queryFn: () => base44.entities.Contrato.list("-created_date") });
+  const { data: contratosRaw = [], isLoading } = useQuery({ queryKey: ["contratos", empresaId], queryFn: () => base44.entities.Contrato.list("-created_date") });
+  const contratos = filterByEmpresa(contratosRaw);
   const { data: empleados = [] } = useQuery({ queryKey: ["empleados"], queryFn: () => base44.entities.Empleado.list() });
   const empleadoMap = Object.fromEntries(empleados.map(e => [e.id, `${e.nombre} ${e.apellidos}`]));
 

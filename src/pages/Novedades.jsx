@@ -16,13 +16,15 @@ const emptyNovedad = { empleado_id: "", empresa_id: "", tipo_novedad: "", fecha:
 
 export default function Novedades() {
   const qc = useQueryClient();
+  const { empresaId, filterByEmpresa } = useEmpresaContext();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyNovedad);
   const [editing, setEditing] = useState(null);
   const [estadoFiltro, setEstadoFiltro] = useState("todos");
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const { data: novedades = [], isLoading } = useQuery({ queryKey: ["novedades"], queryFn: () => base44.entities.Novedad.list("-fecha") });
+  const { data: novedadesRaw = [], isLoading } = useQuery({ queryKey: ["novedades", empresaId], queryFn: () => base44.entities.Novedad.list("-fecha") });
+  const novedadesFilt = filterByEmpresa(novedadesRaw);
   const { data: empleados = [] } = useQuery({ queryKey: ["empleados"], queryFn: () => base44.entities.Empleado.list() });
   const empleadoMap = Object.fromEntries(empleados.map(e => [e.id, `${e.nombre} ${e.apellidos}`]));
 
@@ -36,7 +38,7 @@ export default function Novedades() {
     onSuccess: () => qc.invalidateQueries(["novedades"]),
   });
 
-  const filtered = estadoFiltro === "todos" ? novedades : novedades.filter(n => n.estado === estadoFiltro);
+  const filtered = estadoFiltro === "todos" ? novedadesFilt : novedadesFilt.filter(n => n.estado === estadoFiltro);
 
   const openNew = () => { setForm(emptyNovedad); setEditing(null); setOpen(true); };
   const openEdit = (n) => { setForm(n); setEditing(n.id); setOpen(true); };

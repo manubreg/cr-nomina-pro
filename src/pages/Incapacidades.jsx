@@ -16,12 +16,14 @@ const emptyInc = { empleado_id: "", empresa_id: "", tipo_incapacidad: "", entida
 
 export default function Incapacidades() {
   const qc = useQueryClient();
+  const { empresaId, filterByEmpresa } = useEmpresaContext();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyInc);
   const [editing, setEditing] = useState(null);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const { data: incapacidades = [], isLoading } = useQuery({ queryKey: ["incapacidades"], queryFn: () => base44.entities.Incapacidad.list("-fecha_inicio") });
+  const { data: incapacidadesRaw = [], isLoading } = useQuery({ queryKey: ["incapacidades", empresaId], queryFn: () => base44.entities.Incapacidad.list("-fecha_inicio") });
+  const incapacidades = filterByEmpresa(incapacidadesRaw);
   const { data: empleados = [] } = useQuery({ queryKey: ["empleados"], queryFn: () => base44.entities.Empleado.list() });
   const empleadoMap = Object.fromEntries(empleados.map(e => [e.id, `${e.nombre} ${e.apellidos}`]));
 

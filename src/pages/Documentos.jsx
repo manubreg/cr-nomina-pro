@@ -15,13 +15,15 @@ const emptyDoc = { empleado_id: "", empresa_id: "", tipo_documento: "otro", nomb
 
 export default function Documentos() {
   const qc = useQueryClient();
+  const { empresaId, filterByEmpresa } = useEmpresaContext();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyDoc);
   const [editing, setEditing] = useState(null);
   const [uploading, setUploading] = useState(false);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const { data: documentos = [], isLoading } = useQuery({ queryKey: ["documentos"], queryFn: () => base44.entities.DocumentoEmpleado.list("-created_date") });
+  const { data: documentosRaw = [], isLoading } = useQuery({ queryKey: ["documentos", empresaId], queryFn: () => base44.entities.DocumentoEmpleado.list("-created_date") });
+  const documentos = filterByEmpresa(documentosRaw);
   const { data: empleados = [] } = useQuery({ queryKey: ["empleados"], queryFn: () => base44.entities.Empleado.list() });
   const empleadoMap = Object.fromEntries(empleados.map(e => [e.id, `${e.nombre} ${e.apellidos}`]));
 

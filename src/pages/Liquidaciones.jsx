@@ -16,6 +16,7 @@ const emptyLiq = { empleado_id: "", empresa_id: "", fecha_salida: "", motivo_sal
 
 export default function Liquidaciones() {
   const qc = useQueryClient();
+  const { empresaId, filterByEmpresa } = useEmpresaContext();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyLiq);
   const [editing, setEditing] = useState(null);
@@ -28,7 +29,8 @@ export default function Liquidaciones() {
   };
   const setCalc = (k, v) => setForm(f => recalcularNeto({ ...f, [k]: v }));
 
-  const { data: liquidaciones = [], isLoading } = useQuery({ queryKey: ["liquidaciones"], queryFn: () => base44.entities.Liquidacion.list("-fecha_salida") });
+  const { data: liquidacionesRaw = [], isLoading } = useQuery({ queryKey: ["liquidaciones", empresaId], queryFn: () => base44.entities.Liquidacion.list("-fecha_salida") });
+  const liquidaciones = filterByEmpresa(liquidacionesRaw);
   const { data: empleados = [] } = useQuery({ queryKey: ["empleados"], queryFn: () => base44.entities.Empleado.list() });
   const empleadoMap = Object.fromEntries(empleados.map(e => [e.id, `${e.nombre} ${e.apellidos}`]));
 

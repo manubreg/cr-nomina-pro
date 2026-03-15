@@ -8,9 +8,13 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 const COLORS = ["#2563eb", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
 
 export default function Reportes() {
-  const { data: empleados = [] } = useQuery({ queryKey: ["empleados"], queryFn: () => base44.entities.Empleado.list() });
-  const { data: planillas = [] } = useQuery({ queryKey: ["planillas"], queryFn: () => base44.entities.Planilla.list() });
-  const { data: novedades = [] } = useQuery({ queryKey: ["novedades"], queryFn: () => base44.entities.Novedad.list() });
+  const { empresaId, filterByEmpresa } = useEmpresaContext();
+  const { data: empleadosRaw = [] } = useQuery({ queryKey: ["empleados", empresaId], queryFn: () => base44.entities.Empleado.list() });
+  const empleados = filterByEmpresa(empleadosRaw);
+  const { data: planillasRaw = [] } = useQuery({ queryKey: ["planillas", empresaId], queryFn: () => base44.entities.Planilla.list() });
+  const planillas = filterByEmpresa(planillasRaw);
+  const { data: novedadesRaw = [] } = useQuery({ queryKey: ["novedades", empresaId], queryFn: () => base44.entities.Novedad.list() });
+  const novedades = filterByEmpresa(novedadesRaw);
 
   // Distribución por estado de empleados
   const estadosEmp = empleados.reduce((acc, e) => {
