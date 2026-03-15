@@ -36,6 +36,7 @@ const navItems = [
   { label: "Aguinaldo", path: "/Aguinaldo", icon: Gift },
   { label: "Liquidaciones", path: "/Liquidaciones", icon: Briefcase },
   { label: "Reportes", path: "/Reportes", icon: BarChart3 },
+  { label: "Reportes Legales", path: "/ReportesLegales", icon: BookOpen },
   { label: "Parámetros", path: "/Parametros", icon: Settings },
   { label: "Usuarios", path: "/Usuarios", icon: UserCog },
   { label: "Auditoría", path: "/Auditoria", icon: ShieldCheck },
