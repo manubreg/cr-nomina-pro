@@ -32,7 +32,39 @@ export default function Planillas() {
   const [editing, setEditing] = useState(null);
   const [detalleModal, setDetalleModal] = useState(null);
   const [calculando, setCalculando] = useState(null);
+  const [autoModal, setAutoModal] = useState(false);
+  const [autoForm, setAutoForm] = useState({ empresa_id: "", periodo_id: "", tipo_planilla: "ordinaria" });
+  const [creandoAuto, setCreandoAuto] = useState(false);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleCrearAutomatica = async () => {
+    if (!autoForm.empresa_id || !autoForm.periodo_id) {
+      toast({ title: "Campos requeridos", description: "Seleccione empresa y período", variant: "destructive" });
+      return;
+    }
+    setCreandoAuto(true);
+    // 1. Crear la planilla
+    const nueva = await base44.entities.Planilla.create({
+      empresa_id: autoForm.empresa_id,
+      periodo_id: autoForm.periodo_id,
+      tipo_planilla: autoForm.tipo_planilla,
+      estado: "borrador",
+      codigo_planilla: `PLN-AUTO-${Date.now().toString().slice(-6)}`,
+    });
+    // 2. Calcular automáticamente
+    const res = await base44.functions.invoke('calcularPlanilla', { planilla_id: nueva.id });
+    setCreandoAuto(false);
+    setAutoModal(false);
+    qc.invalidateQueries(["planillas"]);
+    if (res.data?.ok) {
+      toast({
+        title: "✅ Planilla creada y calculada",
+        description: `${res.data.empleados_procesados} empleados · Neto: ₡${Number(res.data.total_neto).toLocaleString()}`,
+      });
+    } else {
+      toast({ title: "Error al calcular", description: res.data?.error || "Error desconocido", variant: "destructive" });
+    }
+  };
 
   const handleCalcular = async (planilla) => {
     setCalculando(planilla.id);
