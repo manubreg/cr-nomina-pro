@@ -60,6 +60,14 @@ export default function Dashboard() {
   const [incapacidades, setIncapacidades] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [allEmpleados, setAllEmpleados] = useState([]);
+  const [allPlanillas, setAllPlanillas] = useState([]);
+  const [allPeriodos, setAllPeriodos] = useState([]);
+  const [allNovedades, setAllNovedades] = useState([]);
+  const [allContratos, setAllContratos] = useState([]);
+  const [allVacaciones, setAllVacaciones] = useState([]);
+  const [allIncapacidades, setAllIncapacidades] = useState([]);
+
   useEffect(() => {
     Promise.all([
       base44.entities.Empleado.list("-created_date", 200),
@@ -70,16 +78,26 @@ export default function Dashboard() {
       base44.entities.VacacionSaldo.list("-created_date", 100),
       base44.entities.Incapacidad.list("-created_date", 50),
     ]).then(([emp, plan, per, nov, cont, vac, inc]) => {
-      setEmpleados(filterByEmpresa(emp));
-      setPlanillas(filterByEmpresa(plan));
-      setPeriodos(filterByEmpresa(per));
-      setNovedades(filterByEmpresa(nov));
-      setContratos(filterByEmpresa(cont));
-      setVacaciones(filterByEmpresa(vac));
-      setIncapacidades(filterByEmpresa(inc));
+      setAllEmpleados(emp);
+      setAllPlanillas(plan);
+      setAllPeriodos(per);
+      setAllNovedades(nov);
+      setAllContratos(cont);
+      setAllVacaciones(vac);
+      setAllIncapacidades(inc);
       setLoading(false);
     });
-  }, [empresaId]);
+  }, []);
+
+  useEffect(() => {
+    setEmpleados(filterByEmpresa(allEmpleados));
+    setPlanillas(filterByEmpresa(allPlanillas));
+    setPeriodos(filterByEmpresa(allPeriodos));
+    setNovedades(filterByEmpresa(allNovedades));
+    setContratos(filterByEmpresa(allContratos));
+    setVacaciones(filterByEmpresa(allVacaciones));
+    setIncapacidades(filterByEmpresa(allIncapacidades));
+  }, [empresaId, allEmpleados, allPlanillas, allPeriodos, allNovedades, allContratos, allVacaciones, allIncapacidades]);
 
   const activos = empleados.filter(e => e.estado === "activo").length;
   const inactivos = empleados.filter(e => e.estado !== "activo").length;
