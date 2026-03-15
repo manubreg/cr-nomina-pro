@@ -36,7 +36,17 @@ Deno.serve(async (req) => {
     const aniosServicio = (fechaSalidaDate - fechaIngreso) / msAnio;
     const diasServicio = Math.floor((fechaSalidaDate - fechaIngreso) / (1000 * 60 * 60 * 24));
 
-    const salarioBase = Number(emp.salario_base) || 0;
+    // Convertir salario a CRC si está en USD, usando TC del día de salida
+    // (si es sábado/domingo, usa viernes anterior — lógica interna de obtenerTipoCambio)
+    const salarioBaseOrig = Number(emp.salario_base) || 0;
+    let tipoCambioVenta = 1;
+    if (emp.moneda === "USD") {
+      try {
+        const tcRes = await base44.functions.invoke("obtenerTipoCambio", { fecha: fecha_salida });
+        tipoCambioVenta = tcRes?.venta || tcRes?.compra || 1;
+      } catch { /* usa 1 si falla */ }
+    }
+    const salarioBase = emp.moneda === "USD" ? Math.round(salarioBaseOrig * tipoCambioVenta) : salarioBaseOrig;
 
     // ---- SALARIO DIARIO ----
     const salarioDiario = salarioBase / 30;
