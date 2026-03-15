@@ -16,7 +16,8 @@ export default function EmpleadoModal({ empleado, departamentos, onClose, onSave
     salario_base: "", frecuencia_pago: "mensual", moneda: "CRC",
     tipo_jornada: "diurna", horas_jornada: 8, correo: "", telefono: "",
     banco: "", cuenta_bancaria: "", cuenta_iban: "",
-    asegurado_ccss: true, observaciones: ""
+    asegurado_ccss: true, observaciones: "",
+    tipo_contrato: "indefinido", fecha_fin_contrato: ""
   });
   const [saving, setSaving] = useState(false);
 
@@ -174,8 +175,19 @@ export default function EmpleadoModal({ empleado, departamentos, onClose, onSave
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </F>
               <F label="Sucursal"><Input field="sucursal" placeholder="Oficina central" /></F>
-            </div>
-          )}
+              <F label="Tipo de Contrato">
+                <Select field="tipo_contrato" options={[
+                  { value: "indefinido", label: "Indefinido" },
+                  { value: "temporal", label: "Temporal" },
+                ]} />
+              </F>
+              {form.tipo_contrato === "temporal" && (
+                <F label="Fecha Fin de Contrato" required>
+                  <Input field="fecha_fin_contrato" type="date" />
+                </F>
+              )}
+              </div>
+              )}
 
           {tab === 2 && (
             <div className="grid grid-cols-2 gap-4">
