@@ -69,7 +69,7 @@ function ColillaCard({ detalle, movimientos, periodo, monedaEmpleado }) {
           </div>
           <div className="md:col-span-2 bg-blue-50 rounded-lg p-3 flex justify-between items-center">
             <span className="font-semibold text-gray-700">NETO A PAGAR</span>
-            <span className="text-xl font-bold text-blue-700">{formatCRC(detalle.neto_pagar)}</span>
+            <span className="text-xl font-bold text-blue-700">{formatCurrency(detalle.neto_pagar, monedaEmpleado)}</span>
           </div>
         </div>
       )}
