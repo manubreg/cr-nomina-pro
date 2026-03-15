@@ -181,41 +181,128 @@ function ReglaHorasExtraEditor({ value, onChange }) {
   );
 }
 
-// ── Regla liquidación / cesantía (tramos por años) ────────────────────────────
+// ── Regla liquidación (Código de Trabajo CR) ──────────────────────────────────
 function ReglaLiquidacionEditor({ value, onChange }) {
-  let tramos = [];
-  try { tramos = JSON.parse(value || "[]"); if (!Array.isArray(tramos)) tramos = []; } catch { tramos = []; }
+  const defaults = {
+    tope_anios_cesantia: 8,
+    preaviso: [
+      { meses_desde: 3, meses_hasta: 6, dias_salario: 7 },
+      { meses_desde: 6, meses_hasta: 12, dias_salario: 15 },
+      { meses_desde: 12, meses_hasta: null, dias_salario: 30 },
+    ],
+    cesantia: [
+      { anio: 1, dias: 19.5 },
+      { anio: 2, dias: 20 },
+      { anio: 3, dias: 20 },
+      { anio: 4, dias: 20 },
+      { anio: 5, dias: 20 },
+      { anio: 6, dias: 20 },
+      { anio: 7, dias: 21 },
+      { anio: 8, dias: 22 },
+    ],
+  };
 
-  const upd = (i, field, val) => { const a = tramos.map((t,idx) => idx===i ? {...t,[field]:val} : t); onChange(JSON.stringify(a)); };
-  const add = () => onChange(JSON.stringify([...tramos, { anios_desde: "", anios_hasta: "", dias_por_anio: "" }]));
-  const del = (i) => onChange(JSON.stringify(tramos.filter((_,idx) => idx !== i)));
+  const obj = parseJson(value, defaults);
+  const set = (k, v) => onChange(JSON.stringify({ ...obj, [k]: v }));
+
+  // Preaviso
+  const updPreaviso = (i, field, val) => {
+    const arr = (obj.preaviso || []).map((r, idx) => idx === i ? { ...r, [field]: val } : r);
+    set("preaviso", arr);
+  };
+  const addPreaviso = () => set("preaviso", [...(obj.preaviso || []), { meses_desde: "", meses_hasta: "", dias_salario: "" }]);
+  const delPreaviso = (i) => set("preaviso", (obj.preaviso || []).filter((_, idx) => idx !== i));
+
+  // Cesantía
+  const updCesantia = (i, field, val) => {
+    const arr = (obj.cesantia || []).map((r, idx) => idx === i ? { ...r, [field]: val } : r);
+    set("cesantia", arr);
+  };
+  const addCesantia = () => {
+    const last = (obj.cesantia || []).length;
+    set("cesantia", [...(obj.cesantia || []), { anio: last + 1, dias: "" }]);
+  };
+  const delCesantia = (i) => set("cesantia", (obj.cesantia || []).filter((_, idx) => idx !== i));
 
   return (
-    <div className="space-y-2">
-      <div className="rounded-lg border border-gray-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50"><tr>
-            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Años desde</th>
-            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Años hasta</th>
-            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Días/año cesantía</th>
-            <th className="px-2 py-2 w-8"></th>
-          </tr></thead>
-          <tbody className="divide-y divide-gray-100">
-            {tramos.length === 0 && <tr><td colSpan={4} className="px-3 py-4 text-center text-xs text-gray-400">Sin tramos. Agregue el primero.</td></tr>}
-            {tramos.map((t, i) => (
-              <tr key={i} className="bg-white">
-                <td className="px-2 py-1.5"><Input type="number" className="h-8 text-sm" placeholder="0" value={t.anios_desde ?? ""} onChange={e => upd(i,"anios_desde", e.target.value === "" ? "" : Number(e.target.value))} /></td>
-                <td className="px-2 py-1.5"><Input type="number" className="h-8 text-sm" placeholder="3" value={t.anios_hasta ?? ""} onChange={e => upd(i,"anios_hasta", e.target.value === "" ? "" : Number(e.target.value))} /></td>
-                <td className="px-2 py-1.5"><Input type="number" step="0.5" className="h-8 text-sm" placeholder="19.5" value={t.dias_por_anio ?? ""} onChange={e => upd(i,"dias_por_anio", e.target.value === "" ? "" : Number(e.target.value))} /></td>
-                <td className="px-2 py-1.5 text-center"><button onClick={() => del(i)} className="text-gray-300 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="space-y-4">
+
+      {/* Tope máximo cesantía */}
+      <div className="rounded-lg border border-gray-200 p-3 bg-gray-50">
+        <div className="flex items-center gap-3">
+          <Label className="w-52 text-xs shrink-0">Tope máximo de años de cesantía</Label>
+          <Input type="number" min="1" className="h-8 text-sm w-24" placeholder="8"
+            value={obj.tope_anios_cesantia ?? ""}
+            onChange={e => set("tope_anios_cesantia", e.target.value === "" ? "" : Number(e.target.value))} />
+          <span className="text-xs text-gray-400">año(s)</span>
+        </div>
       </div>
-      <Button type="button" variant="outline" size="sm" onClick={add} className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 text-xs">
-        <Plus className="w-3 h-3 mr-1" /> Agregar tramo
-      </Button>
+
+      {/* Preaviso */}
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold text-gray-600">Preaviso (solo despido con responsabilidad patronal)</p>
+        </div>
+        <div className="rounded-lg border border-gray-200 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50"><tr>
+              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Desde (meses)</th>
+              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Hasta (meses)</th>
+              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Días de salario</th>
+              <th className="px-2 py-2 w-8"></th>
+            </tr></thead>
+            <tbody className="divide-y divide-gray-100">
+              {(obj.preaviso || []).length === 0 && <tr><td colSpan={4} className="px-3 py-4 text-center text-xs text-gray-400">Sin reglas.</td></tr>}
+              {(obj.preaviso || []).map((r, i) => (
+                <tr key={i} className="bg-white">
+                  <td className="px-2 py-1.5"><Input type="number" className="h-8 text-sm" placeholder="3" value={r.meses_desde ?? ""} onChange={e => updPreaviso(i,"meses_desde", e.target.value === "" ? "" : Number(e.target.value))} /></td>
+                  <td className="px-2 py-1.5">
+                    {i === (obj.preaviso || []).length - 1
+                      ? <span className="text-xs text-gray-400 italic px-1">En adelante</span>
+                      : <Input type="number" className="h-8 text-sm" placeholder="6" value={r.meses_hasta ?? ""} onChange={e => updPreaviso(i,"meses_hasta", e.target.value === "" ? "" : Number(e.target.value))} />}
+                  </td>
+                  <td className="px-2 py-1.5"><Input type="number" className="h-8 text-sm" placeholder="7" value={r.dias_salario ?? ""} onChange={e => updPreaviso(i,"dias_salario", e.target.value === "" ? "" : Number(e.target.value))} /></td>
+                  <td className="px-2 py-1.5 text-center"><button onClick={() => delPreaviso(i)} className="text-gray-300 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <Button type="button" variant="outline" size="sm" onClick={addPreaviso} className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 text-xs">
+          <Plus className="w-3 h-3 mr-1" /> Agregar tramo preaviso
+        </Button>
+      </div>
+
+      {/* Cesantía */}
+      <div className="space-y-1">
+        <p className="text-xs font-semibold text-gray-600">Cesantía — tabla progresiva (Art. 29 Código de Trabajo)</p>
+        <div className="rounded-lg border border-gray-200 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50"><tr>
+              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Año de servicio</th>
+              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Días de salario</th>
+              <th className="px-2 py-2 w-8"></th>
+            </tr></thead>
+            <tbody className="divide-y divide-gray-100">
+              {(obj.cesantia || []).length === 0 && <tr><td colSpan={3} className="px-3 py-4 text-center text-xs text-gray-400">Sin tramos.</td></tr>}
+              {(obj.cesantia || []).map((t, i) => (
+                <tr key={i} className="bg-white">
+                  <td className="px-2 py-1.5"><Input type="number" min="1" className="h-8 text-sm" placeholder={i+1} value={t.anio ?? ""} onChange={e => updCesantia(i,"anio", e.target.value === "" ? "" : Number(e.target.value))} /></td>
+                  <td className="px-2 py-1.5"><Input type="number" step="0.5" className="h-8 text-sm" placeholder="19.5" value={t.dias ?? ""} onChange={e => updCesantia(i,"dias", e.target.value === "" ? "" : Number(e.target.value))} /></td>
+                  <td className="px-2 py-1.5 text-center"><button onClick={() => delCesantia(i)} className="text-gray-300 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <Button type="button" variant="outline" size="sm" onClick={addCesantia} className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 text-xs">
+          <Plus className="w-3 h-3 mr-1" /> Agregar año
+        </Button>
+      </div>
+
+      <div className="bg-amber-50 border border-amber-100 rounded-md px-3 py-2 text-xs text-amber-700">
+        Aguinaldo proporcional y vacaciones no disfrutadas son derechos irrenunciables y se calculan automáticamente en toda liquidación, independientemente del motivo de salida.
+      </div>
     </div>
   );
 }
