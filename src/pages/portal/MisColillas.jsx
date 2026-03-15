@@ -84,17 +84,21 @@ export default function MisColillas() {
   const [periodos, setPeriodos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [empleadoId, setEmpleadoId] = useState(null);
+  const [monedaEmpleado, setMonedaEmpleado] = useState("CRC");
 
   useEffect(() => {
     base44.auth.me().then(async (me) => {
       if (!me?.empleado_id) { setLoading(false); return; }
       setEmpleadoId(me.empleado_id);
-      const [dets, movs, plans, pers] = await Promise.all([
+      const [dets, movs, plans, pers, emps] = await Promise.all([
         base44.entities.PlanillaDetalle.filter({ empleado_id: me.empleado_id }),
         base44.entities.MovimientoPlanilla.filter({ empleado_id: me.empleado_id }),
         base44.entities.Planilla.list("-created_date", 50),
         base44.entities.PeriodoPlanilla.list(),
+        base44.entities.Empleado.filter({ id: me.empleado_id }),
       ]);
+      const empleado = emps[0];
+      setMonedaEmpleado(empleado?.moneda || "CRC");
       setDetalles(dets);
       setMovimientos(movs);
       setPlanillas(plans);
