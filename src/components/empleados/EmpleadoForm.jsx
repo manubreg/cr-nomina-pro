@@ -26,11 +26,23 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const { data: departamentosApi = [] } = useQuery({
-    queryKey: ["departamentos"],
-    queryFn: () => base44.entities.Departamento.list(),
+    queryKey: ["departamentos", form.empresa_id],
+    queryFn: () => form.empresa_id ? base44.entities.Departamento.filter({ empresa_id: form.empresa_id }) : Promise.resolve([]),
+  });
+  
+  const { data: centrosCostoApi = [] } = useQuery({
+    queryKey: ["centrosCosto", form.empresa_id],
+    queryFn: () => form.empresa_id ? base44.entities.CentroCosto.filter({ empresa_id: form.empresa_id }) : Promise.resolve([]),
+  });
+
+  const { data: puestosApi = [] } = useQuery({
+    queryKey: ["puestos", form.empresa_id],
+    queryFn: () => form.empresa_id ? base44.entities.Puesto?.filter?.({ empresa_id: form.empresa_id }) : Promise.resolve([]),
   });
   
   const departamentos = depsPropsssss?.length > 0 ? depsPropsssss : departamentosApi;
+  const centrosCostoFinal = centrosCosto?.length > 0 ? centrosCosto : centrosCostoApi;
+  const puestosFinal = puestos?.length > 0 ? puestos : puestosApi;
 
   useEffect(() => {
     if (editId) {
@@ -138,7 +150,7 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
               <Select value={form.puesto} onValueChange={v => set("puesto", v)}>
                 <SelectTrigger><SelectValue placeholder="Seleccionar puesto" /></SelectTrigger>
                 <SelectContent>
-                  {puestos.map(p => <SelectItem key={p.id} value={p.nombre}>{p.nombre}</SelectItem>)}
+                  {puestosFinal.map(p => <SelectItem key={p.id} value={p.nombre}>{p.nombre}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -156,7 +168,7 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
               <Select value={form.centro_costo_id} onValueChange={v => set("centro_costo_id", v)}>
                 <SelectTrigger><SelectValue placeholder="Seleccionar centro" /></SelectTrigger>
                 <SelectContent>
-                  {centrosCosto.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}
+                  {centrosCostoFinal.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
