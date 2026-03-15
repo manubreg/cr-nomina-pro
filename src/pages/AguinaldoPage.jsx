@@ -120,6 +120,20 @@ export default function AguinaldoPage() {
               <Label>Fecha de Cálculo</Label>
               <Input type="date" value={form.fecha_calculo} onChange={e => set("fecha_calculo", e.target.value)} />
             </div>
+            <div className="col-span-2">
+              <Button type="button" variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
+                onClick={calcularAuto} disabled={calculando || !form.empleado_id}>
+                {calculando ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Calculando...</> : <><Calculator className="w-4 h-4 mr-2" /> Calcular Automáticamente (Ley 1584 CR)</>}
+              </Button>
+            </div>
+            {detalleCalculo && (
+              <div className="col-span-2 bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-800 space-y-1">
+                <p className="font-semibold flex items-center gap-1"><Info className="w-3 h-3" /> Detalle del cálculo</p>
+                <p>Período: <strong>{detalleCalculo.periodo_inicio}</strong> al <strong>{detalleCalculo.periodo_fin}</strong></p>
+                <p>Meses en período: <strong>{detalleCalculo.meses_en_periodo}</strong></p>
+                <p>Fuente: <strong>{detalleCalculo.fuente === 'planillas' ? 'Planillas procesadas' : 'Salario base del empleado'}</strong></p>
+              </div>
+            )}
             <div className="space-y-1">
               <Label>Total Salarios Comp. (₡)</Label>
               <Input type="number" value={form.total_salarios_computables} onChange={e => set("total_salarios_computables", Number(e.target.value))} />
