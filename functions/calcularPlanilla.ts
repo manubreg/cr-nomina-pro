@@ -234,7 +234,7 @@ Deno.serve(async (req) => {
     const montoISR = calcISR(baseISR);
 
     if (montoISR > 0) {
-      movs.push({ tipo_movimiento: 'deduccion', descripcion: 'Impuesto sobre la Renta', monto: montoISR, porcentaje: 0, base_calculo: baseISR, orden_calculo: 30, origen: 'automatico' });
+      movs.push({ tipo_movimiento: 'deduccion', descripcion: 'Impuesto sobre la Renta', monto: montoISR, cantidad: 1, tarifa: 0, porcentaje: 0, base_calculo: baseISR, orden_calculo: 30, origen: 'automatico' });
     }
 
     // ─ Bases para aguinaldo y vacaciones ─────────────────────────────────────
