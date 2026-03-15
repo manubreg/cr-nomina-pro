@@ -31,6 +31,21 @@ export default function Empleados() {
     queryFn: () => base44.entities.Empresa.list(),
   });
 
+  const { data: departamentos = [] } = useQuery({
+    queryKey: ["departamentos", empresaId],
+    queryFn: () => empresaId ? base44.entities.Departamento.filter({ empresa_id: empresaId }) : Promise.resolve([]),
+  });
+
+  const { data: centrosCosto = [] } = useQuery({
+    queryKey: ["centrosCosto", empresaId],
+    queryFn: () => empresaId ? base44.entities.CentroCosto.filter({ empresa_id: empresaId }) : Promise.resolve([]),
+  });
+
+  const { data: puestos = [] } = useQuery({
+    queryKey: ["puestos", empresaId],
+    queryFn: () => empresaId ? base44.entities.Puesto?.filter?.({ empresa_id: empresaId }) : Promise.resolve([]),
+  });
+
   const empresaMap = Object.fromEntries(empresas.map(e => [e.id, e.nombre_comercial || e.nombre_legal]));
 
   const filtered = empleados.filter(e => {
@@ -132,7 +147,7 @@ export default function Empleados() {
         )}
       </div>
 
-      <EmpleadoForm open={formOpen} onClose={() => setFormOpen(false)} editId={editId} empresas={empresas} />
+      <EmpleadoForm open={formOpen} onClose={() => setFormOpen(false)} editId={editId} empresas={empresas} departamentos={departamentos} centrosCosto={centrosCosto} puestos={puestos} />
     </div>
   );
 }
