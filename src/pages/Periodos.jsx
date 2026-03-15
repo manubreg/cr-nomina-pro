@@ -58,6 +58,9 @@ export default function Periodos() {
   const [preview, setPreview] = useState([]);
   const [fileError, setFileError] = useState("");
   const [detalleModal, setDetalleModal] = useState(null);
+  const [editModal, setEditModal] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [editSaving, setEditSaving] = useState(false);
   const fileRef = useRef();
 
   const load = async () => {
