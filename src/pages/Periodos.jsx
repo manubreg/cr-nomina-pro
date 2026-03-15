@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, RefreshCw, Edit, Trash2, Calendar } from "lucide-react";
+import { useEmpresaContext } from "@/components/EmpresaContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const estadoColors = {
   abierto: "bg-blue-100 text-blue-700",
