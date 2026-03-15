@@ -85,41 +85,38 @@ function CuotaCCSSEditor({ value, onChange }) {
   );
 }
 
-// ── Regla vacaciones (días según antigüedad) ──────────────────────────────────
+// ── Regla vacaciones (acumulación: X días por cada Y días/meses laborados) ────
 function ReglasVacacionesEditor({ value, onChange }) {
-  let reglas = [];
-  try { reglas = JSON.parse(value || "[]"); if (!Array.isArray(reglas)) reglas = []; } catch { reglas = []; }
-
-  const upd = (i, field, val) => { const a = reglas.map((r,idx) => idx===i ? {...r,[field]:val} : r); onChange(JSON.stringify(a)); };
-  const add = () => onChange(JSON.stringify([...reglas, { anios_desde: "", anios_hasta: "", dias: "" }]));
-  const del = (i) => onChange(JSON.stringify(reglas.filter((_,idx) => idx !== i)));
+  const obj = parseJson(value, { dias_vacaciones: "", periodo_cantidad: "", periodo_unidad: "meses" });
+  const set = (k, v) => onChange(JSON.stringify({ ...obj, [k]: v }));
 
   return (
-    <div className="space-y-2">
-      <div className="rounded-lg border border-gray-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50"><tr>
-            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Años desde</th>
-            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Años hasta</th>
-            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Días vacac.</th>
-            <th className="px-2 py-2 w-8"></th>
-          </tr></thead>
-          <tbody className="divide-y divide-gray-100">
-            {reglas.length === 0 && <tr><td colSpan={4} className="px-3 py-4 text-center text-xs text-gray-400">Sin reglas. Agregue la primera.</td></tr>}
-            {reglas.map((r, i) => (
-              <tr key={i} className="bg-white">
-                <td className="px-2 py-1.5"><Input type="number" className="h-8 text-sm" placeholder="0" value={r.anios_desde ?? ""} onChange={e => upd(i,"anios_desde", e.target.value === "" ? "" : Number(e.target.value))} /></td>
-                <td className="px-2 py-1.5"><Input type="number" className="h-8 text-sm" placeholder="5" value={r.anios_hasta ?? ""} onChange={e => upd(i,"anios_hasta", e.target.value === "" ? "" : Number(e.target.value))} /></td>
-                <td className="px-2 py-1.5"><Input type="number" className="h-8 text-sm" placeholder="14" value={r.dias ?? ""} onChange={e => upd(i,"dias", e.target.value === "" ? "" : Number(e.target.value))} /></td>
-                <td className="px-2 py-1.5 text-center"><button onClick={() => del(i)} className="text-gray-300 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="rounded-lg border border-gray-200 p-3 bg-gray-50 space-y-3">
+      <p className="text-xs text-gray-500 italic">Define cuántos días de vacaciones se acumulan por cada período laborado.</p>
+      <div className="flex items-center gap-2">
+        <Label className="w-48 text-xs shrink-0">Días de vacaciones que acumula</Label>
+        <Input type="number" step="0.5" min="0" className="h-8 text-sm flex-1" placeholder="1"
+          value={obj.dias_vacaciones ?? ""}
+          onChange={e => set("dias_vacaciones", e.target.value === "" ? "" : Number(e.target.value))} />
+        <span className="text-xs text-gray-400 shrink-0">día(s)</span>
       </div>
-      <Button type="button" variant="outline" size="sm" onClick={add} className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 text-xs">
-        <Plus className="w-3 h-3 mr-1" /> Agregar regla
-      </Button>
+      <div className="flex items-center gap-2">
+        <Label className="w-48 text-xs shrink-0">Por cada</Label>
+        <Input type="number" min="1" className="h-8 text-sm w-20 shrink-0" placeholder="1"
+          value={obj.periodo_cantidad ?? ""}
+          onChange={e => set("periodo_cantidad", e.target.value === "" ? "" : Number(e.target.value))} />
+        <select className="h-8 text-sm border border-gray-200 rounded-md px-2 flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={obj.periodo_unidad ?? "meses"}
+          onChange={e => set("periodo_unidad", e.target.value)}>
+          <option value="dias">día(s) laborado(s)</option>
+          <option value="meses">mes(es) laborado(s)</option>
+        </select>
+      </div>
+      {obj.dias_vacaciones !== "" && obj.periodo_cantidad !== "" && (
+        <div className="bg-blue-50 border border-blue-100 rounded-md px-3 py-2 text-xs text-blue-700">
+          Resumen: por cada <strong>{obj.periodo_cantidad} {obj.periodo_unidad}</strong> laborado(s), el empleado acumula <strong>{obj.dias_vacaciones} día(s)</strong> de vacaciones.
+        </div>
+      )}
     </div>
   );
 }
