@@ -202,7 +202,7 @@ export default function Planillas() {
       </div>
 
       {/* Modal Planilla Automática */}
-      <Dialog open={autoModal} onOpenChange={setAutoModal}>
+      <Dialog open={autoModal} onOpenChange={(open) => { if (!creandoAuto) setAutoModal(open); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
