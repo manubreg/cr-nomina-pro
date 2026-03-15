@@ -378,6 +378,68 @@ export default function Periodos() {
         </DialogContent>
       </Dialog>
 
+      {/* Modal editar periodo */}
+      <Dialog open={!!editModal} onOpenChange={(open) => { if (!open) setEditModal(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="w-4 h-4 text-blue-600" /> Modificar Periodo
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 mt-1">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-gray-600">Tipo</label>
+              <select value={editForm.tipo_periodo || ""} onChange={e => setEditForm(f => ({ ...f, tipo_periodo: e.target.value }))}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="semanal">Semanal</option>
+                <option value="quincenal">Quincenal</option>
+                <option value="mensual">Mensual</option>
+                <option value="aguinaldo">Aguinaldo</option>
+                <option value="liquidacion">Liquidación</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-gray-600">Estado</label>
+              <select value={editForm.estado || ""} onChange={e => setEditForm(f => ({ ...f, estado: e.target.value }))}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="abierto">Abierto</option>
+                <option value="calculado">Calculado</option>
+                <option value="en_revision">En Revisión</option>
+                <option value="aprobado">Aprobado</option>
+                <option value="pagado">Pagado</option>
+                <option value="anulado">Anulado</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-gray-600">Fecha Inicio</label>
+              <input type="date" value={editForm.fecha_inicio || ""} onChange={e => setEditForm(f => ({ ...f, fecha_inicio: e.target.value }))}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-gray-600">Fecha Fin</label>
+              <input type="date" value={editForm.fecha_fin || ""} onChange={e => setEditForm(f => ({ ...f, fecha_fin: e.target.value }))}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div className="space-y-1 col-span-2">
+              <label className="text-xs font-medium text-gray-600">Fecha de Pago</label>
+              <input type="date" value={editForm.fecha_pago || ""} onChange={e => setEditForm(f => ({ ...f, fecha_pago: e.target.value }))}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div className="space-y-1 col-span-2">
+              <label className="text-xs font-medium text-gray-600">Observaciones</label>
+              <input type="text" value={editForm.observaciones || ""} onChange={e => setEditForm(f => ({ ...f, observaciones: e.target.value }))}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-3">
+            <Button variant="outline" onClick={() => setEditModal(null)} disabled={editSaving}>Cancelar</Button>
+            <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleEditSave} disabled={editSaving}>
+              {editSaving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Guardando...</> : "Guardar Cambios"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Modal detalle planilla */}
       {detalleModal && (
         <PlanillaDetalleModal planilla={detalleModal} onClose={() => setDetalleModal(null)} />
