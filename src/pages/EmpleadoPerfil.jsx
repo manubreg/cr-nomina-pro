@@ -64,28 +64,15 @@ export default function EmpleadoPerfil() {
         </TabsList>
 
         <TabsContent value="personal" className="mt-4">
-          <div className="bg-white rounded-xl border border-gray-200 p-5 max-w-lg space-y-5">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="text-xs text-blue-600 font-semibold uppercase mb-1">Fecha de Ingreso</div>
-              <div className="text-lg font-bold text-blue-900">{emp.fecha_ingreso}</div>
-              <div className="text-xs text-blue-600 mt-1">
-                {emp.fecha_ingreso && (() => {
-                  const años = Math.floor((new Date() - new Date(emp.fecha_ingreso)) / (365.25 * 24 * 60 * 60 * 1000));
-                  const meses = Math.floor(((new Date() - new Date(emp.fecha_ingreso)) % (365.25 * 24 * 60 * 60 * 1000)) / (30.44 * 24 * 60 * 60 * 1000));
-                  return `${años}a ${meses}m de antigüedad`;
-                })()}
-              </div>
-            </div>
-            <div>
-              <InfoRow label="Identificación" value={`${emp.tipo_identificacion?.toUpperCase()} - ${emp.identificacion}`} />
-              <InfoRow label="Fecha Nacimiento" value={emp.fecha_nacimiento} />
-              <InfoRow label="Género" value={emp.genero} />
-              <InfoRow label="Nacionalidad" value={emp.nacionalidad} />
-              <InfoRow label="Correo" value={emp.correo} />
-              <InfoRow label="Teléfono" value={emp.telefono} />
-              <InfoRow label="Dirección" value={emp.direccion} />
-              <InfoRow label="Contacto Emergencia" value={emp.contacto_emergencia_nombre} />
-            </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-5 max-w-lg">
+            <InfoRow label="Identificación" value={`${emp.tipo_identificacion?.toUpperCase()} - ${emp.identificacion}`} />
+            <InfoRow label="Fecha Nacimiento" value={emp.fecha_nacimiento} />
+            <InfoRow label="Género" value={emp.genero} />
+            <InfoRow label="Nacionalidad" value={emp.nacionalidad} />
+            <InfoRow label="Correo" value={emp.correo} />
+            <InfoRow label="Teléfono" value={emp.telefono} />
+            <InfoRow label="Dirección" value={emp.direccion} />
+            <InfoRow label="Contacto Emergencia" value={emp.contacto_emergencia_nombre} />
           </div>
         </TabsContent>
 
