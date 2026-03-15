@@ -289,9 +289,20 @@ export default function Periodos() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <button onClick={() => handleDelete(p.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {p.estado === "abierto" && (
+                        <button onClick={() => handleOpenEdit(p)} title="Modificar periodo" className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                      )}
+                      {p.estado !== "pagado" ? (
+                        <button onClick={() => handleDelete(p.id)} title="Eliminar periodo" className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <button disabled title="No se puede eliminar un periodo pagado" className="p-1.5 text-gray-200 cursor-not-allowed rounded-lg">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
