@@ -181,17 +181,15 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [] }) {
           <TabsContent value="pago" className="grid grid-cols-2 gap-4 mt-4">
             <div className="space-y-1">
               <Label>Salario Base</Label>
-              <Input type="number" value={form.salario_base} onChange={e => set("salario_base", Number(e.target.value))} />
+              <Input type="number" value={form.salario_base} onChange={e => set("salario_base", Number(e.target.value))} placeholder="750000.00" step="0.01" />
             </div>
             <div className="space-y-1">
-              <Label>Tipo Salario</Label>
-              <Select value={form.tipo_salario} onValueChange={v => set("tipo_salario", v)}>
+              <Label>Moneda</Label>
+              <Select value={form.moneda} onValueChange={v => set("moneda", v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="mensual">Mensual</SelectItem>
-                  <SelectItem value="quincenal">Quincenal</SelectItem>
-                  <SelectItem value="semanal">Semanal</SelectItem>
-                  <SelectItem value="por_hora">Por Hora</SelectItem>
+                  <SelectItem value="CRC">Colones (CRC)</SelectItem>
+                  <SelectItem value="USD">Dólares (USD)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
