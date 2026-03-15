@@ -342,7 +342,7 @@ function DatosEditor({ tipo, value, onChange }) {
   if (tipo === "regla_aguinaldo") return <ReglaAguinaldoEditor value={value} onChange={onChange} />;
   if (tipo === "regla_horas_extra") return <ReglaHorasExtraEditor value={value} onChange={onChange} />;
   if (tipo === "regla_liquidacion") return <ReglaLiquidacionEditor value={value} onChange={onChange} />;
-  if (tipo === "tope_base") return <TopeBaseEditor value={value} onChange={onChange} />;
+
   if (tipo === "tipo_cambio") return <TipoCambioEditor value={value} onChange={onChange} />;
   // fallback: textarea JSON
   return (
