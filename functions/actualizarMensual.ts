@@ -21,13 +21,13 @@ Deno.serve(async (req) => {
       const empleados = await base44.asServiceRole.entities.Empleado.filter({ empresa_id: empresa.id, estado: "activo" });
 
       for (const empleado of empleados) {
-        // 1. Actualizar vacaciones (acumular 2.5 días/mes)
+        // 1. Actualizar vacaciones (acumular 1 día/mes = 12 días anuales)
         const vacacionesActuales = await base44.asServiceRole.entities.VacacionSaldo.filter({ empleado_id: empleado.id });
         const vacacion = vacacionesActuales[0];
 
         if (vacacion) {
-          const diasGanados = (vacacion.dias_ganados || 0) + 2.5;
-          const diasDisponibles = (vacacion.dias_disponibles || 0) + 2.5;
+          const diasGanados = (vacacion.dias_ganados || 0) + 1;
+          const diasDisponibles = (vacacion.dias_disponibles || 0) + 1;
           
           await base44.asServiceRole.entities.VacacionSaldo.update(vacacion.id, {
             dias_ganados: diasGanados,
