@@ -17,7 +17,7 @@ const empty = {
   frecuencia_pago: "mensual", moneda: "CRC", tipo_jornada: "diurna", horas_jornada: 8,
   banco: "", cuenta_bancaria: "", cuenta_iban: "", sinpe_movil: "",
   asegurado_ccss: true, observaciones: "", codigo_empleado: "", centro_costo_id: "", jefatura_id: "",
-  tipo_contrato: "indefinido", fecha_fin_contrato: ""
+  tipo_contrato: "indefinido", fecha_fin_contrato: "", apto_horas_extra: false
 };
 
 export default function EmpleadoForm({ open, onClose, editId, empresas = [], departamentos: depsPropsssss = [], centrosCosto = [], puestos = [], empleados = [] }) {
@@ -358,6 +358,18 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
                   <SelectItem value="semanal">Semanal</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="col-span-2 space-y-2">
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="apto_horas_extra" 
+                  checked={form.apto_horas_extra || false}
+                  onChange={e => set("apto_horas_extra", e.target.checked)}
+                  className="w-4 h-4 accent-blue-600" 
+                />
+                <Label htmlFor="apto_horas_extra" className="mb-0 cursor-pointer">Apto para pago de tiempo extra</Label>
+              </div>
             </div>
           </TabsContent>
 
