@@ -134,12 +134,13 @@ export default function Dashboard() {
   })();
 
   // Distribución empleados por departamento — calculado desde los datos filtrados
+  const deptNameMap = Object.fromEntries(departamentos.map(d => [d.id, d.nombre]));
   const deptMap = {};
   empleados.filter(e => e.estado === "activo").forEach(e => {
-    const dept = e.departamento_id || "Sin depto";
-    deptMap[dept] = (deptMap[dept] || 0) + 1;
+    const deptName = (e.departamento_id && deptNameMap[e.departamento_id]) || "Sin depto";
+    deptMap[deptName] = (deptMap[deptName] || 0) + 1;
   });
-  const deptData = Object.entries(deptMap).map(([id, value]) => ({ name: id.length > 15 ? id.slice(0, 10) + "…" : id, value }))
+  const deptData = Object.entries(deptMap).map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value).slice(0, 6);
 
   if (loading) return (
