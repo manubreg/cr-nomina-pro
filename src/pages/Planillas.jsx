@@ -150,6 +150,11 @@ export default function Planillas() {
         )}
       </div>
 
+      {/* Modal detalle */}
+      {detalleModal && (
+        <PlanillaDetalleModal planilla={detalleModal} onClose={() => setDetalleModal(null)} />
+      )}
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
