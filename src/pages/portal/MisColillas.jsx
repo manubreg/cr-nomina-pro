@@ -59,12 +59,12 @@ function ColillaCard({ detalle, movimientos, periodo, monedaEmpleado }) {
             {deducciones.map(m => (
               <div key={m.id} className="flex justify-between text-sm py-1.5 border-b border-gray-50">
                 <span className="text-gray-700">{m.descripcion || m.concepto_id}</span>
-                <span className="font-medium text-red-600">{formatCRC(m.monto)}</span>
+                <span className="font-medium text-red-600">{formatCurrency(m.monto, monedaEmpleado)}</span>
               </div>
             ))}
             <div className="flex justify-between text-sm font-bold pt-2">
               <span>Total Deducciones</span>
-              <span className="text-red-600">{formatCRC(detalle.deducciones_totales)}</span>
+              <span className="text-red-600">{formatCurrency(detalle.deducciones_totales, monedaEmpleado)}</span>
             </div>
           </div>
           <div className="md:col-span-2 bg-blue-50 rounded-lg p-3 flex justify-between items-center">
