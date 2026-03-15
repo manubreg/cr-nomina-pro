@@ -82,17 +82,35 @@ Deno.serve(async (req) => {
       return Response.json({ error: "No hay credenciales BCCR configuradas" }, { status: 500 });
     }
 
-    const [compra, venta] = await Promise.all([
-      fetchBCCR("317", fechaDate, email, token),
-      fetchBCCR("318", fechaDate, email, token),
-    ]);
+    // Intentar hasta 7 días atrás (para cubrir feriados prolongados)
+    let intentoDate = new Date(fechaDate);
+    let compra = null;
+    let venta = null;
+    let fechaEncontrada = fechaISO;
+
+    for (let i = 0; i < 7; i++) {
+      // Saltar fines de semana al retroceder
+      intentoDate = viernessAnteriorSiFinDeSemana(intentoDate);
+      const [c, v] = await Promise.all([
+        fetchBCCR("317", intentoDate, email, token),
+        fetchBCCR("318", intentoDate, email, token),
+      ]);
+      if (c || v) {
+        compra = c;
+        venta = v;
+        fechaEncontrada = intentoDate.toISOString().split("T")[0];
+        break;
+      }
+      // Retroceder un día más
+      intentoDate.setUTCDate(intentoDate.getUTCDate() - 1);
+    }
 
     if (!compra && !venta) {
       return Response.json({ error: `No se encontró tipo de cambio para ${fechaISO}` }, { status: 404 });
     }
 
     return Response.json({
-      fecha: fechaISO,
+      fecha: fechaEncontrada,
       compra,
       venta,
       fuente: "bccr_live",
