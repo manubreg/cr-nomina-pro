@@ -4,8 +4,10 @@ import { FileText, ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const formatCRC = (v) => `₡${Number(v || 0).toLocaleString("es-CR")}`;
+const formatUSD = (v) => `$${Number(v || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const formatCurrency = (v, moneda) => moneda === "USD" ? formatUSD(v) : formatCRC(v);
 
-function ColillaCard({ detalle, movimientos, periodo }) {
+function ColillaCard({ detalle, movimientos, periodo, monedaEmpleado }) {
   const [expanded, setExpanded] = useState(false);
   const ingresos = movimientos.filter(m => m.tipo_movimiento === "ingreso");
   const deducciones = movimientos.filter(m => m.tipo_movimiento === "deduccion");
