@@ -65,14 +65,21 @@ Deno.serve(async (req) => {
       fecha_inicio_vigencia: fechaISO,
     });
 
+    console.log(`BD resultados para ${fechaISO}:`, params?.length, JSON.stringify(params?.[0] || null));
+
     if (params && params.length > 0) {
       const datos = JSON.parse(params[0].datos_json || "{}");
-      return Response.json({
-        fecha: fechaISO,
-        compra: datos.compra,
-        venta: datos.venta,
-        fuente: "bd",
-      });
+      console.log("datos_json parseado:", datos);
+      if (datos.compra || datos.venta) {
+        return Response.json({
+          fecha: fechaISO,
+          compra: datos.compra,
+          venta: datos.venta,
+          fuente: "bd",
+        });
+      }
+      // Si el registro existe pero sin datos, continuar al BCCR
+      console.log("Registro en BD sin datos válidos, consultando BCCR...");
     }
 
     // 2. No está en BD → consultar BCCR en tiempo real
