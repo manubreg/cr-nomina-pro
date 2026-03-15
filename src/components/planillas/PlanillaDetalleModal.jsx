@@ -37,7 +37,6 @@ export default function PlanillaDetalleModal({ planilla, onClose }) {
 
   // Descargar todas las boletas en PDF una por una
   const handleDescargarTodas = async () => {
-    const { generarBoletaPDF } = await import("./BoletaPagoGenerator");
     setGenerandoTodas(true);
     for (const det of detalles) {
       const emp  = empleados.find(e => e.id === det.empleado_id);
