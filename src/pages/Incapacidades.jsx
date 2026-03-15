@@ -165,6 +165,20 @@ export default function Incapacidades() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="col-span-2">
+              <Button type="button" variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
+                onClick={calcularAuto} disabled={calculando || !form.empleado_id || !form.fecha_inicio || !form.fecha_fin || !form.tipo_incapacidad}>
+                {calculando ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Calculando...</> : <><Calculator className="w-4 h-4 mr-2" /> Calcular Subsidio Automáticamente (CCSS/INS)</>}
+              </Button>
+            </div>
+            {detalleCalculo && (
+              <div className="col-span-2 bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-800 space-y-1">
+                <p className="font-semibold flex items-center gap-1"><Info className="w-3 h-3" /> Detalle del subsidio</p>
+                <p>{detalleCalculo.descripcion}</p>
+                <p>Días con subsidio: <strong>{detalleCalculo.dias_con_subsidio}</strong> | Período espera: <strong>{detalleCalculo.dias_periodo_espera} día(s)</strong></p>
+                <p>Monto subsidio: <strong>₡ {Number(detalleCalculo.monto_subsidio).toLocaleString()}</strong> | Entidad: <strong>{detalleCalculo.entidad_responsable}</strong></p>
+              </div>
+            )}
             <div className="col-span-2 space-y-1">
               <Label>Observaciones</Label>
               <Input value={form.observaciones} onChange={e => set("observaciones", e.target.value)} />
