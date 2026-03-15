@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Plus, Gift } from "lucide-react";
+import { Plus, Gift, Calculator, Loader2, Info } from "lucide-react";
 import { useEmpresaContext } from "@/components/EmpresaContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
