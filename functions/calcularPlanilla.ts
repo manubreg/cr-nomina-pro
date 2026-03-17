@@ -119,8 +119,8 @@ Deno.serve(async (req) => {
           monto = Math.round((salarioMensual / 240) * f * (nov.cantidad || 0));
           desc = `Horas extra (${nov.cantidad}h)`; break;
         }
-        case 'bono':     monto = nov.monto || 0; desc = 'Bono'; break;
-        case 'comision': monto = nov.monto || 0; desc = 'Comisión'; break;
+        case 'bono':     monto = Number(nov.monto) || 0; desc = 'Bono'; break;
+        case 'comision': monto = Number(nov.monto) || 0; desc = 'Comisión'; break;
         case 'ausencia':
         case 'permiso_sin_goce':
           monto = Math.round((salarioMensual / 30) * (nov.cantidad || 0));
