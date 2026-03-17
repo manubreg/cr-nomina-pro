@@ -95,9 +95,14 @@ export default function AguinaldoPage() {
           <h1 className="text-2xl font-bold text-gray-900">Aguinaldo</h1>
           <p className="text-gray-500 text-sm mt-1">Cálculo y registro de aguinaldos</p>
         </div>
-        <Button onClick={openNew} className="bg-blue-700 hover:bg-blue-800">
-          <Plus className="w-4 h-4 mr-2" /> Nuevo Aguinaldo
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => { setMasivo(true); setResultadoMasivo(null); }} className="border-emerald-300 text-emerald-700 hover:bg-emerald-50">
+            <Users className="w-4 h-4 mr-2" /> Cálculo Masivo
+          </Button>
+          <Button onClick={openNew} className="bg-blue-700 hover:bg-blue-800">
+            <Plus className="w-4 h-4 mr-2" /> Nuevo Aguinaldo
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
