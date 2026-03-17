@@ -58,21 +58,35 @@ export default function ReportesLegales() {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Seleccionar Período</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarRange className="w-5 h-5 text-blue-600" />
+            Rango de Fechas
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <Select value={selectedPeriodo} onValueChange={setSelectedPeriodo}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecciona un período..." />
-            </SelectTrigger>
-            <SelectContent>
-              {periodos.map(p => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.fecha_inicio} a {p.fecha_fin} ({p.tipo_periodo})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="flex-1 space-y-1">
+              <label className="text-sm font-medium text-gray-700">Fecha Inicio</label>
+              <input
+                type="date"
+                value={fechaInicio}
+                onChange={e => setFechaInicio(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex-1 space-y-1">
+              <label className="text-sm font-medium text-gray-700">Fecha Fin</label>
+              <input
+                type="date"
+                value={fechaFin}
+                onChange={e => setFechaFin(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            {!rangoValido && fechaInicio && fechaFin && (
+              <p className="text-xs text-red-500">La fecha inicio debe ser menor o igual a la fecha fin.</p>
+            )}
+          </div>
         </CardContent>
       </Card>
 
