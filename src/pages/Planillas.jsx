@@ -54,12 +54,30 @@ export default function Planillas() {
       return;
     }
     setCreandoAuto(true);
+    const periodoSel = periodos.find(p => p.id === autoForm.periodo_id);
+    const generarNombre = (periodo) => {
+      if (!periodo) return `PLN-${Date.now().toString().slice(-6)}`;
+      const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+      const fecha = new Date((periodo.fecha_inicio || "") + "T00:00:00");
+      const mes = MESES[fecha.getMonth()];
+      const anio = fecha.getFullYear();
+      switch (periodo.tipo_periodo) {
+        case "mensual":    return `Planilla ${mes} ${anio}`;
+        case "quincenal":  return `Planilla ${fecha.getDate() <= 15 ? "1ra" : "2da"} Quincena ${mes} ${anio}`;
+        case "bisemanal":  return `Planilla Bisemanal ${periodo.fecha_inicio} - ${periodo.fecha_fin}`;
+        case "semanal":    return `Planilla Semana ${periodo.fecha_inicio}`;
+        case "diario":     return `Planilla Diaria ${periodo.fecha_inicio}`;
+        case "aguinaldo":  return `Aguinaldo ${anio}`;
+        case "liquidacion":return `Liquidación ${mes} ${anio}`;
+        default:           return `Planilla ${periodo.fecha_inicio}`;
+      }
+    };
     const nueva = await base44.entities.Planilla.create({
       empresa_id: autoForm.empresa_id,
       periodo_id: autoForm.periodo_id,
       tipo_planilla: autoForm.tipo_planilla,
       estado: "borrador",
-      codigo_planilla: `PLN-AUTO-${Date.now().toString().slice(-6)}`,
+      codigo_planilla: generarNombre(periodoSel),
     });
     const res = await base44.functions.invoke('calcularPlanilla', { 
       planilla_id: nueva.id,
