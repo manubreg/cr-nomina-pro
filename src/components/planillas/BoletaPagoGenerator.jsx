@@ -143,6 +143,8 @@ export async function generarBoletaPDF(empresa, empleado, periodo, detalle, movi
   const { jsPDF } = await import("jspdf");
 
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const moneda = empleado?.moneda || "CRC";
+  const C = (v) => fmtC(v, moneda);
 
   const ingresos   = movimientos.filter(m => m.tipo_movimiento === "ingreso");
   const deducciones = movimientos.filter(m => m.tipo_movimiento === "deduccion");
