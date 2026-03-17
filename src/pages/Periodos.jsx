@@ -154,6 +154,12 @@ export default function Periodos() {
   // Obtener planilla asociada a un período
   const getPlanilla = (periodoId) => planillas.find(pl => pl.periodo_id === periodoId);
 
+  const periodosFiltrados = periodos.filter(p => {
+    const okEstado = filtroEstado === "todos" || p.estado === filtroEstado;
+    const okTipo = filtroTipo === "todos" || p.tipo_periodo === filtroTipo;
+    return okEstado && okTipo;
+  });
+
   return (
     <div className="p-6 space-y-5 max-w-screen-xl mx-auto">
       <div className="flex items-center justify-between flex-wrap gap-3">
