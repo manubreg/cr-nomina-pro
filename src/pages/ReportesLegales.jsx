@@ -27,7 +27,7 @@ export default function ReportesLegales() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `ReporteCCSS_${selectedPeriodo}.xlsx`;
+      a.download = `ReporteCCSS_${fechaInicio}_${fechaFin}.xlsx`;
       a.click();
     },
     onSuccess: () => toast.success('Reporte CCSS descargado'),
