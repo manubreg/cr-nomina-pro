@@ -138,7 +138,7 @@ export default function ReportesLegales() {
             </p>
             <Button
               onClick={() => generarINS.mutate()}
-              disabled={!selectedPeriodo || generarINS.isPending}
+              disabled={!rangoValido || generarINS.isPending}
               className="w-full gap-2"
             >
               {generarINS.isPending ? (
