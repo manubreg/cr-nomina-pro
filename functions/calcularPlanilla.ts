@@ -184,18 +184,7 @@ Deno.serve(async (req) => {
     movimientosTemp.push({ empleado_id: emp.id, movs });
   }
 
-  // ── 7. Eliminar previos y guardar nuevos (en paralelo donde se pueda) ─────
-  const [detsPrev, movsPrev] = await Promise.all([
-    base44.asServiceRole.entities.PlanillaDetalle.filter({ planilla_id }, '-created_date', 500),
-    base44.asServiceRole.entities.MovimientoPlanilla.filter({ planilla_id }, '-created_date', 2000),
-  ]);
-  console.log('[calcularPlanilla] borrando', detsPrev.length, 'detalles y', movsPrev.length, 'movimientos previos');
-
-  // Borrar en paralelo
-  await Promise.all([
-    ...detsPrev.map(d => base44.asServiceRole.entities.PlanillaDetalle.delete(d.id)),
-    ...movsPrev.map(m => base44.asServiceRole.entities.MovimientoPlanilla.delete(m.id)),
-  ]);
+  // ── 7. (Previos ya eliminados en paso 2) ─────────────────────────────────
 
   // ── 8. Guardar detalles en bulk ──────────────────────────────────────────
   console.log('[calcularPlanilla] creando', detallesData.length, 'detalles...');
