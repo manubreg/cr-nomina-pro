@@ -116,12 +116,10 @@ Deno.serve(async (req) => {
 
   // ── 5. Calcular por empleado ───────────────────────────────────────────────
   // Eliminar detalles y movimientos previos
-  const [todosDetalles, todosMovs] = await Promise.all([
-    base44.entities.PlanillaDetalle.list(),
-    base44.entities.MovimientoPlanilla.list(),
+  const [detsPrev, movsPrev] = await Promise.all([
+    base44.asServiceRole.entities.PlanillaDetalle.filter({ planilla_id }, '-created_date', 1000),
+    base44.asServiceRole.entities.MovimientoPlanilla.filter({ planilla_id }, '-created_date', 5000),
   ]);
-  const detsPrev = todosDetalles.filter(d => d.planilla_id === planilla_id);
-  const movsPrev = todosMovs.filter(m => m.planilla_id === planilla_id);
   await Promise.all([
     ...detsPrev.map(d => base44.entities.PlanillaDetalle.delete(d.id)),
     ...movsPrev.map(m => base44.entities.MovimientoPlanilla.delete(m.id)),
