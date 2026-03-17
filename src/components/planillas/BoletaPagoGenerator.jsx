@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 
 const fmt = (v) => Number(v || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
-const fmtC = (v) => `₡ ${fmt(v)}`;
+const fmtC = (v, moneda = "CRC") => `${moneda} ${fmt(v)}`;
 
 // ─── Tramos ISR CR 2025 ───────────────────────────────────────────────────────
 const TRAMOS_ISR = [
