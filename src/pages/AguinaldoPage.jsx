@@ -55,6 +55,36 @@ export default function AguinaldoPage() {
     setCalculando(false);
   };
 
+  const calcularMasivo = async () => {
+    const activos = empleados.filter(e => e.empresa_id === empresaId && e.estado === "activo");
+    if (activos.length === 0) return;
+    setCalculandoMasivo(true);
+    setResultadoMasivo(null);
+    let ok = 0, err = 0;
+    for (const emp of activos) {
+      const res = await base44.functions.invoke('calcularAguinaldo', {
+        empleado_id: emp.id,
+        anio: anioMasivo,
+        empresa_id: empresaId,
+      });
+      if (res.data?.ok) {
+        const r = res.data.resultado;
+        const existing = aguinaldos.find(a => a.empleado_id === emp.id && a.anio === anioMasivo);
+        if (existing) {
+          await base44.entities.Aguinaldo.update(existing.id, r);
+        } else {
+          await base44.entities.Aguinaldo.create({ ...r, empresa_id: empresaId });
+        }
+        ok++;
+      } else {
+        err++;
+      }
+    }
+    setCalculandoMasivo(false);
+    setResultadoMasivo({ ok, err, total: activos.length });
+    qc.invalidateQueries(["aguinaldos"]);
+  };
+
   const openNew = () => { setForm({ ...emptyAg, empresa_id: empresaId || "" }); setEditing(null); setDetalleCalculo(null); setOpen(true); };
   const openEdit = (a) => { setForm(a); setEditing(a.id); setDetalleCalculo(null); setOpen(true); };
 
