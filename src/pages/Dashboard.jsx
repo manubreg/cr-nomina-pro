@@ -118,20 +118,48 @@ export default function Dashboard() {
 
   const sinCuentaBancaria = empleados.filter(e => e.estado === "activo" && !e.cuenta_iban && !e.cuenta_bancaria).length;
 
-  // Gráfico evolución planilla — calculado desde los datos filtrados
+  // Gráfico evolución planilla — agrupado por filtro (semanal, quincenal, mensual)
+  const periodoMap = Object.fromEntries(periodos.map(p => [p.id, p]));
+  const MONTH_NAMES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
+  const getGrupoKey = (planilla) => {
+    const periodo = periodoMap[planilla.periodo_id];
+    const fecha = periodo?.fecha_inicio || planilla.fecha_calculo;
+    if (!fecha) return null;
+    const d = new Date(fecha + "T00:00:00");
+    if (graficoAgrupacion === "mensual") {
+      return `${MONTH_NAMES[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
+    } else if (graficoAgrupacion === "quincenal") {
+      const quincena = d.getDate() <= 15 ? "Q1" : "Q2";
+      return `${MONTH_NAMES[d.getMonth()]} ${quincena}`;
+    } else { // semanal
+      const startOfYear = new Date(d.getFullYear(), 0, 1);
+      const week = Math.ceil(((d - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+      return `S${week} ${String(d.getFullYear()).slice(2)}`;
+    }
+  };
+
   const monthlyData = (() => {
-    const sorted = [...planillas].sort((a, b) => new Date(a.fecha_calculo) - new Date(b.fecha_calculo));
-    const last6 = sorted.slice(-6);
-    return last6.map(p => ({
-      mes: p.codigo_planilla
-        ? p.codigo_planilla.replace("PL-", "").replace(/(\d{4})-(\d{2})/, (_, y, m) => {
-            const months = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-            return `${months[parseInt(m, 10) - 1]} ${y.slice(2)}`;
-          })
-        : p.fecha_calculo?.slice(0, 7) || "—",
-      neto: p.total_neto || 0,
-      bruto: p.total_ingresos || 0,
-    }));
+    const grupos = {};
+    const orden = [];
+    const sorted = [...planillas]
+      .filter(p => p.estado !== "anulado")
+      .sort((a, b) => {
+        const fa = periodoMap[a.periodo_id]?.fecha_inicio || a.fecha_calculo || "";
+        const fb = periodoMap[b.periodo_id]?.fecha_inicio || b.fecha_calculo || "";
+        return fa.localeCompare(fb);
+      });
+
+    for (const p of sorted) {
+      const key = getGrupoKey(p);
+      if (!key) continue;
+      if (!grupos[key]) { grupos[key] = { mes: key, neto: 0, bruto: 0 }; orden.push(key); }
+      grupos[key].neto += p.total_neto || 0;
+      grupos[key].bruto += p.total_ingresos || 0;
+    }
+
+    const limit = graficoAgrupacion === "semanal" ? 8 : 6;
+    return orden.slice(-limit).map(k => grupos[k]);
   })();
 
   // Distribución empleados por departamento — calculado desde los datos filtrados
