@@ -5,29 +5,28 @@ Deno.serve(async (req) => {
   const user = await base44.auth.me();
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
-  const { planilla_id, empleados_ids } = await req.json();
+  // empresa_id y periodo_id se pasan desde el frontend para evitar fetch extra
+  const { planilla_id, empresa_id, periodo_id, estado: planilla_estado, empleados_ids } = await req.json();
   if (!planilla_id) return Response.json({ error: 'planilla_id requerido' }, { status: 400 });
+  if (!empresa_id)  return Response.json({ error: 'empresa_id requerido' }, { status: 400 });
 
-  // ── FASE 1: Cargar planilla ───────────────────────────────────────────────
-  const planillas = await base44.asServiceRole.entities.Planilla.filter({ id: planilla_id }, '-created_date', 1);
-  const planilla = planillas[0];
-  if (!planilla) return Response.json({ error: 'Planilla no encontrada' }, { status: 404 });
-  if (planilla.estado === 'pagado' || planilla.estado === 'anulado') {
+  if (planilla_estado === 'pagado' || planilla_estado === 'anulado') {
     return Response.json({ error: 'No se puede recalcular una planilla pagada o anulada' }, { status: 400 });
   }
-  const empresa_id = planilla.empresa_id;
-  if (!empresa_id) return Response.json({ error: 'La planilla no tiene empresa_id' }, { status: 400 });
-  console.log('[calcularPlanilla] planilla ok, empresa_id =', empresa_id);
+  console.log('[calcularPlanilla] empresa_id =', empresa_id, '| periodo_id =', periodo_id);
 
-  // ── FASE 2: Cargar datos necesarios ──────────────────────────────────────
+  // ── FASE 1: Cargar datos en paralelo ──────────────────────────────────────
   const [todosParams, empleadosEmpresa, todasNovedades, periodoArr] = await Promise.all([
     base44.asServiceRole.entities.ParametroLegal.filter({ empresa_id, estado: 'vigente' }, '-created_date', 50),
     base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'activo' }, '-fecha_ingreso', 300),
-    base44.asServiceRole.entities.Novedad.filter({ empresa_id, periodo_id: planilla.periodo_id, estado: 'aprobada' }, '-created_date', 300),
-    planilla.periodo_id
-      ? base44.asServiceRole.entities.PeriodoPlanilla.filter({ id: planilla.periodo_id }, '-created_date', 1)
+    periodo_id
+      ? base44.asServiceRole.entities.Novedad.filter({ empresa_id, periodo_id, estado: 'aprobada' }, '-created_date', 300)
+      : Promise.resolve([]),
+    periodo_id
+      ? base44.asServiceRole.entities.PeriodoPlanilla.filter({ empresa_id }, '-fecha_inicio', 50)
       : Promise.resolve([]),
   ]);
+  const planilla = { id: planilla_id, empresa_id, periodo_id };
   console.log('[calcularPlanilla] empleados:', empleadosEmpresa.length);
 
   const periodo = periodoArr[0] || null;
