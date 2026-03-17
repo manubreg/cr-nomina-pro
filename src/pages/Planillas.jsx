@@ -31,6 +31,12 @@ export default function Planillas() {
   const [descargando, setDescargando] = useState(null);
   const [autoModal, setAutoModal] = useState(false);
   const [autoForm, setAutoForm] = useState({ empresa_id: "", periodo_id: "", tipo_planilla: "ordinaria", empleados_ids: [] });
+
+  // Pre-fill empresa cuando se abre el modal
+  const handleOpenAutoModal = () => {
+    setAutoForm({ empresa_id: empresaId || "", periodo_id: "", tipo_planilla: "ordinaria", empleados_ids: [] });
+    setAutoModal(true);
+  };
   const [creandoAuto, setCreandoAuto] = useState(false);
   const [eliminando, setEliminando] = useState(null);
   const [busquedaEmpleados, setBusquedaEmpleados] = useState("");
