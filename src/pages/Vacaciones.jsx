@@ -147,7 +147,7 @@ export default function Vacaciones() {
 
         <TabsContent value="saldos" className="mt-4">
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            {saldos.length === 0 ? (
+            {saldosFiltrados.length === 0 ? (
               <div className="p-12 text-center"><Umbrella className="w-10 h-10 mx-auto mb-3 text-gray-300" /><p className="text-gray-400">Sin saldos registrados</p></div>
             ) : (
               <div className="overflow-x-auto">
@@ -162,7 +162,7 @@ export default function Vacaciones() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {saldos.map(s => (
+                    {saldosFiltrados.map(s => (
                       <tr key={s.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3 font-medium text-gray-800">{empleadoMap[s.empleado_id] || "—"}</td>
                         <td className="px-4 py-3 text-gray-600">{s.dias_ganados}</td>
