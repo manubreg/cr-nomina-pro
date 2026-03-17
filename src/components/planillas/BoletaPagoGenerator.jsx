@@ -227,7 +227,7 @@ export async function generarBoletaPDF(empresa, empleado, periodo, detalle, movi
   doc.text("Limite Inferior", 80, y + 4, { align: "right" });
   doc.text("Limite Superior", 120, y + 4, { align: "right" });
   doc.text("Porcentaje retención", 160, y + 4, { align: "right" });
-  doc.text(isrMov ? fmtC(isrMov.monto) : "-", 198, y + 4, { align: "right" });
+  doc.text(isrMov ? C(isrMov.monto) : "-", 198, y + 4, { align: "right" });
   y += 5;
 
   TRAMOS_ISR.forEach((t, i) => {
