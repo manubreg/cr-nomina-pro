@@ -270,7 +270,9 @@ export default function Periodos() {
             className="px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="todos">Todos</option>
+            <option value="diario">Diario</option>
             <option value="semanal">Semanal</option>
+            <option value="bisemanal">Bisemanal</option>
             <option value="quincenal">Quincenal</option>
             <option value="mensual">Mensual</option>
             <option value="aguinaldo">Aguinaldo</option>
@@ -438,12 +440,14 @@ export default function Periodos() {
               <label className="text-xs font-medium text-gray-600">Tipo</label>
               <select value={editForm.tipo_periodo || ""} onChange={e => setEditForm(f => ({ ...f, tipo_periodo: e.target.value }))}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="diario">Diario</option>
                 <option value="semanal">Semanal</option>
+                <option value="bisemanal">Bisemanal</option>
                 <option value="quincenal">Quincenal</option>
                 <option value="mensual">Mensual</option>
                 <option value="aguinaldo">Aguinaldo</option>
                 <option value="liquidacion">Liquidación</option>
-              </select>
+                </select>
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium text-gray-600">Estado</label>
