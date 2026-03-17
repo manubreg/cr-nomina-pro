@@ -1,22 +1,20 @@
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useEmpresaContext } from '@/components/EmpresaContext';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Download, Loader2 } from 'lucide-react';
+import { FileText, Download, Loader2, CalendarRange } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ReportesLegales() {
   const { empresaId } = useEmpresaContext();
-  const [selectedPeriodo, setSelectedPeriodo] = useState('');
+  const today = new Date().toISOString().split('T')[0];
+  const firstOfMonth = today.slice(0, 8) + '01';
+  const [fechaInicio, setFechaInicio] = useState(firstOfMonth);
+  const [fechaFin, setFechaFin] = useState(today);
 
-  const { data: periodos = [] } = useQuery({
-    queryKey: ['periodos', empresaId],
-    queryFn: () => base44.entities.PeriodoPlanilla.filter({ empresa_id: empresaId }),
-    enabled: !!empresaId,
-  });
+  const rangoValido = fechaInicio && fechaFin && fechaInicio <= fechaFin;
 
   const generarCCSS = useMutation({
     mutationFn: async () => {
