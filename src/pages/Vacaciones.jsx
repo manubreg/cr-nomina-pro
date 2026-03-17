@@ -95,7 +95,7 @@ export default function Vacaciones() {
       <Tabs defaultValue="solicitudes">
         <TabsList>
           <TabsTrigger value="solicitudes">Solicitudes ({solicitudes.length})</TabsTrigger>
-          <TabsTrigger value="saldos">Saldos ({saldos.length})</TabsTrigger>
+          <TabsTrigger value="saldos">Saldos ({saldosFiltrados.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="solicitudes" className="mt-4">
