@@ -32,14 +32,10 @@ Deno.serve(async (req) => {
   ]);
   console.log('[calcularPlanilla] dets previos:', detsPrev.length, '| movs previos:', movsPrev.length, '| empleados:', empleadosEmpresa.length);
 
-  // ── FASE 3: Borrar previos ────────────────────────────────────────────────
-  if (detsPrev.length > 0 || movsPrev.length > 0) {
-    await Promise.all([
-      ...detsPrev.map(d => base44.asServiceRole.entities.PlanillaDetalle.delete(d.id)),
-      ...movsPrev.map(m => base44.asServiceRole.entities.MovimientoPlanilla.delete(m.id)),
-    ]);
-    console.log('[calcularPlanilla] previos eliminados');
-  }
+  // ── FASE 3: Borrar previos (secuencial para evitar sobrecarga) ───────────
+  for (const d of detsPrev) await base44.asServiceRole.entities.PlanillaDetalle.delete(d.id);
+  for (const m of movsPrev) await base44.asServiceRole.entities.MovimientoPlanilla.delete(m.id);
+  console.log('[calcularPlanilla] previos eliminados');
 
   const periodo = periodoArr[0] || null;
 
