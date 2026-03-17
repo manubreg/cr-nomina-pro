@@ -73,8 +73,9 @@ Deno.serve(async (req) => {
   const fechaInicioPeriodo = periodo?.fecha_inicio || '';
   const empleados    = todosEmpleados.filter(e => {
     if (e.empresa_id !== empresa_id || e.estado !== 'activo') return false;
-    // Excluir empleados cuya fecha de ingreso sea posterior al inicio del período
     if (e.fecha_ingreso && fechaInicioPeriodo && e.fecha_ingreso > fechaInicioPeriodo) return false;
+    // Filtrar por empleados específicos si se indicaron
+    if (empleados_ids && empleados_ids.length > 0 && !empleados_ids.includes(e.id)) return false;
     return true;
   });
   const novedades    = todasNovedades.filter(n => n.empresa_id === empresa_id && n.periodo_id === planilla.periodo_id && n.estado === 'aprobada');
@@ -97,7 +98,9 @@ Deno.serve(async (req) => {
   // Factor de conversión salario mensual → período
   const factorPeriodo = (tipo) => {
     switch (tipo) {
+      case 'diario':     return 1 / 30;
       case 'semanal':    return 7 / 30;
+      case 'bisemanal':  return 14 / 30;
       case 'quincenal':  return 15 / 30;
       case 'mensual':
       default:           return 1;
