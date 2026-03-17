@@ -60,6 +60,7 @@ export default function Dashboard() {
   const [incapacidades, setIncapacidades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [departamentos, setDepartamentos] = useState([]);
+  const [graficoAgrupacion, setGraficoAgrupacion] = useState("mensual");
 
   const [allEmpleados, setAllEmpleados] = useState([]);
   const [allPlanillas, setAllPlanillas] = useState([]);
