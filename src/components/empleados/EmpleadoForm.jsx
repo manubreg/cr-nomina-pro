@@ -166,6 +166,10 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
               <Input type="date" value={form.fecha_ingreso} onChange={e => set("fecha_ingreso", e.target.value)} />
             </div>
             <div className="space-y-1">
+              <Label>Fecha Salida</Label>
+              <Input type="date" value={form.fecha_salida} onChange={e => set("fecha_salida", e.target.value)} />
+            </div>
+            <div className="space-y-1">
               <Label>Puesto</Label>
               <div className="relative">
                 <Input
