@@ -33,6 +33,10 @@ export default function AguinaldoPage() {
 
   const [calculando, setCalculando] = useState(false);
   const [detalleCalculo, setDetalleCalculo] = useState(null);
+  const [masivo, setMasivo] = useState(false);
+  const [anioMasivo, setAnioMasivo] = useState(new Date().getFullYear());
+  const [calculandoMasivo, setCalculandoMasivo] = useState(false);
+  const [resultadoMasivo, setResultadoMasivo] = useState(null);
 
   const calcularAuto = async () => {
     if (!form.empleado_id || !form.anio) return;
