@@ -208,7 +208,9 @@ export default function Periodos() {
               <label className="text-xs font-medium text-gray-600">Tipo</label>
               <select value={form.tipo_periodo} onChange={e => setForm(p => ({ ...p, tipo_periodo: e.target.value }))}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="diario">Diario</option>
                 <option value="semanal">Semanal</option>
+                <option value="bisemanal">Bisemanal</option>
                 <option value="quincenal">Quincenal</option>
                 <option value="mensual">Mensual</option>
                 <option value="aguinaldo">Aguinaldo</option>
