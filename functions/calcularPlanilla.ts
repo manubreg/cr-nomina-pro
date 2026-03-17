@@ -31,6 +31,7 @@ Deno.serve(async (req) => {
 
   const periodo = periodos.find(p => p.id === planilla.periodo_id);
   const empresa_id = planilla.empresa_id;
+  if (!empresa_id) return Response.json({ error: 'La planilla no tiene empresa_id definido' }, { status: 400 });
 
   // ── 2. Cargar parámetros legales vigentes ────────────────────────────────
   const todosParams = await base44.entities.ParametroLegal.list();
@@ -65,21 +66,25 @@ Deno.serve(async (req) => {
   } catch { /* si falla, usa 1 (CRC nativo) */ }
 
   // ── 3. Empleados activos de la empresa ────────────────────────────────────
-  const [todosEmpleados, todasNovedades, todosConceptos] = await Promise.all([
-    base44.entities.Empleado.list(),
-    base44.entities.Novedad.list(),
-    base44.entities.ConceptoPago.list(),
-  ]);
   const fechaInicioPeriodo = periodo?.fecha_inicio || '';
-  const empleados    = todosEmpleados.filter(e => {
-    if (e.empresa_id !== empresa_id || e.estado !== 'activo') return false;
-    if (e.fecha_ingreso && fechaInicioPeriodo && e.fecha_ingreso > fechaInicioPeriodo) return false;
-    // Filtrar por empleados específicos si se indicaron
-    if (empleados_ids && empleados_ids.length > 0 && !empleados_ids.includes(e.id)) return false;
-    return true;
-  });
-  const novedades    = todasNovedades.filter(n => n.empresa_id === empresa_id && n.periodo_id === planilla.periodo_id && n.estado === 'aprobada');
-  const conceptosPago = todosConceptos.filter(c => c.empresa_id === empresa_id && c.estado === 'activo');
+
+  // Usar filter nativo para asegurar que solo se traen empleados de esta empresa
+  const [empleadosEmpresa, todasNovedades, conceptosPago] = await Promise.all([
+    base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'activo' }, '-fecha_ingreso', 500),
+    base44.asServiceRole.entities.Novedad.filter({ empresa_id, periodo_id: planilla.periodo_id, estado: 'aprobada' }, '-created_date', 500),
+    base44.asServiceRole.entities.ConceptoPago.filter({ empresa_id, estado: 'activo' }, '-created_date', 200),
+  ]);
+
+  let empleados = empleadosEmpresa;
+  // Excluir empleados que ingresaron después del inicio del período
+  if (fechaInicioPeriodo) {
+    empleados = empleados.filter(e => !e.fecha_ingreso || e.fecha_ingreso <= fechaInicioPeriodo);
+  }
+  // Filtrar por empleados específicos si se indicaron
+  if (empleados_ids && empleados_ids.length > 0) {
+    empleados = empleados.filter(e => empleados_ids.includes(e.id));
+  }
+  const novedades = todasNovedades;
 
   // ── 4. Helpers ────────────────────────────────────────────────────────────
   const calcISR = (baseImponible) => {
