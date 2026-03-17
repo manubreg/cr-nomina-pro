@@ -254,9 +254,9 @@ export async function generarBoletaPDF(empresa, empleado, periodo, detalle, movi
   y = drawFila(doc, "  Embargos", "", "", "-", y, true);
 
   y += 2;
-  y = drawTotal(doc, "TOTAL A DEDUCIR", fmtC(detalle.deducciones_totales), y, 80, 80, 80);
+  y = drawTotal(doc, "TOTAL A DEDUCIR", C(detalle.deducciones_totales), y, 80, 80, 80);
   y += 1;
-  y = drawTotal(doc, "LÍQUIDO A PERCIBIR", fmtC(detalle.neto_pagar), y, 34, 139, 34);
+  y = drawTotal(doc, "LÍQUIDO A PERCIBIR", C(detalle.neto_pagar), y, 34, 139, 34);
 
   // Firma
   y += 12;
