@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
   for (const { empleado_id, movs } of movimientosTemp) {
     const planilla_detalle_id = empToDetalle[empleado_id];
     for (const m of movs) {
-      todosMovimientos.push({ ...m, planilla_id, planilla_detalle_id, empleado_id, concepto_id: 'auto' });
+      todosMovimientos.push({ ...m, planilla_id, planilla_detalle_id, empleado_id });
     }
   }
 
