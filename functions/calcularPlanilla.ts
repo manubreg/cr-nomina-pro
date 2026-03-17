@@ -32,6 +32,7 @@ Deno.serve(async (req) => {
   const periodo = periodos.find(p => p.id === planilla.periodo_id);
   const empresa_id = planilla.empresa_id;
   if (!empresa_id) return Response.json({ error: 'La planilla no tiene empresa_id definido' }, { status: 400 });
+  console.log('[calcularPlanilla] empresa_id =', empresa_id, '| planilla_id =', planilla_id);
 
   // ── 2. Cargar parámetros legales vigentes ────────────────────────────────
   const todosParams = await base44.entities.ParametroLegal.list();
