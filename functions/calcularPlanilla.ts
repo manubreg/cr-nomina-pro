@@ -49,13 +49,17 @@ Deno.serve(async (req) => {
     { limite_inferior: 4727000,  limite_superior: 999999999, porcentaje: 25 },
   ];
 
-  // ── 2b. Tipo de cambio ───────────────────────────────────────────────────
-  let tipoCambioVenta = 1;
+  // ── 2b. Tipo de cambio (BCCR directo, sin invocar otra función) ──────────
+  let tipoCambioVenta = 650; // fallback razonable
   try {
     const fechaRef = periodo?.fecha_fin || new Date().toISOString().split("T")[0];
-    const tcRes = await base44.functions.invoke("obtenerTipoCambio", { fecha: fechaRef });
-    tipoCambioVenta = tcRes?.venta || tcRes?.compra || 1;
-  } catch { /* usa 1 (CRC nativo) */ }
+    const [anio, mes, dia] = fechaRef.split('-');
+    const bccrUrl = `https://gee.bccr.fi.cr/Indicadores/Suscripciones/WS/wsindicadoreseconomicos.asmx/ObtenerIndicadoresEconomicos?Indicador=318&FechaInicio=${dia}/${mes}/${anio}&FechaFinal=${dia}/${mes}/${anio}&Nombre=tipo_cambio&SubNiveles=N&CorreoElectronico=${Deno.env.get('BCCR_EMAIL')||''}&Token=${Deno.env.get('BCCR_TOKEN')||''}`;
+    const resp = await fetch(bccrUrl, { signal: AbortSignal.timeout(5000) });
+    const xml = await resp.text();
+    const match = xml.match(/<NUM_VALOR>([\d.]+)<\/NUM_VALOR>/);
+    if (match) tipoCambioVenta = parseFloat(match[1]);
+  } catch { /* usa fallback */ }
 
   // ── 3. Filtrar empleados ─────────────────────────────────────────────────
   const fechaInicioPeriodo = periodo?.fecha_inicio || '';
