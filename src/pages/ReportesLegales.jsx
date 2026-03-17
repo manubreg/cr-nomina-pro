@@ -106,7 +106,7 @@ export default function ReportesLegales() {
             </p>
             <Button
               onClick={() => generarCCSS.mutate()}
-              disabled={!selectedPeriodo || generarCCSS.isPending}
+              disabled={!rangoValido || generarCCSS.isPending}
               className="w-full gap-2"
             >
               {generarCCSS.isPending ? (
