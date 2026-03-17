@@ -182,7 +182,7 @@ export async function generarBoletaPDF(empresa, empleado, periodo, detalle, movi
   y = drawFila(doc, "Viáticos", "", "", "-", y, true);
   y = drawFila(doc, "Otros", "", "", "-", y, false);
 
-  y = drawTotal(doc, "TOTAL DEVENGADO", fmtC(detalle.ingresos_totales), y, 0, 32, 96);
+  y = drawTotal(doc, "TOTAL DEVENGADO", C(detalle.ingresos_totales), y, 0, 32, 96);
 
   y += 3;
 
