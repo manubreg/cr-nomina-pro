@@ -76,6 +76,7 @@ Deno.serve(async (req) => {
     base44.asServiceRole.entities.ConceptoPago.filter({ empresa_id, estado: 'activo' }, '-created_date', 200),
   ]);
 
+  console.log('[calcularPlanilla] empleadosEmpresa count =', empleadosEmpresa.length, '| IDs empresa:', [...new Set(empleadosEmpresa.map(e => e.empresa_id))]);
   let empleados = empleadosEmpresa;
   // Excluir empleados que ingresaron después del inicio del período
   if (fechaInicioPeriodo) {
