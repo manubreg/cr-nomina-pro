@@ -245,7 +245,17 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Evolución */}
         <div className="xl:col-span-2 bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">Evolución de Planilla (6 meses)</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-gray-700">Evolución de Planilla</h3>
+            <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+              {["semanal","quincenal","mensual"].map(op => (
+                <button key={op} onClick={() => setGraficoAgrupacion(op)}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors capitalize ${graficoAgrupacion === op ? "bg-white text-blue-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+                  {op}
+                </button>
+              ))}
+            </div>
+          </div>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={monthlyData} barGap={4}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
