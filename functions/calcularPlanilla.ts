@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
   const planilla = { id: planilla_id, empresa_id, periodo_id };
   console.log('[calcularPlanilla] empleados:', empleadosEmpresa.length);
 
-  const periodo = periodoArr[0] || null;
+  const periodo = periodoArr.find(p => p.id === periodo_id) || periodoArr[0] || null;
 
   // ── Tipo de cambio ────────────────────────────────────────────────────────
   let tipoCambioVenta = 650;
