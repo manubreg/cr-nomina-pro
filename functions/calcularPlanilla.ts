@@ -97,14 +97,15 @@ Deno.serve(async (req) => {
   const tipoPlanillaFactor = factorPeriodo(periodo?.tipo_periodo || 'mensual');
 
   // ── 5. Eliminar registros previos ────────────────────────────────────────
+  console.log('[calcularPlanilla] Borrando registros previos...');
   const [detsPrev, movsPrev] = await Promise.all([
     base44.asServiceRole.entities.PlanillaDetalle.filter({ planilla_id }, '-created_date', 1000),
     base44.asServiceRole.entities.MovimientoPlanilla.filter({ planilla_id }, '-created_date', 5000),
   ]);
-  await Promise.all([
-    ...detsPrev.map(d => base44.asServiceRole.entities.PlanillaDetalle.delete(d.id)),
-    ...movsPrev.map(m => base44.asServiceRole.entities.MovimientoPlanilla.delete(m.id)),
-  ]);
+  console.log('[calcularPlanilla] Prev detalles:', detsPrev.length, '| prev movs:', movsPrev.length);
+  for (const d of detsPrev) await base44.asServiceRole.entities.PlanillaDetalle.delete(d.id);
+  for (const m of movsPrev) await base44.asServiceRole.entities.MovimientoPlanilla.delete(m.id);
+  console.log('[calcularPlanilla] Previos eliminados. Procesando', empleados.length, 'empleados...');
 
   // ── 6. Calcular datos de cada empleado (sin I/O) ─────────────────────────
   const detallesData = [];
