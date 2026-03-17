@@ -70,7 +70,13 @@ Deno.serve(async (req) => {
     base44.entities.Novedad.list(),
     base44.entities.ConceptoPago.list(),
   ]);
-  const empleados    = todosEmpleados.filter(e => e.empresa_id === empresa_id && e.estado === 'activo');
+  const fechaInicioPeriodo = periodo?.fecha_inicio || '';
+  const empleados    = todosEmpleados.filter(e => {
+    if (e.empresa_id !== empresa_id || e.estado !== 'activo') return false;
+    // Excluir empleados cuya fecha de ingreso sea posterior al inicio del período
+    if (e.fecha_ingreso && fechaInicioPeriodo && e.fecha_ingreso > fechaInicioPeriodo) return false;
+    return true;
+  });
   const novedades    = todasNovedades.filter(n => n.empresa_id === empresa_id && n.periodo_id === planilla.periodo_id && n.estado === 'aprobada');
   const conceptosPago = todosConceptos.filter(c => c.empresa_id === empresa_id && c.estado === 'activo');
 
