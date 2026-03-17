@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
   const user = await base44.auth.me();
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
-  const { planilla_id } = await req.json();
+  const { planilla_id, empleados_ids } = await req.json();
   if (!planilla_id) return Response.json({ error: 'planilla_id requerido' }, { status: 400 });
 
   // ── 1. Cargar planilla y período ─────────────────────────────────────────
