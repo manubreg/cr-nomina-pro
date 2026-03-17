@@ -19,10 +19,8 @@ Deno.serve(async (req) => {
   if (!empresa_id) return Response.json({ error: 'La planilla no tiene empresa_id' }, { status: 400 });
   console.log('[calcularPlanilla] planilla ok, empresa_id =', empresa_id);
 
-  // ── FASE 2: Limpiar previos y cargar datos en paralelo ────────────────────
-  const [detsPrev, movsPrev, todosParams, empleadosEmpresa, todasNovedades, periodoArr] = await Promise.all([
-    base44.asServiceRole.entities.PlanillaDetalle.filter({ planilla_id }, '-created_date', 200),
-    base44.asServiceRole.entities.MovimientoPlanilla.filter({ planilla_id }, '-created_date', 500),
+  // ── FASE 2: Cargar datos necesarios ──────────────────────────────────────
+  const [todosParams, empleadosEmpresa, todasNovedades, periodoArr] = await Promise.all([
     base44.asServiceRole.entities.ParametroLegal.filter({ empresa_id, estado: 'vigente' }, '-created_date', 50),
     base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'activo' }, '-fecha_ingreso', 300),
     base44.asServiceRole.entities.Novedad.filter({ empresa_id, periodo_id: planilla.periodo_id, estado: 'aprobada' }, '-created_date', 300),
@@ -30,12 +28,7 @@ Deno.serve(async (req) => {
       ? base44.asServiceRole.entities.PeriodoPlanilla.filter({ id: planilla.periodo_id }, '-created_date', 1)
       : Promise.resolve([]),
   ]);
-  console.log('[calcularPlanilla] dets previos:', detsPrev.length, '| movs previos:', movsPrev.length, '| empleados:', empleadosEmpresa.length);
-
-  // ── FASE 3: Borrar previos (secuencial para evitar sobrecarga) ───────────
-  for (const d of detsPrev) await base44.asServiceRole.entities.PlanillaDetalle.delete(d.id);
-  for (const m of movsPrev) await base44.asServiceRole.entities.MovimientoPlanilla.delete(m.id);
-  console.log('[calcularPlanilla] previos eliminados');
+  console.log('[calcularPlanilla] empleados:', empleadosEmpresa.length);
 
   const periodo = periodoArr[0] || null;
 
