@@ -160,7 +160,7 @@ export async function generarBoletaPDF(empresa, empleado, periodo, detalle, movi
 
   // ── Percepciones salariales ──
   y = drawSeccion(doc, "Percepciones salariales:", y, 0, 32, 96);
-  y = drawFila(doc, "Salario base (días laborales)", diasPeriodo, `₡ ${fmt(precioDia)}`, fmtC(salBase), y, false);
+  y = drawFila(doc, "Salario base (días laborales)", diasPeriodo, C(precioDia), C(salBase), y, false);
 
   // Extras del cálculo
   const extraIngresos = ingresos.filter(m => m.descripcion !== "Salario base");
