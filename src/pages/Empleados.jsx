@@ -127,6 +127,7 @@ export default function Empleados() {
                     <td className="px-4 py-3 text-gray-600 hidden md:table-cell font-mono text-xs">{emp.identificacion}</td>
                     <td className="px-4 py-3 text-gray-600 hidden lg:table-cell">{emp.puesto || "—"}</td>
                     <td className="px-4 py-3 text-gray-600 hidden lg:table-cell text-xs">{empresaMap[emp.empresa_id] || "—"}</td>
+                    <td className="px-4 py-3 text-gray-600 hidden lg:table-cell text-xs">{emp.fecha_salida || "—"}</td>
                     <td className="px-4 py-3">
                       <Badge className={estadoColor[emp.estado] || "bg-gray-100 text-gray-600"}>{emp.estado}</Badge>
                     </td>
