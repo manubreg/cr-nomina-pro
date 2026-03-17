@@ -9,7 +9,8 @@ Deno.serve(async (req) => {
   if (!planilla_id) return Response.json({ error: 'planilla_id requerido' }, { status: 400 });
 
   // ── FASE 1: Cargar planilla ───────────────────────────────────────────────
-  const planilla = await base44.asServiceRole.entities.Planilla.get(planilla_id);
+  const planillas = await base44.asServiceRole.entities.Planilla.list('-created_date', 500);
+  const planilla = planillas.find(p => p.id === planilla_id);
   if (!planilla) return Response.json({ error: 'Planilla no encontrada' }, { status: 404 });
   if (planilla.estado === 'pagado' || planilla.estado === 'anulado') {
     return Response.json({ error: 'No se puede recalcular una planilla pagada o anulada' }, { status: 400 });
