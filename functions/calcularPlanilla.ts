@@ -207,7 +207,9 @@ Deno.serve(async (req) => {
   }
 
   // ── 7. Guardar PlanillaDetalle en bulk ───────────────────────────────────
+  console.log('[calcularPlanilla] Guardando', detallesData.length, 'detalles con bulkCreate...');
   const detallesCreados = await base44.asServiceRole.entities.PlanillaDetalle.bulkCreate(detallesData);
+  console.log('[calcularPlanilla] Detalles creados:', detallesCreados?.length);
 
   // ── 8. Guardar MovimientoPlanilla en bulk ────────────────────────────────
   const empleadoADetalle = {};
