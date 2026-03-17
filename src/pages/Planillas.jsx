@@ -63,6 +63,8 @@ export default function Planillas() {
     });
     const res = await base44.functions.invoke('calcularPlanilla', { 
       planilla_id: nueva.id,
+      empresa_id: autoForm.empresa_id,
+      periodo_id: autoForm.periodo_id,
       empleados_ids: autoForm.empleados_ids.length > 0 ? autoForm.empleados_ids : undefined
     });
     setCreandoAuto(false);
