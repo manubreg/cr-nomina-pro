@@ -45,7 +45,7 @@ export default function ReportesLegales() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `ReporteINS_${selectedPeriodo}.xlsx`;
+      a.download = `ReporteINS_${fechaInicio}_${fechaFin}.xlsx`;
       a.click();
     },
     onSuccess: () => toast.success('Reporte INS descargado'),
