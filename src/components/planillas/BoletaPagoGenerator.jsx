@@ -205,7 +205,7 @@ export async function generarBoletaPDF(empresa, empleado, periodo, detalle, movi
       doc.setFont("helvetica", "normal");
       doc.text(label, 24, y + 3.7);
       doc.text(`${pct}%`, 130, y + 3.7, { align: "right" });
-      doc.text(fmtC(monto), 198, y + 3.7, { align: "right" });
+      doc.text(C(monto), 198, y + 3.7, { align: "right" });
       return y + 5;
     };
     y = rowCCSS("SEM", "5.50", semMov?.monto || 0, false);
