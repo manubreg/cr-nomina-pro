@@ -236,8 +236,8 @@ export async function generarBoletaPDF(empresa, empleado, periodo, detalle, movi
     doc.setFontSize(6.5);
     doc.setTextColor(60, 60, 60);
     doc.text(`Tramo ${i + 1}`, 24, y + 3.2);
-    doc.text(`₡ ${fmt(t.inf)}`, 80, y + 3.2, { align: "right" });
-    doc.text(`₡ ${t.sup >= 999999999 ? "999,999,999.00" : fmt(t.sup)}`, 120, y + 3.2, { align: "right" });
+    doc.text(`${moneda} ${fmt(t.inf)}`, 80, y + 3.2, { align: "right" });
+    doc.text(`${moneda} ${t.sup >= 999999999 ? "999,999,999.00" : fmt(t.sup)}`, 120, y + 3.2, { align: "right" });
     doc.text(`${t.pct}.0%`, 160, y + 3.2, { align: "right" });
     y += 4.5;
   });
