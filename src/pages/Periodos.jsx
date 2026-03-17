@@ -296,9 +296,9 @@ export default function Periodos() {
               <tr><td colSpan={7} className="text-center py-12 text-gray-400">
                 <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" /> Cargando...
               </td></tr>
-            ) : periodos.length === 0 ? (
-              <tr><td colSpan={7} className="text-center py-12 text-gray-400 text-sm">No hay periodos registrados.</td></tr>
-            ) : periodos.map(p => {
+            ) : periodosFiltrados.length === 0 ? (
+              <tr><td colSpan={7} className="text-center py-12 text-gray-400 text-sm">No hay periodos que coincidan con los filtros.</td></tr>
+            ) : periodosFiltrados.map(p => {
               const planilla = getPlanilla(p.id);
               return (
                 <tr key={p.id} className="hover:bg-gray-50">
