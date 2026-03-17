@@ -25,7 +25,20 @@ Deno.serve(async (req) => {
   const periodo = periodos.find(p => p.id === planilla.periodo_id) || null;
   console.log('[calcularPlanilla] empresa_id =', empresa_id, '| periodo =', periodo?.tipo_periodo);
 
-  // ── 2. Parámetros legales y empleados ────────────────────────────────────
+  // ── 2. Eliminar registros previos (temprano, antes del cálculo pesado) ────
+  const [detsPrev, movsPrev] = await Promise.all([
+    base44.asServiceRole.entities.PlanillaDetalle.filter({ planilla_id }, '-created_date', 200),
+    base44.asServiceRole.entities.MovimientoPlanilla.filter({ planilla_id }, '-created_date', 500),
+  ]);
+  console.log('[calcularPlanilla] borrando', detsPrev.length, 'detalles y', movsPrev.length, 'movimientos previos');
+  if (detsPrev.length > 0 || movsPrev.length > 0) {
+    await Promise.all([
+      ...detsPrev.map(d => base44.asServiceRole.entities.PlanillaDetalle.delete(d.id)),
+      ...movsPrev.map(m => base44.asServiceRole.entities.MovimientoPlanilla.delete(m.id)),
+    ]);
+  }
+
+  // ── 3. Parámetros legales y empleados ────────────────────────────────────
   const [todosParams, empleadosEmpresa, todasNovedades] = await Promise.all([
     base44.asServiceRole.entities.ParametroLegal.filter({ empresa_id, estado: 'vigente' }, '-created_date', 50),
     base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'activo' }, '-fecha_ingreso', 300),
