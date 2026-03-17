@@ -37,7 +37,8 @@ export default function ReportesLegales() {
   const generarINS = useMutation({
     mutationFn: async () => {
       const res = await base44.functions.invoke('generarReporteINS', {
-        periodo_id: selectedPeriodo,
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin,
         empresa_id: empresaId,
       });
       const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
