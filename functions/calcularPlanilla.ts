@@ -8,14 +8,12 @@ Deno.serve(async (req) => {
   const { planilla_id, empleados_ids } = await req.json();
   if (!planilla_id) return Response.json({ error: 'planilla_id requerido' }, { status: 400 });
 
-  // ── FASE 1: Todo en paralelo (planilla_id ya disponible) ─────────────────
-  const [planillaArr, detsPrev, movsPrev] = await Promise.all([
-    base44.asServiceRole.entities.Planilla.filter({ id: planilla_id }, '-created_date', 1),
+  // ── FASE 1: Cargar planilla y datos paralelos ─────────────────────────────
+  const [planilla, detsPrev, movsPrev] = await Promise.all([
+    base44.asServiceRole.entities.Planilla.get(planilla_id),
     base44.asServiceRole.entities.PlanillaDetalle.filter({ planilla_id }, '-created_date', 200),
     base44.asServiceRole.entities.MovimientoPlanilla.filter({ planilla_id }, '-created_date', 500),
   ]);
-
-  const planilla = planillaArr[0];
   if (!planilla) return Response.json({ error: 'Planilla no encontrada' }, { status: 404 });
   if (planilla.estado === 'pagado' || planilla.estado === 'anulado') {
     return Response.json({ error: 'No se puede recalcular una planilla pagada o anulada' }, { status: 400 });
