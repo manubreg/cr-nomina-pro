@@ -166,8 +166,10 @@ Deno.serve(async (req) => {
     const ingresos    = movs.filter(m => m.tipo_movimiento === 'ingreso').reduce((s, m) => s + m.monto, 0);
 
     detallesData.push({ planilla_id, empleado_id: emp.id, empresa_id,
-      salario_base_periodo: salarioPeriodo, ingresos_totales: ingresos,
-      deducciones_totales: deducciones, neto_pagar: ingresos - deducciones,
+      salario_base_periodo: Number(salarioPeriodo) || 0,
+      ingresos_totales: Number(ingresos) || 0,
+      deducciones_totales: Number(deducciones) || 0,
+      neto_pagar: Number(ingresos - deducciones) || 0,
       base_ccss: baseCCSS, base_impuesto: baseISR,
       base_aguinaldo: totalIngresos, base_vacaciones: totalIngresos });
     movimientosTemp.push({ empleado_id: emp.id, movs });
