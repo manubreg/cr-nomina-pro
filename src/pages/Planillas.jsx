@@ -31,12 +31,6 @@ export default function Planillas() {
   const [descargando, setDescargando] = useState(null);
   const [autoModal, setAutoModal] = useState(false);
   const [autoForm, setAutoForm] = useState({ empresa_id: "", periodo_id: "", tipo_planilla: "ordinaria", empleados_ids: [] });
-
-  // Pre-fill empresa cuando se abre el modal
-  const handleOpenAutoModal = () => {
-    setAutoForm({ empresa_id: empresaId || "", periodo_id: "", tipo_planilla: "ordinaria", empleados_ids: [] });
-    setAutoModal(true);
-  };
   const [creandoAuto, setCreandoAuto] = useState(false);
   const [eliminando, setEliminando] = useState(null);
   const [busquedaEmpleados, setBusquedaEmpleados] = useState("");
@@ -60,43 +54,35 @@ export default function Planillas() {
       return;
     }
     setCreandoAuto(true);
-    try {
-      const nueva = await base44.entities.Planilla.create({
-        empresa_id: autoForm.empresa_id,
-        periodo_id: autoForm.periodo_id,
-        tipo_planilla: autoForm.tipo_planilla,
-        estado: "borrador",
-        codigo_planilla: `PLN-AUTO-${Date.now().toString().slice(-6)}`,
+    const nueva = await base44.entities.Planilla.create({
+      empresa_id: autoForm.empresa_id,
+      periodo_id: autoForm.periodo_id,
+      tipo_planilla: autoForm.tipo_planilla,
+      estado: "borrador",
+      codigo_planilla: `PLN-AUTO-${Date.now().toString().slice(-6)}`,
+    });
+    const res = await base44.functions.invoke('calcularPlanilla', { 
+      planilla_id: nueva.id,
+      empleados_ids: autoForm.empleados_ids.length > 0 ? autoForm.empleados_ids : undefined
+    });
+    setCreandoAuto(false);
+    setAutoModal(false);
+    setAutoForm({ empresa_id: "", periodo_id: "", tipo_planilla: "ordinaria", empleados_ids: [] });
+    setBusquedaEmpleados("");
+    qc.invalidateQueries(["planillas"]);
+    if (res.data?.ok) {
+      toast({
+        title: "✅ Planilla creada y calculada",
+        description: `${res.data.empleados_procesados} empleados · Neto: ₡${Number(res.data.total_neto).toLocaleString()}`,
       });
-      const res = await base44.functions.invoke('calcularPlanilla', { 
-        planilla_id: nueva.id,
-        empresa_id: nueva.empresa_id,
-        periodo_id: nueva.periodo_id,
-        estado: nueva.estado,
-        empleados_ids: autoForm.empleados_ids.length > 0 ? autoForm.empleados_ids : undefined
-      });
-      setAutoModal(false);
-      setAutoForm({ empresa_id: "", periodo_id: "", tipo_planilla: "ordinaria", empleados_ids: [] });
-      setBusquedaEmpleados("");
-      qc.invalidateQueries(["planillas"]);
-      if (res.data?.ok) {
-        toast({
-          title: "✅ Planilla creada y calculada",
-          description: `${res.data.empleados_procesados} empleados · Neto: ₡${Number(res.data.total_neto).toLocaleString()}`,
-        });
-      } else {
-        toast({ title: "Error al calcular", description: res.data?.error || "Error desconocido", variant: "destructive" });
-      }
-    } catch (err) {
-      toast({ title: "Error inesperado", description: err.message, variant: "destructive" });
-    } finally {
-      setCreandoAuto(false);
+    } else {
+      toast({ title: "Error al calcular", description: res.data?.error || "Error desconocido", variant: "destructive" });
     }
   };
 
   const handleCalcular = async (planilla) => {
     setCalculando(planilla.id);
-    const res = await base44.functions.invoke('calcularPlanilla', { planilla_id: planilla.id, empresa_id: planilla.empresa_id, periodo_id: planilla.periodo_id, estado: planilla.estado });
+    const res = await base44.functions.invoke('calcularPlanilla', { planilla_id: planilla.id });
     setCalculando(null);
     if (res.data?.ok) {
       qc.invalidateQueries(["planillas"]);
@@ -159,7 +145,7 @@ export default function Planillas() {
           <h1 className="text-2xl font-bold text-gray-900">Planillas</h1>
           <p className="text-gray-500 text-sm mt-1">{planillas.length} planillas registradas</p>
         </div>
-        <Button onClick={handleOpenAutoModal} className="bg-emerald-600 hover:bg-emerald-700">
+        <Button onClick={() => setAutoModal(true)} className="bg-emerald-600 hover:bg-emerald-700">
           <Zap className="w-4 h-4 mr-2" /> Planilla Automática
         </Button>
       </div>
