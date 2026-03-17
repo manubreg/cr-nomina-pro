@@ -2,50 +2,61 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
-
   const user = await base44.auth.me();
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
   const { planilla_id, empleados_ids } = await req.json();
   if (!planilla_id) return Response.json({ error: 'planilla_id requerido' }, { status: 400 });
 
-  // ── 1. Cargar planilla ───────────────────────────────────────────────────
-  const [planillas, periodos] = await Promise.all([
+  // ── FASE 1: Todo en paralelo (planilla_id ya disponible) ─────────────────
+  const [planillaArr, detsPrev, movsPrev] = await Promise.all([
     base44.asServiceRole.entities.Planilla.filter({ id: planilla_id }, '-created_date', 1),
-    base44.asServiceRole.entities.PeriodoPlanilla.list('-fecha_inicio', 200),
+    base44.asServiceRole.entities.PlanillaDetalle.filter({ planilla_id }, '-created_date', 200),
+    base44.asServiceRole.entities.MovimientoPlanilla.filter({ planilla_id }, '-created_date', 500),
   ]);
-  const planilla = planillas[0];
+
+  const planilla = planillaArr[0];
   if (!planilla) return Response.json({ error: 'Planilla no encontrada' }, { status: 404 });
   if (planilla.estado === 'pagado' || planilla.estado === 'anulado') {
     return Response.json({ error: 'No se puede recalcular una planilla pagada o anulada' }, { status: 400 });
   }
-
   const empresa_id = planilla.empresa_id;
-  if (!empresa_id) return Response.json({ error: 'La planilla no tiene empresa_id definido' }, { status: 400 });
-  const periodo = periodos.find(p => p.id === planilla.periodo_id) || null;
-  console.log('[calcularPlanilla] empresa_id =', empresa_id, '| periodo =', periodo?.tipo_periodo);
+  if (!empresa_id) return Response.json({ error: 'La planilla no tiene empresa_id' }, { status: 400 });
 
-  // ── 2. Eliminar registros previos (temprano, antes del cálculo pesado) ────
-  const [detsPrev, movsPrev] = await Promise.all([
-    base44.asServiceRole.entities.PlanillaDetalle.filter({ planilla_id }, '-created_date', 200),
-    base44.asServiceRole.entities.MovimientoPlanilla.filter({ planilla_id }, '-created_date', 500),
-  ]);
-  console.log('[calcularPlanilla] borrando', detsPrev.length, 'detalles y', movsPrev.length, 'movimientos previos');
-  if (detsPrev.length > 0 || movsPrev.length > 0) {
-    await Promise.all([
-      ...detsPrev.map(d => base44.asServiceRole.entities.PlanillaDetalle.delete(d.id)),
-      ...movsPrev.map(m => base44.asServiceRole.entities.MovimientoPlanilla.delete(m.id)),
-    ]);
-  }
+  console.log('[calcularPlanilla] empresa_id =', empresa_id, '| previos:', detsPrev.length, 'dets,', movsPrev.length, 'movs');
 
-  // ── 3. Parámetros legales y empleados ────────────────────────────────────
-  const [todosParams, empleadosEmpresa, todasNovedades] = await Promise.all([
+  // ── FASE 2: En paralelo — borrar previos + cargar datos necesarios ────────
+  const deleteOps = [
+    ...detsPrev.map(d => base44.asServiceRole.entities.PlanillaDetalle.delete(d.id)),
+    ...movsPrev.map(m => base44.asServiceRole.entities.MovimientoPlanilla.delete(m.id)),
+  ];
+
+  const [, , todosParams, empleadosEmpresa, todasNovedades, periodos, tipoCambioResult] = await Promise.all([
+    deleteOps.length > 0 ? Promise.all(deleteOps) : Promise.resolve(),
+    Promise.resolve(), // placeholder
     base44.asServiceRole.entities.ParametroLegal.filter({ empresa_id, estado: 'vigente' }, '-created_date', 50),
     base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'activo' }, '-fecha_ingreso', 300),
     base44.asServiceRole.entities.Novedad.filter({ empresa_id, periodo_id: planilla.periodo_id, estado: 'aprobada' }, '-created_date', 300),
+    base44.asServiceRole.entities.PeriodoPlanilla.filter({ id: planilla.periodo_id }, '-created_date', 1),
+    (async () => {
+      try {
+        const periodo_tmp = await base44.asServiceRole.entities.PeriodoPlanilla.filter({ id: planilla.periodo_id }, '-created_date', 1);
+        const fechaRef = periodo_tmp[0]?.fecha_fin || new Date().toISOString().split("T")[0];
+        const [anio, mes, dia] = fechaRef.split('-');
+        const url = `https://gee.bccr.fi.cr/Indicadores/Suscripciones/WS/wsindicadoreseconomicos.asmx/ObtenerIndicadoresEconomicos?Indicador=318&FechaInicio=${dia}/${mes}/${anio}&FechaFinal=${dia}/${mes}/${anio}&Nombre=tc&SubNiveles=N&CorreoElectronico=${Deno.env.get('BCCR_EMAIL')||''}&Token=${Deno.env.get('BCCR_TOKEN')||''}`;
+        const resp = await fetch(url, { signal: AbortSignal.timeout(3000) });
+        const xml = await resp.text();
+        const match = xml.match(/<NUM_VALOR>([\d.]+)<\/NUM_VALOR>/);
+        return match ? parseFloat(match[1]) : 650;
+      } catch { return 650; }
+    })(),
   ]);
-  console.log('[calcularPlanilla] empleados =', empleadosEmpresa.length);
 
+  const periodo = periodos[0] || null;
+  const tipoCambioVenta = tipoCambioResult || 650;
+  console.log('[calcularPlanilla] empleados =', empleadosEmpresa.length, '| TC =', tipoCambioVenta);
+
+  // ── Parámetros ────────────────────────────────────────────────────────────
   const getParam = (tipo) => {
     const p = todosParams.find(p => p.tipo === tipo);
     if (!p) return null;
@@ -60,29 +71,6 @@ Deno.serve(async (req) => {
     { limite_inferior: 4727000,  limite_superior: 999999999, porcentaje: 25 },
   ];
 
-  // ── 3. Tipo de cambio ────────────────────────────────────────────────────
-  let tipoCambioVenta = 650;
-  try {
-    const fechaRef = periodo?.fecha_fin || new Date().toISOString().split("T")[0];
-    const [anio, mes, dia] = fechaRef.split('-');
-    const url = `https://gee.bccr.fi.cr/Indicadores/Suscripciones/WS/wsindicadoreseconomicos.asmx/ObtenerIndicadoresEconomicos?Indicador=318&FechaInicio=${dia}/${mes}/${anio}&FechaFinal=${dia}/${mes}/${anio}&Nombre=tc&SubNiveles=N&CorreoElectronico=${Deno.env.get('BCCR_EMAIL')||''}&Token=${Deno.env.get('BCCR_TOKEN')||''}`;
-    const resp = await fetch(url, { signal: AbortSignal.timeout(4000) });
-    const xml = await resp.text();
-    const match = xml.match(/<NUM_VALOR>([\d.]+)<\/NUM_VALOR>/);
-    if (match) tipoCambioVenta = parseFloat(match[1]);
-  } catch { /* usa fallback */ }
-
-  // ── 4. Filtrar empleados ─────────────────────────────────────────────────
-  const fechaInicioPeriodo = periodo?.fecha_inicio || '';
-  let empleados = empleadosEmpresa;
-  if (fechaInicioPeriodo) {
-    empleados = empleados.filter(e => !e.fecha_ingreso || e.fecha_ingreso <= fechaInicioPeriodo);
-  }
-  if (empleados_ids && empleados_ids.length > 0) {
-    empleados = empleados.filter(e => empleados_ids.includes(e.id));
-  }
-
-  // ── 5. Helpers ────────────────────────────────────────────────────────────
   const calcISR = (base) => {
     let impuesto = 0;
     const tramos = [...tramosISR].sort((a, b) => a.limite_inferior - b.limite_inferior);
@@ -94,6 +82,7 @@ Deno.serve(async (req) => {
     }
     return Math.round(impuesto);
   };
+
   const factorPeriodo = (tipo) => {
     switch (tipo) {
       case 'diario':    return 1 / 30;
@@ -104,8 +93,19 @@ Deno.serve(async (req) => {
     }
   };
   const factor = factorPeriodo(periodo?.tipo_periodo || 'mensual');
+  const fechaInicioPeriodo = periodo?.fecha_inicio || '';
 
-  // ── 6. Calcular datos de cada empleado (sin I/O) ─────────────────────────
+  // ── Filtrar empleados ─────────────────────────────────────────────────────
+  let empleados = empleadosEmpresa;
+  if (fechaInicioPeriodo) {
+    empleados = empleados.filter(e => !e.fecha_ingreso || e.fecha_ingreso <= fechaInicioPeriodo);
+  }
+  if (empleados_ids && empleados_ids.length > 0) {
+    empleados = empleados.filter(e => empleados_ids.includes(e.id));
+  }
+  console.log('[calcularPlanilla] empleados activos para este período:', empleados.length);
+
+  // ── FASE 3: Calcular (pura CPU, sin I/O) ──────────────────────────────────
   const detallesData = [];
   const movimientosTemp = [];
 
@@ -184,35 +184,33 @@ Deno.serve(async (req) => {
     movimientosTemp.push({ empleado_id: emp.id, movs });
   }
 
-  // ── 7. (Previos ya eliminados en paso 2) ─────────────────────────────────
-
-  // ── 8. Guardar detalles en bulk ──────────────────────────────────────────
-  console.log('[calcularPlanilla] creando', detallesData.length, 'detalles...');
+  // ── FASE 4: Guardar detalles y movimientos en bulk ────────────────────────
+  console.log('[calcularPlanilla] guardando', detallesData.length, 'detalles...');
   const detallesCreados = await base44.asServiceRole.entities.PlanillaDetalle.bulkCreate(detallesData);
+  console.log('[calcularPlanilla] detalles guardados:', detallesCreados?.length);
 
-  // Mapa empleado → id detalle
   const empToDetalle = {};
   for (const det of detallesCreados) empToDetalle[det.empleado_id] = det.id;
 
-  // ── 9. Guardar movimientos en bulk ───────────────────────────────────────
   const todosMovimientos = [];
   for (const { empleado_id, movs } of movimientosTemp) {
     const planilla_detalle_id = empToDetalle[empleado_id];
     for (const m of movs) {
-      todosMovimientos.push({ ...m, planilla_id, planilla_detalle_id, empleado_id, concepto_id: m.concepto_id || 'auto' });
+      todosMovimientos.push({ ...m, planilla_id, planilla_detalle_id, empleado_id, concepto_id: 'auto' });
     }
   }
+
   if (todosMovimientos.length > 0) {
-    console.log('[calcularPlanilla] creando', todosMovimientos.length, 'movimientos...');
+    console.log('[calcularPlanilla] guardando', todosMovimientos.length, 'movimientos...');
     await base44.asServiceRole.entities.MovimientoPlanilla.bulkCreate(todosMovimientos);
   }
 
-  // ── 10. Actualizar totales ────────────────────────────────────────────────
-  const totalIngresos    = detallesData.reduce((s, d) => s + d.ingresos_totales, 0);
-  const totalDeducciones = detallesData.reduce((s, d) => s + d.deducciones_totales, 0);
+  // ── FASE 5: Actualizar totales planilla ───────────────────────────────────
+  const totalIngresosFinal    = detallesData.reduce((s, d) => s + d.ingresos_totales, 0);
+  const totalDeduccionesFinal = detallesData.reduce((s, d) => s + d.deducciones_totales, 0);
   await base44.asServiceRole.entities.Planilla.update(planilla_id, {
-    total_ingresos: totalIngresos, total_deducciones: totalDeducciones,
-    total_neto: totalIngresos - totalDeducciones,
+    total_ingresos: totalIngresosFinal, total_deducciones: totalDeduccionesFinal,
+    total_neto: totalIngresosFinal - totalDeduccionesFinal,
     cantidad_empleados: detallesData.length,
     estado: 'calculado',
     fecha_calculo: new Date().toISOString().split('T')[0],
@@ -223,8 +221,8 @@ Deno.serve(async (req) => {
   return Response.json({
     ok: true,
     empleados_procesados: detallesData.length,
-    total_ingresos: totalIngresos,
-    total_deducciones: totalDeducciones,
-    total_neto: totalIngresos - totalDeducciones,
+    total_ingresos: totalIngresosFinal,
+    total_deducciones: totalDeduccionesFinal,
+    total_neto: totalIngresosFinal - totalDeduccionesFinal,
   });
 });
