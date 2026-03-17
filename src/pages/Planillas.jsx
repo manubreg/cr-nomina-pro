@@ -156,7 +156,7 @@ export default function Planillas() {
           <h1 className="text-2xl font-bold text-gray-900">Planillas</h1>
           <p className="text-gray-500 text-sm mt-1">{planillas.length} planillas registradas</p>
         </div>
-        <Button onClick={() => setAutoModal(true)} className="bg-emerald-600 hover:bg-emerald-700">
+        <Button onClick={handleOpenAutoModal} className="bg-emerald-600 hover:bg-emerald-700">
           <Zap className="w-4 h-4 mr-2" /> Planilla Automática
         </Button>
       </div>
