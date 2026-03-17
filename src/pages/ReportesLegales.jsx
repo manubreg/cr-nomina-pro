@@ -205,18 +205,19 @@ export default function ReportesLegales() {
   );
 }
 
-function ReporteRetenciones({ titulo, descripcion, color, colorBg, funcionName, selectedPeriodo, empresa_id }) {
+function ReporteRetenciones({ titulo, descripcion, color, funcionName, fechaInicio, fechaFin, rangoValido, empresa_id }) {
   const mutation = useMutation({
     mutationFn: async () => {
       const res = await base44.functions.invoke(funcionName, {
-        periodo_id: selectedPeriodo,
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin,
         empresa_id,
       });
       const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${funcionName}_${selectedPeriodo}.xlsx`;
+      a.download = `${funcionName}_${fechaInicio}_${fechaFin}.xlsx`;
       a.click();
     },
     onSuccess: () => toast.success('Reporte descargado'),
@@ -235,7 +236,7 @@ function ReporteRetenciones({ titulo, descripcion, color, colorBg, funcionName, 
         <p className="text-sm text-gray-600">{descripcion}</p>
         <Button
           onClick={() => mutation.mutate()}
-          disabled={!selectedPeriodo || mutation.isPending}
+          disabled={!rangoValido || mutation.isPending}
           className="w-full gap-2"
         >
           {mutation.isPending ? (
