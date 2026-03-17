@@ -241,6 +241,43 @@ export default function Periodos() {
         </div>
       )}
 
+      {/* Filtros */}
+      <div className="flex flex-wrap gap-3 items-center bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
+        <span className="text-xs font-semibold text-gray-500 uppercase">Filtros:</span>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-500">Estado</label>
+          <select
+            value={filtroEstado}
+            onChange={e => setFiltroEstado(e.target.value)}
+            className="px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="todos">Todos</option>
+            <option value="abierto">Abierto</option>
+            <option value="calculado">Calculado</option>
+            <option value="en_revision">En Revisión</option>
+            <option value="aprobado">Aprobado</option>
+            <option value="pagado">Pagado</option>
+            <option value="anulado">Anulado</option>
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-500">Tipo</label>
+          <select
+            value={filtroTipo}
+            onChange={e => setFiltroTipo(e.target.value)}
+            className="px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="todos">Todos</option>
+            <option value="semanal">Semanal</option>
+            <option value="quincenal">Quincenal</option>
+            <option value="mensual">Mensual</option>
+            <option value="aguinaldo">Aguinaldo</option>
+            <option value="liquidacion">Liquidación</option>
+          </select>
+        </div>
+        <span className="ml-auto text-xs text-gray-400">{periodosFiltrados.length} resultado(s)</span>
+      </div>
+
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <table className="w-full text-sm">
           <thead>
