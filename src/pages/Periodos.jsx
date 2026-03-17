@@ -61,6 +61,8 @@ export default function Periodos() {
   const [editModal, setEditModal] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [editSaving, setEditSaving] = useState(false);
+  const [filtroEstado, setFiltroEstado] = useState("todos");
+  const [filtroTipo, setFiltroTipo] = useState("todos");
   const fileRef = useRef();
 
   const load = async () => {
