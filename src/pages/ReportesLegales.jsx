@@ -164,53 +164,40 @@ export default function ReportesLegales() {
           titulo="Retenciones ISR"
           descripcion="Retenciones de Impuesto sobre la Renta por empleado."
           color="text-red-600"
-          colorBg="bg-red-100"
           funcionName="generarReporteISR"
-          selectedPeriodo={selectedPeriodo}
+          fechaInicio={fechaInicio} fechaFin={fechaFin} rangoValido={rangoValido}
           empresa_id={empresaId}
         />
-
-        {/* Reporte Embargos */}
         <ReporteRetenciones 
           titulo="Embargos y Pensiones"
           descripcion="Embargos judiciales y retenciones por pensiones."
           color="text-orange-600"
-          colorBg="bg-orange-100"
           funcionName="generarReporteEmbargos"
-          selectedPeriodo={selectedPeriodo}
+          fechaInicio={fechaInicio} fechaFin={fechaFin} rangoValido={rangoValido}
           empresa_id={empresaId}
         />
-
-        {/* Reporte Solidarista */}
         <ReporteRetenciones 
           titulo="Asociación Solidarista"
           descripcion="Aportes a asociación solidarista del empleado."
           color="text-purple-600"
-          colorBg="bg-purple-100"
           funcionName="generarReporteSolidarista"
-          selectedPeriodo={selectedPeriodo}
+          fechaInicio={fechaInicio} fechaFin={fechaFin} rangoValido={rangoValido}
           empresa_id={empresaId}
         />
-
-        {/* Reporte Otras Deducciones */}
         <ReporteRetenciones 
           titulo="Otras Deducciones"
           descripcion="Deducciones varias no clasificadas en otras categorías."
           color="text-gray-600"
-          colorBg="bg-gray-100"
           funcionName="generarReporteOtrasDeducciones"
-          selectedPeriodo={selectedPeriodo}
+          fechaInicio={fechaInicio} fechaFin={fechaFin} rangoValido={rangoValido}
           empresa_id={empresaId}
         />
-
-        {/* Reporte Banco Popular */}
         <ReporteRetenciones 
           titulo="Retenciones Banco Popular"
           descripcion="Retenciones del Banco Popular por seguro y servicios bancarios."
           color="text-blue-600"
-          colorBg="bg-blue-100"
           funcionName="generarReporteBancoPopular"
-          selectedPeriodo={selectedPeriodo}
+          fechaInicio={fechaInicio} fechaFin={fechaFin} rangoValido={rangoValido}
           empresa_id={empresaId}
         />
       </div>
