@@ -259,7 +259,7 @@ Deno.serve(async (req) => {
     const neto        = ingresos - deducciones;
 
     // ─ Guardar PlanillaDetalle ───────────────────────────────────────────────
-    const detalle = await base44.entities.PlanillaDetalle.create({
+    const detalle = await base44.asServiceRole.entities.PlanillaDetalle.create({
       planilla_id,
       empleado_id: emp.id,
       empresa_id,
@@ -274,7 +274,7 @@ Deno.serve(async (req) => {
     });
 
     // ─ Guardar MovimientosPlanilla ───────────────────────────────────────────
-    await Promise.all(movs.map(m => base44.entities.MovimientoPlanilla.create({
+    await Promise.all(movs.map(m => base44.asServiceRole.entities.MovimientoPlanilla.create({
       ...m,
       planilla_id,
       planilla_detalle_id: detalle.id,
@@ -289,7 +289,7 @@ Deno.serve(async (req) => {
 
   // ── 6. Actualizar totales de la planilla ──────────────────────────────────
   const totalNeto = totalIngresosGlobal - totalDeduccionesGlobal;
-  await base44.entities.Planilla.update(planilla_id, {
+  await base44.asServiceRole.entities.Planilla.update(planilla_id, {
     total_ingresos:    totalIngresosGlobal,
     total_deducciones: totalDeduccionesGlobal,
     total_neto:        totalNeto,
