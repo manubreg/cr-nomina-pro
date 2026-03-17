@@ -217,4 +217,8 @@ Deno.serve(async (req) => {
     total_deducciones: totalDeduccionesFinal,
     total_neto: totalIngresosFinal - totalDeduccionesFinal,
   });
+  } catch (err) {
+    console.error('[calcularPlanilla] ERROR:', err?.message, err?.stack);
+    return Response.json({ error: err?.message || 'Error interno' }, { status: 500 });
+  }
 });
