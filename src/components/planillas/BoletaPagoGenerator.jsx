@@ -170,11 +170,11 @@ export async function generarBoletaPDF(empresa, empleado, periodo, detalle, movi
   const horasM     = extraIngresos.find(m => m.descripcion?.toLowerCase().includes("mixta") || m.descripcion?.toLowerCase().includes("mix"));
   const bonoLinea  = extraIngresos.find(m => m.descripcion?.toLowerCase().includes("bono"));
 
-  y = drawFila(doc, "Vacaciones", "", "", vacLinea ? fmtC(vacLinea.monto) : "-", y, true);
-  y = drawFila(doc, "Horas extraordinarias diurnas", horasD ? horasD.cantidad : "", "", horasD ? fmtC(horasD.monto) : "-", y, false);
-  y = drawFila(doc, "Horas extraordinarias nocturnas", horasN ? horasN.cantidad : "", "", horasN ? fmtC(horasN.monto) : "-", y, true);
-  y = drawFila(doc, "Horas extraordinarias mixtas", horasM ? horasM.cantidad : "", "", horasM ? fmtC(horasM.monto) : "-", y, false);
-  y = drawFila(doc, "Bonos", "", "", bonoLinea ? fmtC(bonoLinea.monto) : "-", y, true);
+  y = drawFila(doc, "Vacaciones", "", "", vacLinea ? C(vacLinea.monto) : "-", y, true);
+  y = drawFila(doc, "Horas extraordinarias diurnas", horasD ? horasD.cantidad : "", "", horasD ? C(horasD.monto) : "-", y, false);
+  y = drawFila(doc, "Horas extraordinarias nocturnas", horasN ? horasN.cantidad : "", "", horasN ? C(horasN.monto) : "-", y, true);
+  y = drawFila(doc, "Horas extraordinarias mixtas", horasM ? horasM.cantidad : "", "", horasM ? C(horasM.monto) : "-", y, false);
+  y = drawFila(doc, "Bonos", "", "", bonoLinea ? C(bonoLinea.monto) : "-", y, true);
 
   // Percepciones no salariales
   y = drawSeccion(doc, "Percepciones no salariales:", y, 100, 100, 100);
