@@ -140,6 +140,33 @@ export default function AguinaldoPage() {
         )}
       </div>
 
+      {/* Modal cálculo masivo */}
+      <Dialog open={masivo} onOpenChange={setMasivo}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><Users className="w-5 h-5 text-emerald-600" /> Cálculo Masivo de Aguinaldo</DialogTitle></DialogHeader>
+          <p className="text-sm text-gray-500">Calcula el aguinaldo de todos los empleados activos de la empresa para el año indicado.</p>
+          <div className="space-y-3 mt-2">
+            <div className="space-y-1">
+              <Label>Año</Label>
+              <Input type="number" value={anioMasivo} onChange={e => setAnioMasivo(Number(e.target.value))} />
+            </div>
+            {resultadoMasivo && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-sm text-emerald-800 space-y-1">
+                <p className="font-semibold">Proceso completado</p>
+                <p>✔ {resultadoMasivo.ok} calculados correctamente</p>
+                {resultadoMasivo.err > 0 && <p className="text-red-600">✖ {resultadoMasivo.err} con error</p>}
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setMasivo(false)} disabled={calculandoMasivo}>Cerrar</Button>
+            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={calcularMasivo} disabled={calculandoMasivo || !empresaId}>
+              {calculandoMasivo ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Calculando...</> : <><Calculator className="w-4 h-4 mr-2" /> Calcular</>}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>{editing ? "Editar Aguinaldo" : "Nuevo Aguinaldo"}</DialogTitle></DialogHeader>
