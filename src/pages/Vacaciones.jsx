@@ -28,6 +28,13 @@ export default function Vacaciones() {
   const saldos = filterByEmpresa(saldosRaw);
   const { data: empleados = [] } = useQuery({ queryKey: ["empleados"], queryFn: () => base44.entities.Empleado.list() });
   const empleadoMap = Object.fromEntries(empleados.map(e => [e.id, `${e.nombre} ${e.apellidos}`]));
+  const empleadoEstadoMap = Object.fromEntries(empleados.map(e => [e.id, e.estado]));
+
+  // Filtrar saldos: excluir empleados liquidados o inactivos (sus vacaciones ya se liquidaron)
+  const saldosFiltrados = saldos.filter(s => {
+    const estado = empleadoEstadoMap[s.empleado_id];
+    return estado !== 'liquidado' && estado !== 'inactivo';
+  });
 
   const save = useMutation({
     mutationFn: (data) => editing ? base44.entities.VacacionSolicitud.update(editing, data) : base44.entities.VacacionSolicitud.create(data),
