@@ -27,6 +27,10 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
   const [departamentoBusqueda, setDepartamentoBusqueda] = useState("");
   const [centroCostoBusqueda, setCentroCostoBusqueda] = useState("");
   const [puestoBusqueda, setPuestoBusqueda] = useState("");
+  const [showPuesto, setShowPuesto] = useState(false);
+  const [showDep, setShowDep] = useState(false);
+  const [showCC, setShowCC] = useState(false);
+  const [showJef, setShowJef] = useState(false);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const { data: departamentosApi = [] } = useQuery({
