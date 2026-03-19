@@ -84,11 +84,17 @@ Deno.serve(async (req) => {
   const factor = factorPeriodo(periodo?.tipo_periodo || 'mensual');
   const fechaInicioPeriodo = periodo?.fecha_inicio || '';
 
-  // ── Filtrar empleados ─────────────────────────────────────────────────────
-  let empleados = empleadosEmpresa;
-  if (fechaInicioPeriodo) {
-    empleados = empleados.filter(e => !e.fecha_ingreso || e.fecha_ingreso <= fechaInicioPeriodo);
-  }
+  // ── Filtrar empleados por fechas del período ─────────────────────────────
+  const fechaFinPeriodo = periodo?.fecha_fin || '';
+  let empleados = empleadosEmpresa.filter(e => {
+    // Excluir liquidados si ya tienen fecha de salida antes del inicio del período
+    if (e.estado === 'liquidado') return false;
+    // Debe haber ingresado antes o durante el período
+    if (fechaInicioPeriodo && e.fecha_ingreso && e.fecha_ingreso > fechaFinPeriodo) return false;
+    // Si tiene fecha de salida, debe ser después del inicio del período
+    if (fechaInicioPeriodo && e.fecha_salida && e.fecha_salida < fechaInicioPeriodo) return false;
+    return true;
+  });
   if (empleados_ids && empleados_ids.length > 0) {
     empleados = empleados.filter(e => empleados_ids.includes(e.id));
   }
