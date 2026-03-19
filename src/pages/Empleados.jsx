@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import EmpleadoForm from "@/components/empleados/EmpleadoForm";
+import ImportarEmpleadosModal from "@/components/empleados/ImportarEmpleadosModal";
 import { useEmpresaContext } from "@/components/EmpresaContext";
 
 const estadoColor = { activo: "bg-emerald-100 text-emerald-700", suspendido: "bg-amber-100 text-amber-700", inactivo: "bg-gray-100 text-gray-600", liquidado: "bg-red-100 text-red-600" };
