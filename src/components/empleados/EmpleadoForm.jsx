@@ -50,11 +50,42 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
 
   useEffect(() => {
     if (editId) {
-      base44.entities.Empleado.filter({ id: editId }).then(r => r[0] && setForm({ ...empty, ...r[0] }));
+      base44.entities.Empleado.filter({ id: editId }).then(r => {
+        if (r[0]) {
+          setForm({ ...empty, ...r[0] });
+          setPuestoBusqueda(r[0].puesto || "");
+        }
+      });
     } else {
       setForm(empty);
+      setPuestoBusqueda("");
+      setDepartamentoBusqueda("");
+      setCentroCostoBusqueda("");
+      setJefaturaBusqueda("");
     }
   }, [editId, open]);
+
+  // Inicializar labels de IDs al cargar las listas
+  useEffect(() => {
+    if (form.departamento_id && departamentos.length > 0) {
+      const dep = departamentos.find(d => d.id === form.departamento_id);
+      if (dep) setDepartamentoBusqueda(dep.nombre);
+    }
+  }, [departamentos, form.departamento_id]);
+
+  useEffect(() => {
+    if (form.centro_costo_id && centrosCostoFinal.length > 0) {
+      const cc = centrosCostoFinal.find(c => c.id === form.centro_costo_id);
+      if (cc) setCentroCostoBusqueda(cc.nombre);
+    }
+  }, [centrosCostoFinal, form.centro_costo_id]);
+
+  useEffect(() => {
+    if (form.jefatura_id && empleados.length > 0) {
+      const jefe = empleados.find(e => e.id === form.jefatura_id);
+      if (jefe) setJefaturaBusqueda(`${jefe.nombre} ${jefe.apellidos}`);
+    }
+  }, [empleados, form.jefatura_id]);
 
   const save = useMutation({
     mutationFn: (data) => editId ? base44.entities.Empleado.update(editId, data) : base44.entities.Empleado.create(data),
