@@ -104,11 +104,32 @@ Deno.serve(async (req) => {
   const detallesData = [];
   const movimientosTemp = [];
 
+  const diasEnPeriodo = (fechaIni, fechaFin) => {
+    const d1 = new Date(fechaIni + 'T00:00:00');
+    const d2 = new Date(fechaFin + 'T00:00:00');
+    return Math.max(0, Math.round((d2 - d1) / 86400000) + 1);
+  };
+
   for (const emp of empleados) {
     const salarioMensual = emp.moneda === "USD"
       ? Math.round((emp.salario_base || 0) * tipoCambioVenta)
       : (emp.salario_base || 0);
-    const salarioPeriodo = Math.round(salarioMensual * factor);
+
+    // Calcular días trabajados si el empleado ingresó o salió dentro del período
+    let salarioPeriodo;
+    const pIni = fechaInicioPeriodo;
+    const pFin = fechaFinPeriodo;
+    if (pIni && pFin) {
+      const efectivoDesde = emp.fecha_ingreso && emp.fecha_ingreso > pIni ? emp.fecha_ingreso : pIni;
+      const efectivoHasta = emp.fecha_salida && emp.fecha_salida < pFin ? emp.fecha_salida : pFin;
+      const diasTrabajados = diasEnPeriodo(efectivoDesde, efectivoHasta);
+      const diasPeriodo = diasEnPeriodo(pIni, pFin);
+      const proporcional = diasPeriodo > 0 ? diasTrabajados / diasPeriodo : 1;
+      salarioPeriodo = Math.round(salarioMensual * factor * proporcional);
+    } else {
+      salarioPeriodo = Math.round(salarioMensual * factor);
+    }
+
     const movs = [];
 
     movs.push({ tipo_movimiento: 'ingreso', descripcion: 'Salario base', monto: salarioPeriodo,
