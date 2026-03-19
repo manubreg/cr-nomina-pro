@@ -20,6 +20,7 @@ export default function Empleados() {
   const [estadoFiltro, setEstadoFiltro] = useState("activo");
   const [formOpen, setFormOpen] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [importarOpen, setImportarOpen] = useState(false);
 
   const { data: empleadosRaw = [], isLoading } = useQuery({
     queryKey: ["empleados", empresaId],
