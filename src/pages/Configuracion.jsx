@@ -42,7 +42,7 @@ export default function Configuracion() {
     },
     onSuccess: () => {
       const keys = ["departamentos", "centrosCosto", "puestos"];
-      qc.invalidateQueries([keys[tab]]);
+      qc.invalidateQueries({ queryKey: [keys[tab], empresaId] });
       setForm({ nombre: "", codigo: "", descripcion: "" });
       setEditId(null);
     },
