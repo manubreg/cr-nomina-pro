@@ -10,7 +10,8 @@ export default function Configuracion() {
   const { empresaId } = useEmpresaContext();
   const [tab, setTab] = useState(0);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({ nombre: "", codigo: "", descripcion: "" });
+  const [form, setForm] = useState({ nombre: "", codigo: "", descripcion: "", pais: "" });
+  const [depSeleccionado, setDepSeleccionado] = useState("");
 
   // Fetch data
   const { data: departamentos = [] } = useQuery({
