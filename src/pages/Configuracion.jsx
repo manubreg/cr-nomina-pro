@@ -60,14 +60,25 @@ export default function Configuracion() {
     },
   });
 
+  // Auto-generar código CC: codigoPais(dep) + codigoDep
+  const autoCodCC = (depId) => {
+    const dep = departamentos.find(d => d.id === depId);
+    if (!dep) return "";
+    const paisCod = dep.pais ? dep.pais.substring(0, 2).toUpperCase() : "XX";
+    const depCod = dep.codigo ? dep.codigo.toUpperCase() : dep.nombre.substring(0, 3).toUpperCase();
+    return `${paisCod}-${depCod}`;
+  };
+
   const handleEdit = (item) => {
     setEditId(item.id);
-    setForm({ nombre: item.nombre, codigo: item.codigo || "", descripcion: item.descripcion || "" });
+    setForm({ nombre: item.nombre, codigo: item.codigo || "", descripcion: item.descripcion || "", pais: item.pais || "" });
+    setDepSeleccionado("");
   };
 
   const handleNew = () => {
     setEditId(null);
-    setForm({ nombre: "", codigo: "", descripcion: "" });
+    setForm({ nombre: "", codigo: "", descripcion: "", pais: "" });
+    setDepSeleccionado("");
   };
 
   const data = [departamentos, centrosCosto, puestos][tab];
