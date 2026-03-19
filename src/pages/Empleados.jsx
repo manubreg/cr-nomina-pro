@@ -66,9 +66,14 @@ export default function Empleados() {
           <h1 className="text-2xl font-bold text-gray-900">Empleados</h1>
           <p className="text-gray-500 text-sm mt-1">{filtered.length} empleados encontrados</p>
         </div>
-        <Button onClick={openNew} className="bg-blue-700 hover:bg-blue-800">
-          <Plus className="w-4 h-4 mr-2" /> Nuevo Empleado
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportarOpen(true)} className="gap-2">
+            <Upload className="w-4 h-4" /> Importar CSV/Excel
+          </Button>
+          <Button onClick={openNew} className="bg-blue-700 hover:bg-blue-800">
+            <Plus className="w-4 h-4 mr-2" /> Nuevo Empleado
+          </Button>
+        </div>
       </div>
 
       {/* Filtros */}
