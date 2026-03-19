@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
   // ── FASE 1: Cargar datos en paralelo ──────────────────────────────────────
   const [todosParams, empleadosEmpresa, todasNovedades, periodoArr] = await Promise.all([
     base44.asServiceRole.entities.ParametroLegal.filter({ empresa_id, estado: 'vigente' }, '-created_date', 50),
-    base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'activo' }, '-fecha_ingreso', 300),
+    base44.asServiceRole.entities.Empleado.filter({ empresa_id }, '-fecha_ingreso', 500),
     periodo_id
       ? base44.asServiceRole.entities.Novedad.filter({ empresa_id, periodo_id, estado: 'aprobada' }, '-created_date', 300)
       : Promise.resolve([]),
