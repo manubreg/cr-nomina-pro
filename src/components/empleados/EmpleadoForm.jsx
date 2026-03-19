@@ -210,26 +210,21 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
                 <Input
                   placeholder="Buscar puesto..."
                   value={puestoBusqueda}
-                  onChange={e => setPuestoBusqueda(e.target.value)}
+                  onChange={e => { setPuestoBusqueda(e.target.value); setShowPuesto(true); }}
+                  onFocus={() => setShowPuesto(true)}
+                  onBlur={() => setTimeout(() => setShowPuesto(false), 150)}
                 />
-                {puestoBusqueda && (
+                {showPuesto && puestoBusqueda && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
-                    {puestosFinal
-                      .filter(p => p.nombre.toLowerCase().includes(puestoBusqueda.toLowerCase()))
-                      .map(p => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => {
-                            set("puesto", p.nombre);
-                            setPuestoBusqueda(p.nombre);
-                          }}
-                          className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm border-b border-gray-100 last:border-b-0"
-                        >
-                          {p.nombre}
-                        </button>
-                      ))}
-                      {puestosFinal.filter(p => p.nombre.toLowerCase().includes(puestoBusqueda.toLowerCase())).length === 0 && (
+                    {puestosFinal.filter(p => p.nombre.toLowerCase().includes(puestoBusqueda.toLowerCase())).map(p => (
+                      <button key={p.id} type="button"
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => { set("puesto", p.nombre); setPuestoBusqueda(p.nombre); setShowPuesto(false); }}
+                        className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm border-b border-gray-100 last:border-b-0">
+                        {p.nombre}
+                      </button>
+                    ))}
+                    {puestosFinal.filter(p => p.nombre.toLowerCase().includes(puestoBusqueda.toLowerCase())).length === 0 && (
                       <div className="px-3 py-2 text-sm text-gray-400">Sin resultados</div>
                     )}
                   </div>
@@ -242,26 +237,21 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
                 <Input
                   placeholder="Buscar departamento..."
                   value={departamentoBusqueda}
-                  onChange={e => setDepartamentoBusqueda(e.target.value)}
+                  onChange={e => { setDepartamentoBusqueda(e.target.value); setShowDep(true); }}
+                  onFocus={() => setShowDep(true)}
+                  onBlur={() => setTimeout(() => setShowDep(false), 150)}
                 />
-                {departamentoBusqueda && (
+                {showDep && departamentoBusqueda && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
-                    {departamentos
-                      .filter(d => d.nombre.toLowerCase().includes(departamentoBusqueda.toLowerCase()))
-                      .map(d => (
-                        <button
-                          key={d.id}
-                          type="button"
-                          onClick={() => {
-                            set("departamento_id", d.id);
-                            setDepartamentoBusqueda(d.nombre);
-                          }}
-                          className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm border-b border-gray-100 last:border-b-0"
-                        >
-                          {d.nombre}
-                        </button>
-                      ))}
-                      {departamentos.filter(d => d.nombre.toLowerCase().includes(departamentoBusqueda.toLowerCase())).length === 0 && (
+                    {departamentos.filter(d => d.nombre.toLowerCase().includes(departamentoBusqueda.toLowerCase())).map(d => (
+                      <button key={d.id} type="button"
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => { set("departamento_id", d.id); setDepartamentoBusqueda(d.nombre); setShowDep(false); }}
+                        className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm border-b border-gray-100 last:border-b-0">
+                        {d.nombre}
+                      </button>
+                    ))}
+                    {departamentos.filter(d => d.nombre.toLowerCase().includes(departamentoBusqueda.toLowerCase())).length === 0 && (
                       <div className="px-3 py-2 text-sm text-gray-400">Sin resultados</div>
                     )}
                   </div>
@@ -274,26 +264,21 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
                 <Input
                   placeholder="Buscar centro..."
                   value={centroCostoBusqueda}
-                  onChange={e => setCentroCostoBusqueda(e.target.value)}
+                  onChange={e => { setCentroCostoBusqueda(e.target.value); setShowCC(true); }}
+                  onFocus={() => setShowCC(true)}
+                  onBlur={() => setTimeout(() => setShowCC(false), 150)}
                 />
-                {centroCostoBusqueda && (
+                {showCC && centroCostoBusqueda && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
-                    {centrosCostoFinal
-                      .filter(c => c.nombre.toLowerCase().includes(centroCostoBusqueda.toLowerCase()))
-                      .map(c => (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => {
-                            set("centro_costo_id", c.id);
-                            setCentroCostoBusqueda(c.nombre);
-                          }}
-                          className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm border-b border-gray-100 last:border-b-0"
-                        >
-                          {c.nombre}
-                        </button>
-                      ))}
-                      {centrosCostoFinal.filter(c => c.nombre.toLowerCase().includes(centroCostoBusqueda.toLowerCase())).length === 0 && (
+                    {centrosCostoFinal.filter(c => c.nombre.toLowerCase().includes(centroCostoBusqueda.toLowerCase())).map(c => (
+                      <button key={c.id} type="button"
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => { set("centro_costo_id", c.id); setCentroCostoBusqueda(c.nombre); setShowCC(false); }}
+                        className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm border-b border-gray-100 last:border-b-0">
+                        {c.nombre}
+                      </button>
+                    ))}
+                    {centrosCostoFinal.filter(c => c.nombre.toLowerCase().includes(centroCostoBusqueda.toLowerCase())).length === 0 && (
                       <div className="px-3 py-2 text-sm text-gray-400">Sin resultados</div>
                     )}
                   </div>
@@ -306,26 +291,21 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
                 <Input
                   placeholder="Buscar empleado..."
                   value={jefaturaBusqueda}
-                  onChange={e => setJefaturaBusqueda(e.target.value)}
+                  onChange={e => { setJefaturaBusqueda(e.target.value); setShowJef(true); }}
+                  onFocus={() => setShowJef(true)}
+                  onBlur={() => setTimeout(() => setShowJef(false), 150)}
                 />
-                {jefaturaBusqueda && (
+                {showJef && jefaturaBusqueda && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
-                    {empleados
-                      .filter(e => `${e.nombre} ${e.apellidos}`.toLowerCase().includes(jefaturaBusqueda.toLowerCase()))
-                      .map(e => (
-                        <button
-                          key={e.id}
-                          type="button"
-                          onClick={() => {
-                            set("jefatura_id", e.id);
-                            setJefaturaBusqueda(`${e.nombre} ${e.apellidos}`);
-                          }}
-                          className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm border-b border-gray-100 last:border-b-0"
-                        >
-                          {e.nombre} {e.apellidos}
-                        </button>
-                      ))}
-                      {empleados.filter(e => `${e.nombre} ${e.apellidos}`.toLowerCase().includes(jefaturaBusqueda.toLowerCase())).length === 0 && (
+                    {empleados.filter(e => `${e.nombre} ${e.apellidos}`.toLowerCase().includes(jefaturaBusqueda.toLowerCase())).map(e => (
+                      <button key={e.id} type="button"
+                        onMouseDown={e2 => e2.preventDefault()}
+                        onClick={() => { set("jefatura_id", e.id); setJefaturaBusqueda(`${e.nombre} ${e.apellidos}`); setShowJef(false); }}
+                        className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm border-b border-gray-100 last:border-b-0">
+                        {e.nombre} {e.apellidos}
+                      </button>
+                    ))}
+                    {empleados.filter(e => `${e.nombre} ${e.apellidos}`.toLowerCase().includes(jefaturaBusqueda.toLowerCase())).length === 0 && (
                       <div className="px-3 py-2 text-sm text-gray-400">Sin resultados</div>
                     )}
                   </div>
