@@ -120,6 +120,42 @@ export default function Configuracion() {
                 placeholder="Nombre"
               />
             </div>
+
+            {/* Campo País — solo para Departamentos */}
+            {tab === 0 && (
+              <div>
+                <label className="text-xs font-medium text-gray-600">País</label>
+                <input
+                  type="text"
+                  value={form.pais}
+                  onChange={e => setForm({ ...form, pais: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ej: Costa Rica, CR"
+                />
+              </div>
+            )}
+
+            {/* Selector de Departamento + código auto — solo para Centros de Costos */}
+            {tab === 1 && (
+              <div>
+                <label className="text-xs font-medium text-gray-600">Departamento (para código)</label>
+                <select
+                  value={depSeleccionado}
+                  onChange={e => {
+                    const depId = e.target.value;
+                    setDepSeleccionado(depId);
+                    if (depId) setForm(f => ({ ...f, codigo: autoCodCC(depId) }));
+                  }}
+                  className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Seleccionar departamento...</option>
+                  {departamentos.map(d => (
+                    <option key={d.id} value={d.id}>{d.nombre} {d.pais ? `(${d.pais})` : ""}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div>
               <label className="text-xs font-medium text-gray-600">Código</label>
               <input
@@ -127,7 +163,7 @@ export default function Configuracion() {
                 value={form.codigo}
                 onChange={e => setForm({ ...form, codigo: e.target.value })}
                 className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Código"
+                placeholder={tab === 1 ? "Auto-generado al seleccionar depto." : "Código"}
               />
             </div>
             <div>
