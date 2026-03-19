@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
   // ── FASE 1: Cargar datos en paralelo ──────────────────────────────────────
   const [todosParams, empleadosEmpresa, todasNovedades, periodoArr] = await Promise.all([
     base44.asServiceRole.entities.ParametroLegal.filter({ empresa_id, estado: 'vigente' }, '-created_date', 50),
-    base44.asServiceRole.entities.Empleado.filter({ empresa_id }, '-fecha_ingreso', 500),
+    base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'activo' }, '-fecha_ingreso', 300),
     periodo_id
       ? base44.asServiceRole.entities.Novedad.filter({ empresa_id, periodo_id, estado: 'aprobada' }, '-created_date', 300)
       : Promise.resolve([]),
@@ -84,17 +84,11 @@ Deno.serve(async (req) => {
   const factor = factorPeriodo(periodo?.tipo_periodo || 'mensual');
   const fechaInicioPeriodo = periodo?.fecha_inicio || '';
 
-  // ── Filtrar empleados por fechas del período ─────────────────────────────
-  const fechaFinPeriodo = periodo?.fecha_fin || '';
-  let empleados = empleadosEmpresa.filter(e => {
-    // Excluir liquidados si ya tienen fecha de salida antes del inicio del período
-    if (e.estado === 'liquidado') return false;
-    // Debe haber ingresado antes o durante el período
-    if (fechaInicioPeriodo && e.fecha_ingreso && e.fecha_ingreso > fechaFinPeriodo) return false;
-    // Si tiene fecha de salida, debe ser después del inicio del período
-    if (fechaInicioPeriodo && e.fecha_salida && e.fecha_salida < fechaInicioPeriodo) return false;
-    return true;
-  });
+  // ── Filtrar empleados ─────────────────────────────────────────────────────
+  let empleados = empleadosEmpresa;
+  if (fechaInicioPeriodo) {
+    empleados = empleados.filter(e => !e.fecha_ingreso || e.fecha_ingreso <= fechaInicioPeriodo);
+  }
   if (empleados_ids && empleados_ids.length > 0) {
     empleados = empleados.filter(e => empleados_ids.includes(e.id));
   }
@@ -104,32 +98,11 @@ Deno.serve(async (req) => {
   const detallesData = [];
   const movimientosTemp = [];
 
-  const diasEnPeriodo = (fechaIni, fechaFin) => {
-    const d1 = new Date(fechaIni + 'T00:00:00');
-    const d2 = new Date(fechaFin + 'T00:00:00');
-    return Math.max(0, Math.round((d2 - d1) / 86400000) + 1);
-  };
-
   for (const emp of empleados) {
     const salarioMensual = emp.moneda === "USD"
       ? Math.round((emp.salario_base || 0) * tipoCambioVenta)
       : (emp.salario_base || 0);
-
-    // Calcular días trabajados si el empleado ingresó o salió dentro del período
-    let salarioPeriodo;
-    const pIni = fechaInicioPeriodo;
-    const pFin = fechaFinPeriodo;
-    if (pIni && pFin) {
-      const efectivoDesde = emp.fecha_ingreso && emp.fecha_ingreso > pIni ? emp.fecha_ingreso : pIni;
-      const efectivoHasta = emp.fecha_salida && emp.fecha_salida < pFin ? emp.fecha_salida : pFin;
-      const diasTrabajados = diasEnPeriodo(efectivoDesde, efectivoHasta);
-      const diasPeriodo = diasEnPeriodo(pIni, pFin);
-      const proporcional = diasPeriodo > 0 ? diasTrabajados / diasPeriodo : 1;
-      salarioPeriodo = Math.round(salarioMensual * factor * proporcional);
-    } else {
-      salarioPeriodo = Math.round(salarioMensual * factor);
-    }
-
+    const salarioPeriodo = Math.round(salarioMensual * factor);
     const movs = [];
 
     movs.push({ tipo_movimiento: 'ingreso', descripcion: 'Salario base', monto: salarioPeriodo,
