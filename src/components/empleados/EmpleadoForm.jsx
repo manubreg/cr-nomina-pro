@@ -214,7 +214,7 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
                   onFocus={() => setShowPuesto(true)}
                   onBlur={() => setTimeout(() => setShowPuesto(false), 150)}
                 />
-                {showPuesto && puestoBusqueda && (
+                {showPuesto && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
                     {puestosFinal.filter(p => p.nombre.toLowerCase().includes(puestoBusqueda.toLowerCase())).map(p => (
                       <button key={p.id} type="button"
@@ -241,7 +241,7 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
                   onFocus={() => setShowDep(true)}
                   onBlur={() => setTimeout(() => setShowDep(false), 150)}
                 />
-                {showDep && departamentoBusqueda && (
+                {showDep && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
                     {departamentos.filter(d => d.nombre.toLowerCase().includes(departamentoBusqueda.toLowerCase())).map(d => (
                       <button key={d.id} type="button"
@@ -268,7 +268,7 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
                   onFocus={() => setShowCC(true)}
                   onBlur={() => setTimeout(() => setShowCC(false), 150)}
                 />
-                {showCC && centroCostoBusqueda && (
+                {showCC && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
                     {centrosCostoFinal.filter(c => c.nombre.toLowerCase().includes(centroCostoBusqueda.toLowerCase())).map(c => (
                       <button key={c.id} type="button"
