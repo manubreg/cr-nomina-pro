@@ -31,17 +31,32 @@ const navItems = [
       { label: "Conceptos de Pago", path: "/Conceptos" },
     ]
   },
-  { label: "Vacaciones", path: "/Vacaciones", icon: Umbrella },
-  { label: "Incapacidades", path: "/Incapacidades", icon: Activity },
-  { label: "Aguinaldo", path: "/Aguinaldo", icon: Gift },
-  { label: "Liquidaciones", path: "/Liquidaciones", icon: Briefcase },
-  { label: "Reportes", path: "/Reportes", icon: BarChart3 },
-  { label: "Reportes Legales", path: "/ReportesLegales", icon: BookOpen },
-  { label: "Parámetros", path: "/Parametros", icon: Settings },
-  { label: "Configuración", path: "/Configuracion", icon: Settings },
-  { label: "Usuarios", path: "/Usuarios", icon: UserCog },
-  { label: "Auditoría", path: "/Auditoria", icon: ShieldCheck },
-  { label: "Actualización Mensual", path: "/ReporteActualizacionMensual", icon: Calendar },
+  {
+    label: "Beneficios", icon: Umbrella, path: "/Vacaciones",
+    children: [
+      { label: "Vacaciones", path: "/Vacaciones" },
+      { label: "Incapacidades", path: "/Incapacidades" },
+      { label: "Aguinaldo", path: "/Aguinaldo" },
+      { label: "Liquidaciones", path: "/Liquidaciones" },
+    ]
+  },
+  {
+    label: "Reportes", icon: BarChart3, path: "/Reportes",
+    children: [
+      { label: "Reportes Generales", path: "/Reportes" },
+      { label: "Reportes Legales", path: "/ReportesLegales" },
+      { label: "Actualización Mensual", path: "/ReporteActualizacionMensual" },
+    ]
+  },
+  {
+    label: "Administración", icon: Settings, path: "/Parametros",
+    children: [
+      { label: "Parámetros", path: "/Parametros" },
+      { label: "Configuración", path: "/Configuracion" },
+      { label: "Usuarios", path: "/Usuarios" },
+      { label: "Auditoría", path: "/Auditoria" },
+    ]
+  },
 ];
 
 function NavItem({ item, collapsed, location }) {
