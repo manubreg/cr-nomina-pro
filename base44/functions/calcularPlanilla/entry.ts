@@ -84,6 +84,17 @@ Deno.serve(async (req) => {
   const factor = factorPeriodo(periodo?.tipo_periodo || 'mensual');
   const fechaInicioPeriodo = periodo?.fecha_inicio || '';
 
+  // ── Limpiar detalles y movimientos anteriores de esta planilla ───────────
+  const [detallesAnteriores, movimientosAnteriores] = await Promise.all([
+    base44.asServiceRole.entities.PlanillaDetalle.filter({ planilla_id }),
+    base44.asServiceRole.entities.MovimientoPlanilla.filter({ planilla_id }),
+  ]);
+  await Promise.all([
+    ...detallesAnteriores.map(d => base44.asServiceRole.entities.PlanillaDetalle.delete(d.id)),
+    ...movimientosAnteriores.map(m => base44.asServiceRole.entities.MovimientoPlanilla.delete(m.id)),
+  ]);
+  console.log('[calcularPlanilla] limpiados', detallesAnteriores.length, 'detalles y', movimientosAnteriores.length, 'movimientos anteriores');
+
   // ── Filtrar empleados ─────────────────────────────────────────────────────
   let empleados = empleadosEmpresa;
   if (fechaInicioPeriodo) {
@@ -92,6 +103,22 @@ Deno.serve(async (req) => {
   if (empleados_ids && empleados_ids.length > 0) {
     empleados = empleados.filter(e => empleados_ids.includes(e.id));
   }
+
+  // Filtrar por frecuencia_pago del empleado vs tipo_periodo de la planilla
+  // Mapeo: quincenal/bisemanal/semanal/diario son sub-mensual; mensual solo incluye empleados mensuales
+  const tipoPeriodo = periodo?.tipo_periodo || 'mensual';
+  if (tipoPeriodo !== 'aguinaldo' && tipoPeriodo !== 'liquidacion') {
+    const frecuenciasAceptadas = {
+      'mensual':    ['mensual'],
+      'quincenal':  ['quincenal'],
+      'bisemanal':  ['quincenal', 'bisemanal'],
+      'semanal':    ['semanal'],
+      'diario':     ['semanal', 'diario'],
+    };
+    const aceptadas = frecuenciasAceptadas[tipoPeriodo] || ['mensual'];
+    empleados = empleados.filter(e => aceptadas.includes(e.frecuencia_pago || 'mensual'));
+  }
+
   console.log('[calcularPlanilla] empleados para calcular:', empleados.length);
 
   // ── FASE 4: Calcular (pura CPU, sin I/O) ─────────────────────────────────
