@@ -31,6 +31,11 @@ export default function AguinaldoPage() {
     onSuccess: () => { qc.invalidateQueries(["aguinaldos"]); setOpen(false); },
   });
 
+  const eliminar = useMutation({
+    mutationFn: (id) => base44.entities.Aguinaldo.delete(id),
+    onSuccess: () => qc.invalidateQueries(["aguinaldos"]),
+  });
+
   const [calculando, setCalculando] = useState(false);
   const [detalleCalculo, setDetalleCalculo] = useState(null);
   const [masivo, setMasivo] = useState(false);
