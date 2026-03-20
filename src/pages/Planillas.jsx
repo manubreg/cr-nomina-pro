@@ -234,8 +234,12 @@ export default function Planillas() {
                                usuario_aprobo: (await base44.auth.me()).email,
                                fecha_aprobacion: new Date().toISOString().split("T")[0],
                              });
+                             if (p.periodo_id) {
+                               await base44.entities.PeriodoPlanilla.update(p.periodo_id, { estado: 'aprobado' });
+                               qc.invalidateQueries(["periodos"]);
+                             }
                              qc.invalidateQueries(["planillas"]);
-                             toast({ title: "Planilla aprobada" });
+                             toast({ title: "Planilla aprobada", description: "El período también fue marcado como aprobado." });
                            }}
                            title="Aprobar planilla"
                            className="text-gray-400 hover:text-emerald-600 p-1.5 rounded hover:bg-emerald-50 transition-colors"
