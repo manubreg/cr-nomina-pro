@@ -131,19 +131,18 @@ export default function Vacaciones() {
       "2026-12-25", "2026-12-31"
     ];
 
+    // Obtener días laborales del empleado (por defecto lunes a viernes)
+    const diasLaborales = emp.dias_laborales || [1, 2, 3, 4, 5];
+
     for (let d = new Date(inicio); d <= fin; d.setDate(d.getDate() + 1)) {
       const dayOfWeek = d.getDay();
       const dateStr = d.toISOString().split("T")[0];
 
-      // Verificar si es sábado (6) o domingo (0)
-      const esSabadoDomingo = dayOfWeek === 0 || dayOfWeek === 6;
-      
       // Verificar si es feriado
       const esFeriado = feriadosCR.includes(dateStr);
 
-      // Si el empleado tiene jornada diurna y no es sábado/domingo/feriado, contar
-      // Simplificado: solo contar si no es sábado, domingo o feriado
-      if (!esSabadoDomingo && !esFeriado) {
+      // Solo contar si es un día laboral del empleado y no es feriado
+      if (diasLaborales.includes(dayOfWeek) && !esFeriado) {
         diasHabiles++;
       }
     }
