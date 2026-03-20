@@ -627,14 +627,30 @@ Devuelve únicamente JSON con la estructura indicada.`,
           </p>
 
           {!iaResultado && !iaAnalizando && (
-            <div className="bg-violet-50 border border-violet-100 rounded-lg p-4 text-sm text-violet-700 mt-1">
-              <p className="font-medium mb-1">¿Qué analiza la IA?</p>
-              <ul className="space-y-1 text-xs list-disc list-inside text-violet-600">
-                <li>Tipo de período más frecuente (mensual, quincenal, etc.)</li>
-                <li>Patrón de fechas de inicio, fin y pago</li>
-                <li>Tendencia del total neto de planillas</li>
-                <li>Evitar duplicar períodos ya existentes</li>
-              </ul>
+            <div className="space-y-3 mt-1">
+              <div className="bg-violet-50 border border-violet-100 rounded-lg p-4 text-sm text-violet-700">
+                <p className="font-medium mb-1">¿Qué analiza la IA?</p>
+                <ul className="space-y-1 text-xs list-disc list-inside text-violet-600">
+                  <li>Tipo de período más frecuente (mensual, quincenal, etc.)</li>
+                  <li>Patrón de fechas de inicio, fin y pago</li>
+                  <li>Tendencia del total neto de planillas</li>
+                  <li>Evitar duplicar períodos ya existentes</li>
+                </ul>
+              </div>
+              <div className="border border-gray-100 rounded-lg p-3 bg-gray-50 flex items-start gap-3">
+                <Zap className="w-4 h-4 text-purple-500 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-gray-700">Generación automática (sin IA)</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Genera períodos basándose en reglas predefinidas sin análisis inteligente.</p>
+                </div>
+                <button
+                  onClick={async () => { setIaModal(false); await handleGenerarAutomatico(); }}
+                  disabled={generando}
+                  className="text-xs text-purple-700 border border-purple-200 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-lg font-medium disabled:opacity-60 shrink-0"
+                >
+                  {generando ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "Generar"}
+                </button>
+              </div>
             </div>
           )}
 
