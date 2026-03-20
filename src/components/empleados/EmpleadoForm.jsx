@@ -353,6 +353,50 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
             </div>
           </TabsContent>
 
+          {/* Horarios */}
+          <TabsContent value="horarios" className="space-y-4 mt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label>Hora Inicio</Label>
+                <Input type="time" value={form.hora_inicio} onChange={e => set("hora_inicio", e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label>Hora Fin</Label>
+                <Input type="time" value={form.hora_fin} onChange={e => set("hora_fin", e.target.value)} />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Días de la Semana</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { num: 1, nombre: "Lunes" },
+                  { num: 2, nombre: "Martes" },
+                  { num: 3, nombre: "Miércoles" },
+                  { num: 4, nombre: "Jueves" },
+                  { num: 5, nombre: "Viernes" },
+                  { num: 6, nombre: "Sábado" },
+                  { num: 0, nombre: "Domingo" },
+                ].map(dia => (
+                  <label key={dia.num} className="flex items-center gap-2 cursor-pointer p-2 hover:bg-gray-50 rounded border border-gray-200">
+                    <input
+                      type="checkbox"
+                      checked={(form.dias_laborales || []).includes(dia.num)}
+                      onChange={e => {
+                        const nuevos = e.target.checked
+                          ? [...(form.dias_laborales || []), dia.num].sort()
+                          : (form.dias_laborales || []).filter(d => d !== dia.num);
+                        set("dias_laborales", nuevos);
+                      }}
+                      className="w-4 h-4 accent-blue-600"
+                    />
+                    <span className="text-sm font-medium text-gray-700">{dia.nombre}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+
           {/* Pago */}
           <TabsContent value="pago" className="grid grid-cols-2 gap-4 mt-4">
             <div className="space-y-1">
