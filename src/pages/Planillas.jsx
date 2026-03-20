@@ -459,9 +459,13 @@ export default function Planillas() {
                     observacion: editandoModal.observacion,
                     ...(aprobando ? { usuario_aprobo: (await base44.auth.me()).email, fecha_aprobacion: new Date().toISOString().split("T")[0] } : {}),
                   });
+                  if (aprobando && editandoModal.periodo_id) {
+                    await base44.entities.PeriodoPlanilla.update(editandoModal.periodo_id, { estado: 'aprobado' });
+                    qc.invalidateQueries(["periodos"]);
+                  }
                   qc.invalidateQueries(["planillas"]);
                   setEditandoModal(null);
-                  toast({ title: "Planilla actualizada" });
+                  toast({ title: "Planilla actualizada", description: aprobando ? "El período también fue marcado como aprobado." : undefined });
 
                   // Al aprobar: descargar boletas automáticamente
                   if (aprobando) {
