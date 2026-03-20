@@ -38,6 +38,7 @@ const navItems = [
       { label: "Incapacidades", path: "/Incapacidades" },
       { label: "Aguinaldo", path: "/Aguinaldo" },
       { label: "Liquidaciones", path: "/Liquidaciones" },
+      { label: "Historial Salarial", path: "/HistorialSalarial" },
     ]
   },
   {
