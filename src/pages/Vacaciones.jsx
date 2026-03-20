@@ -200,6 +200,30 @@ export default function Vacaciones() {
             <Info className="w-4 h-4 shrink-0" />
             Cálculo automático basado en el Código de Trabajo de Costa Rica: <strong>15 días por año laborado</strong> (1.25 días/mes). Solo empleados activos con fecha de ingreso registrada.
           </div>
+          {/* Alerta empleados con 8+ días disponibles */}
+          {(() => {
+            const conAlerta = empleados
+              .filter(e => e.estado === "activo" && e.fecha_ingreso && (!empresaId || e.empresa_id === empresaId))
+              .filter(emp => {
+                const { diasGanados } = calcularDiasAcumulados(emp.fecha_ingreso);
+                const diasUsados = solicitudes.filter(s => s.empleado_id === emp.id && ["aprobada", "aplicada"].includes(s.estado)).reduce((sum, s) => sum + (s.dias_solicitados || 0), 0);
+                return Math.max(0, diasGanados - diasUsados) >= 8;
+              });
+            if (conAlerta.length === 0) return null;
+            return (
+              <div className="mb-3 bg-amber-50 border border-amber-300 rounded-lg px-4 py-3 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-800">
+                    {conAlerta.length} empleado{conAlerta.length !== 1 ? "s" : ""} con 8 o más días de vacaciones disponibles
+                  </p>
+                  <p className="text-xs text-amber-700 mt-0.5">
+                    {conAlerta.map(e => `${e.nombre} ${e.apellidos}`).join(" · ")}
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             {empleados.filter(e => e.estado === "activo" && e.fecha_ingreso && (!empresaId || e.empresa_id === empresaId)).length === 0 ? (
               <div className="p-12 text-center"><Umbrella className="w-10 h-10 mx-auto mb-3 text-gray-300" /><p className="text-gray-400">Sin empleados activos con fecha de ingreso</p></div>
