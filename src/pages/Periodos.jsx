@@ -63,6 +63,7 @@ export default function Periodos() {
   const [editSaving, setEditSaving] = useState(false);
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [filtroTipo, setFiltroTipo] = useState("todos");
+  const [generando, setGenerando] = useState(false);
   const fileRef = useRef();
 
   const load = async () => {
