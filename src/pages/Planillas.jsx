@@ -425,6 +425,19 @@ export default function Planillas() {
         <PlanillaDetalleModal planilla={detalleModal} onClose={() => setDetalleModal(null)} />
       )}
 
+      {/* Diálogo de confirmación */}
+      {confirmDialog && (
+        <ConfirmDialog
+          open={!!confirmDialog}
+          onClose={() => setConfirmDialog(null)}
+          onConfirm={confirmDialog.onConfirm}
+          title={confirmDialog.title}
+          description={confirmDialog.description}
+          confirmLabel={confirmDialog.confirmLabel}
+          type={confirmDialog.btnType}
+        />
+      )}
+
       {/* Modal editar */}
       {editandoModal && (
         <Dialog open={!!editandoModal} onOpenChange={(open) => { if (open) return; setEditandoModal(null); }}>
