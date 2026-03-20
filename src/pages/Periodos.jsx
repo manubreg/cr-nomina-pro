@@ -497,11 +497,17 @@ Devuelve únicamente JSON con la estructura indicada.`,
                       {/* Aprobar Pago — si el período o su planilla están aprobados */}
                       {(p.estado === "aprobado" || planilla?.estado === "aprobado") && p.estado !== "pagado" && (
                         <button
-                          onClick={async () => {
-                            if (!confirm(`¿Marcar el período como PAGADO?`)) return;
-                            await base44.entities.PeriodoPlanilla.update(p.id, { estado: "pagado" });
-                            load();
-                          }}
+                          onClick={() => setConfirmDialog({
+                            title: "Aprobar Pago",
+                            description: `¿Confirma marcar el período ${p.fecha_inicio} → ${p.fecha_fin} como PAGADO?`,
+                            confirmLabel: "Marcar Pagado",
+                            btnType: "success",
+                            onConfirm: async () => {
+                              setConfirmDialog(null);
+                              await base44.entities.PeriodoPlanilla.update(p.id, { estado: "pagado" });
+                              load();
+                            }
+                          })}
                           title="Aprobar Pago"
                           className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg"
                         >
