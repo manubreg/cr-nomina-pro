@@ -34,6 +34,7 @@ import ReporteActualizacionMensual from './pages/ReporteActualizacionMensual';
 import ReporteHistorialSalarial from './pages/ReporteHistorialSalarial';
 import HistorialSalarial from './pages/HistorialSalarial';
 import Configuracion from './pages/Configuracion';
+import CalendarioObligaciones from './pages/CalendarioObligaciones';
 
 // Portal empleado
 import MisDatos from './pages/portal/MisDatos';
