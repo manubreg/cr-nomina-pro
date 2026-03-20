@@ -622,6 +622,107 @@ Devuelve únicamente JSON con la estructura indicada.`,
       {detalleModal && (
         <PlanillaDetalleModal planilla={detalleModal} onClose={() => setDetalleModal(null)} />
       )}
+
+      {/* Modal IA */}
+      <Dialog open={iaModal} onOpenChange={(open) => { if (!iaCreando && !iaAnalizando) setIaModal(open); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-violet-600" /> Sugerencia IA de Período
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-500 -mt-2">
+            La IA analiza el historial de períodos y planillas para sugerir el próximo período a crear.
+          </p>
+
+          {!iaResultado && !iaAnalizando && (
+            <div className="bg-violet-50 border border-violet-100 rounded-lg p-4 text-sm text-violet-700 mt-1">
+              <p className="font-medium mb-1">¿Qué analiza la IA?</p>
+              <ul className="space-y-1 text-xs list-disc list-inside text-violet-600">
+                <li>Tipo de período más frecuente (mensual, quincenal, etc.)</li>
+                <li>Patrón de fechas de inicio, fin y pago</li>
+                <li>Tendencia del total neto de planillas</li>
+                <li>Evitar duplicar períodos ya existentes</li>
+              </ul>
+            </div>
+          )}
+
+          {iaAnalizando && (
+            <div className="flex flex-col items-center py-8 gap-3 text-violet-600">
+              <Loader2 className="w-8 h-8 animate-spin" />
+              <p className="text-sm font-medium">Analizando historial...</p>
+              <p className="text-xs text-gray-400">La IA está revisando los períodos y planillas anteriores</p>
+            </div>
+          )}
+
+          {iaResultado && (
+            <div className="space-y-3 mt-1">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-2 text-emerald-700 font-semibold text-sm mb-2">
+                  <CheckCircle2 className="w-4 h-4" /> Período sugerido
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-xs text-gray-500 block">Tipo</span>
+                    <span className="font-medium capitalize text-gray-800">{iaResultado.tipo_periodo}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500 block">Fecha Pago</span>
+                    <span className="font-medium text-gray-800">{iaResultado.fecha_pago}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500 block">Fecha Inicio</span>
+                    <span className="font-medium text-gray-800">{iaResultado.fecha_inicio}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500 block">Fecha Fin</span>
+                    <span className="font-medium text-gray-800">{iaResultado.fecha_fin}</span>
+                  </div>
+                </div>
+                {iaResultado.observacion && (
+                  <p className="text-xs text-emerald-600 border-t border-emerald-200 pt-2 mt-1">{iaResultado.observacion}</p>
+                )}
+              </div>
+              {iaResultado.advertencias?.length > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-1">
+                  <div className="flex items-center gap-1.5 text-amber-700 text-xs font-semibold">
+                    <AlertCircle className="w-3.5 h-3.5" /> Advertencias
+                  </div>
+                  {iaResultado.advertencias.map((a, i) => (
+                    <p key={i} className="text-xs text-amber-600">• {a}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" onClick={() => setIaModal(false)} disabled={iaAnalizando || iaCreando}>Cancelar</Button>
+            {!iaResultado ? (
+              <Button
+                className="bg-violet-600 hover:bg-violet-700"
+                onClick={handleIaAnalizar}
+                disabled={iaAnalizando || !empresaId}
+              >
+                {iaAnalizando
+                  ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analizando...</>
+                  : <><Sparkles className="w-4 h-4 mr-2" /> Analizar con IA</>}
+              </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => { setIaResultado(null); }} disabled={iaCreando}>
+                  Volver a analizar
+                </Button>
+                <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={handleIaCrear} disabled={iaCreando}>
+                  {iaCreando
+                    ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creando...</>
+                    : <><CheckCircle2 className="w-4 h-4 mr-2" /> Crear Período</>}
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
