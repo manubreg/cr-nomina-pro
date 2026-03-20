@@ -417,22 +417,36 @@ export default function Planillas() {
                 />
               </div>
             </div>
+            {editandoModal.estado === "aprobado" && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-xs text-emerald-700">
+                ✅ Al aprobar, se descargarán automáticamente las boletas PDF de todos los empleados con las deducciones de CCSS e ISR calculadas.
+              </div>
+            )}
             <div className="flex justify-end gap-2 mt-2">
               <Button variant="outline" onClick={() => setEditandoModal(null)}>Cancelar</Button>
               <Button 
                 className="bg-orange-600 hover:bg-orange-700"
                 onClick={async () => {
+                  const aprobando = editandoModal.estado === "aprobado";
                   await base44.entities.Planilla.update(editandoModal.id, {
                     codigo_planilla: editandoModal.codigo_planilla,
                     estado: editandoModal.estado,
                     observacion: editandoModal.observacion,
+                    ...(aprobando ? { usuario_aprobo: (await base44.auth.me()).email, fecha_aprobacion: new Date().toISOString().split("T")[0] } : {}),
                   });
                   qc.invalidateQueries(["planillas"]);
                   setEditandoModal(null);
                   toast({ title: "Planilla actualizada" });
+
+                  // Al aprobar: descargar boletas automáticamente
+                  if (aprobando) {
+                    toast({ title: "Generando boletas PDF...", description: "Se descargarán las boletas de todos los empleados." });
+                    await handleDescargarTodas({ ...editandoModal });
+                  }
                 }}
               >
-                <Edit2 className="w-4 h-4 mr-2" /> Guardar Cambios
+                <Edit2 className="w-4 h-4 mr-2" />
+                {editandoModal.estado === "aprobado" ? "Aprobar y Descargar Boletas" : "Guardar Cambios"}
               </Button>
             </div>
           </DialogContent>
