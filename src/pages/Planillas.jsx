@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Receipt, Eye, Calculator, Loader2, Zap, Download, FileText, Edit2, Trash2 } from "lucide-react";
+import { Receipt, Eye, Calculator, Loader2, Zap, Download, FileText, Edit2, Trash2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
