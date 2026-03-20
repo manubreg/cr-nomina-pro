@@ -46,7 +46,6 @@ const navItems = [
     children: [
       { label: "Reportes Generales", path: "/Reportes" },
       { label: "Reportes Legales", path: "/ReportesLegales" },
-      { label: "Actualización Mensual", path: "/ReporteActualizacionMensual" },
       { label: "Historial Salarial", path: "/ReporteHistorialSalarial" },
     ]
   },
