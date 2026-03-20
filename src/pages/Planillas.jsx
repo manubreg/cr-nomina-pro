@@ -490,24 +490,35 @@ export default function Planillas() {
                 className="bg-orange-600 hover:bg-orange-700"
                 onClick={async () => {
                   const aprobando = editandoModal.estado === "aprobado";
-                  await base44.entities.Planilla.update(editandoModal.id, {
-                    codigo_planilla: editandoModal.codigo_planilla,
-                    estado: editandoModal.estado,
-                    observacion: editandoModal.observacion,
-                    ...(aprobando ? { usuario_aprobo: (await base44.auth.me()).email, fecha_aprobacion: new Date().toISOString().split("T")[0] } : {}),
-                  });
-                  if (aprobando && editandoModal.periodo_id) {
-                    await base44.entities.PeriodoPlanilla.update(editandoModal.periodo_id, { estado: 'aprobado' });
-                    qc.invalidateQueries(["periodos"]);
-                  }
-                  qc.invalidateQueries(["planillas"]);
-                  setEditandoModal(null);
-                  toast({ title: "Planilla actualizada", description: aprobando ? "El período también fue marcado como aprobado." : undefined });
-
-                  // Al aprobar: descargar boletas automáticamente
+                  const doSave = async () => {
+                    await base44.entities.Planilla.update(editandoModal.id, {
+                      codigo_planilla: editandoModal.codigo_planilla,
+                      estado: editandoModal.estado,
+                      observacion: editandoModal.observacion,
+                      ...(aprobando ? { usuario_aprobo: (await base44.auth.me()).email, fecha_aprobacion: new Date().toISOString().split("T")[0] } : {}),
+                    });
+                    if (aprobando && editandoModal.periodo_id) {
+                      await base44.entities.PeriodoPlanilla.update(editandoModal.periodo_id, { estado: 'aprobado' });
+                      qc.invalidateQueries(["periodos"]);
+                    }
+                    qc.invalidateQueries(["planillas"]);
+                    setEditandoModal(null);
+                    toast({ title: "Planilla actualizada", description: aprobando ? "El período también fue marcado como aprobado." : undefined });
+                    if (aprobando) {
+                      toast({ title: "Generando boletas PDF...", description: "Se descargarán las boletas de todos los empleados." });
+                      await handleDescargarTodas({ ...editandoModal });
+                    }
+                  };
                   if (aprobando) {
-                    toast({ title: "Generando boletas PDF...", description: "Se descargarán las boletas de todos los empleados." });
-                    await handleDescargarTodas({ ...editandoModal });
+                    setConfirmDialog({
+                      title: "Aprobar y Guardar Planilla",
+                      description: `¿Confirma aprobar "${editandoModal.codigo_planilla}"? Se generarán las boletas PDF automáticamente.`,
+                      confirmLabel: "Aprobar y Descargar",
+                      btnType: "success",
+                      onConfirm: async () => { setConfirmDialog(null); await doSave(); }
+                    });
+                  } else {
+                    await doSave();
                   }
                 }}
               >
