@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { X, Save, User, Briefcase, CreditCard, MapPin } from "lucide-react";
 import MoneyInput from "./MoneyInput";
 
-const TABS = ["Personal", "Laboral", "Bancario", "Otros"];
+const TABS = ["Personal", "Laboral", "Horario", "Pago", "Otros"];
 
 export default function EmpleadoModal({ empleado, departamentos = [], centrosCosto = [], puestos = [], empleados = [], onClose, onSaved }) {
   const [tab, setTab] = useState(0);
