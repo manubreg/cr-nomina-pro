@@ -368,6 +368,18 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
               </Select>
             </div>
             <div className="space-y-1">
+              <Label>Tipo de Salario</Label>
+              <Select value={form.tipo_salario || "mensual"} onValueChange={v => set("tipo_salario", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mensual">Mensual</SelectItem>
+                  <SelectItem value="quincenal">Quincenal</SelectItem>
+                  <SelectItem value="semanal">Semanal</SelectItem>
+                  <SelectItem value="por_hora">Por Hora</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
               <Label>Frecuencia de Pago</Label>
               <Select value={form.frecuencia_pago} onValueChange={v => set("frecuencia_pago", v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>

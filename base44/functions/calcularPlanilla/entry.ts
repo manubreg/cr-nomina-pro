@@ -98,10 +98,22 @@ Deno.serve(async (req) => {
   const detallesData = [];
   const movimientosTemp = [];
 
+  // Convierte cualquier tipo de salario base a mensual
+  const normalizarSalarioMensual = (emp) => {
+    const base = emp.salario_base || 0;
+    switch (emp.tipo_salario || 'mensual') {
+      case 'quincenal': return base * 2;
+      case 'semanal':   return base * (52 / 12);
+      case 'por_hora':  return base * (emp.horas_jornada || 8) * 30;
+      default:          return base; // mensual
+    }
+  };
+
   for (const emp of empleados) {
-    const salarioMensual = emp.moneda === "USD"
-      ? Math.round((emp.salario_base || 0) * tipoCambioVenta)
-      : (emp.salario_base || 0);
+    const salarioMensualBase = emp.moneda === "USD"
+      ? Math.round(normalizarSalarioMensual(emp) * tipoCambioVenta)
+      : normalizarSalarioMensual(emp);
+    const salarioMensual = Math.round(salarioMensualBase);
     const salarioPeriodo = Math.round(salarioMensual * factor);
     const movs = [];
 
