@@ -440,7 +440,8 @@ export default function Vacaciones() {
             </div>
             <div className="space-y-1">
               <Label>Días Solicitados *</Label>
-              <Input type="number" value={form.dias_solicitados} onChange={e => set("dias_solicitados", Number(e.target.value))} />
+              <Input type="number" value={form.dias_solicitados} readOnly className="bg-gray-50" />
+              <p className="text-xs text-gray-500">Se calcula automáticamente (sin sábados, domingos ni feriados)</p>
             </div>
             <div className="col-span-2 space-y-1">
               <Label>Motivo</Label>
