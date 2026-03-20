@@ -30,7 +30,7 @@ import Parametros from './pages/Parametros';
 import Usuarios from './pages/Usuarios';
 import AuditoriaPage from './pages/Auditoria';
 import Notificaciones from './pages/Notificaciones';
-import ReporteActualizacionMensual from './pages/ReporteActualizacionMensual';
+
 import ReporteHistorialSalarial from './pages/ReporteHistorialSalarial';
 import HistorialSalarial from './pages/HistorialSalarial';
 import Configuracion from './pages/Configuracion';
