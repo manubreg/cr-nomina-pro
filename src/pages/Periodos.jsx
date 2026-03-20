@@ -484,8 +484,8 @@ Devuelve únicamente JSON con la estructura indicada.`,
                           <Trash2 className="w-4 h-4" />
                         </button>
                       )}
-                      {/* Aprobar Pago — solo si está aprobado */}
-                      {p.estado === "aprobado" && (
+                      {/* Aprobar Pago — si el período o su planilla están aprobados */}
+                      {(p.estado === "aprobado" || planilla?.estado === "aprobado") && p.estado !== "pagado" && (
                         <button
                           onClick={async () => {
                             if (!confirm(`¿Marcar el período como PAGADO?`)) return;
