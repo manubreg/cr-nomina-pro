@@ -84,6 +84,7 @@ Deno.serve(async (req) => {
   };
   const factor = factorPeriodo(periodo?.tipo_periodo || 'mensual');
   const fechaInicioPeriodo = periodo?.fecha_inicio || '';
+  const fechaFinPeriodo = periodo?.fecha_fin || '';
 
   // ── Limpiar detalles y movimientos anteriores de esta planilla ───────────
   const [detallesAnteriores, movimientosAnteriores] = await Promise.all([
