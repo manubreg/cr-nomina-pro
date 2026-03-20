@@ -187,38 +187,6 @@ export default function Vacaciones() {
           </div>
         </TabsContent>
 
-        <TabsContent value="saldos" className="mt-4">
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            {saldosFiltrados.length === 0 ? (
-              <div className="p-12 text-center"><Umbrella className="w-10 h-10 mx-auto mb-3 text-gray-300" /><p className="text-gray-400">Sin saldos registrados</p></div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Empleado</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Días Ganados</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Días Usados</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Saldo</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {saldosFiltrados.map(s => (
-                      <tr key={s.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 font-medium text-gray-800">{empleadoMap[s.empleado_id] || "—"}</td>
-                        <td className="px-4 py-3 text-gray-600">{s.dias_ganados}</td>
-                        <td className="px-4 py-3 text-gray-600">{s.dias_usados}</td>
-                        <td className="px-4 py-3 font-bold text-blue-700">{s.saldo_actual}</td>
-                        <td className="px-4 py-3"><Badge className={s.estado === "vigente" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}>{s.estado}</Badge></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </TabsContent>
 
         {/* Pestaña Acumulados: muestra días ganados automáticamente por fecha de ingreso */}
         <TabsContent value="acumulados" className="mt-4">
