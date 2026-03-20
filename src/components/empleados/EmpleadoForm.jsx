@@ -104,9 +104,10 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
           <DialogTitle>{editId ? "Editar Empleado" : "Nuevo Empleado"}</DialogTitle>
         </DialogHeader>
         <Tabs defaultValue="personal">
-          <TabsList className="grid grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="personal">Personal</TabsTrigger>
             <TabsTrigger value="laboral">Laboral</TabsTrigger>
+            <TabsTrigger value="horarios">Horarios</TabsTrigger>
             <TabsTrigger value="pago">Pago</TabsTrigger>
             <TabsTrigger value="banco">Banco</TabsTrigger>
           </TabsList>
