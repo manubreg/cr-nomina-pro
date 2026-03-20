@@ -396,17 +396,6 @@ export default function Vacaciones() {
               <Label>Días Solicitados *</Label>
               <Input type="number" value={form.dias_solicitados} onChange={e => set("dias_solicitados", Number(e.target.value))} />
             </div>
-            <div className="space-y-1">
-              <Label>Estado</Label>
-              <Select value={form.estado} onValueChange={v => set("estado", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pendiente">Pendiente</SelectItem>
-                  <SelectItem value="aprobada">Aprobada</SelectItem>
-                  <SelectItem value="rechazada">Rechazada</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <div className="col-span-2 space-y-1">
               <Label>Motivo</Label>
               <Input value={form.motivo || ""} onChange={e => set("motivo", e.target.value)} />
