@@ -267,10 +267,17 @@ export default function Vacaciones() {
                             </td>
                             <td className="px-4 py-3 hidden lg:table-cell text-red-500">{diasUsados}</td>
                             <td className="px-4 py-3">
-                              <span className={`font-bold text-lg ${saldoDisponible > 5 ? "text-blue-700" : saldoDisponible > 0 ? "text-amber-600" : "text-red-600"}`}>
-                                {saldoDisponible.toFixed(2)}
-                              </span>
-                            </td>
+                                <div className="flex items-center gap-2">
+                                  <span className={`font-bold text-lg ${saldoDisponible >= 8 ? "text-amber-600" : saldoDisponible > 0 ? "text-blue-700" : "text-red-600"}`}>
+                                    {saldoDisponible.toFixed(2)}
+                                  </span>
+                                  {saldoDisponible >= 8 && (
+                                    <span title="8 o más días disponibles" className="flex items-center gap-1 text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded-full px-2 py-0.5 font-medium">
+                                      <AlertTriangle className="w-3 h-3" /> Pendientes
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
                           </tr>
                         );
                       })}
