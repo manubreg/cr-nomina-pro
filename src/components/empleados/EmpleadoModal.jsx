@@ -244,8 +244,40 @@ export default function EmpleadoModal({ empleado, departamentos = [], centrosCos
               </div>
               )}
 
-          {tab === 2 && (
-            <div className="grid grid-cols-2 gap-4">
+              {tab === 2 && (
+              <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
+                Configura el horario de trabajo para cada día. Deja en blanco si no trabaja ese día.
+              </div>
+              <div className="space-y-3">
+                {["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"].map(dia => (
+                  <div key={dia} className="grid grid-cols-3 gap-3 items-center">
+                    <span className="text-sm font-medium text-gray-700 capitalize">{dia}</span>
+                    <div className="flex gap-1">
+                      <input
+                        type="time"
+                        value={form[`horario_${dia}`]?.inicio || ""}
+                        onChange={e => set(`horario_${dia}`, { ...form[`horario_${dia}`], inicio: e.target.value })}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Inicio"
+                      />
+                      <span className="text-gray-400">—</span>
+                      <input
+                        type="time"
+                        value={form[`horario_${dia}`]?.fin || ""}
+                        onChange={e => set(`horario_${dia}`, { ...form[`horario_${dia}`], fin: e.target.value })}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Fin"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </div>
+              )}
+
+              {tab === 3 && (
+              <div className="grid grid-cols-2 gap-4">
               <F label="Banco"><Input field="banco" placeholder="BCR, BNCR, BAC..." /></F>
               <F label="Número de Cuenta"><Input field="cuenta_bancaria" placeholder="000-000000-0" /></F>
               <div className="col-span-2">
@@ -260,11 +292,11 @@ export default function EmpleadoModal({ empleado, departamentos = [], centrosCos
                   <label htmlFor="ccss" className="text-sm text-gray-600">Asegurado en CCSS</label>
                 </div>
               </F>
-            </div>
-          )}
+              </div>
+              )}
 
-          {tab === 3 && (
-            <div className="grid grid-cols-1 gap-4">
+              {tab === 4 && (
+              <div className="grid grid-cols-1 gap-4">
               <F label="Fecha Salida"><Input field="fecha_salida" type="date" /></F>
               <F label="Observaciones">
                 <textarea value={form.observaciones || ""} onChange={e => set("observaciones", e.target.value)}
@@ -272,8 +304,8 @@ export default function EmpleadoModal({ empleado, departamentos = [], centrosCos
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Observaciones internas..." />
               </F>
-            </div>
-          )}
+              </div>
+              )}
         </div>
 
         {/* Footer */}
