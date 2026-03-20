@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CalendarioAusencias from "@/components/vacaciones/CalendarioAusencias";
+import { useEffect } from "react";
 
 const estadoColor = { pendiente: "bg-amber-100 text-amber-700", aprobada: "bg-emerald-100 text-emerald-700", rechazada: "bg-red-100 text-red-600", aplicada: "bg-purple-100 text-purple-700" };
 const emptySolicitud = { empleado_id: "", empresa_id: "", fecha_solicitud: new Date().toISOString().split("T")[0], fecha_inicio: "", fecha_fin: "", dias_solicitados: 0, motivo: "", estado: "pendiente" };
