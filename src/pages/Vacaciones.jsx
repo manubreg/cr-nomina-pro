@@ -411,8 +411,8 @@ export default function Vacaciones() {
               <Label>Motivo</Label>
               <Input value={form.motivo || ""} onChange={e => set("motivo", e.target.value)} />
             </div>
-          </div>
-          <div className="flex justify-end gap-2 mt-4">
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
             <Button className="bg-blue-700 hover:bg-blue-800" onClick={() => save.mutate(form)} disabled={save.isPending}>
               {save.isPending ? "Guardando..." : "Guardar"}
