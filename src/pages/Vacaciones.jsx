@@ -114,6 +114,51 @@ export default function Vacaciones() {
     onSuccess: () => { qc.invalidateQueries(["vacSaldos"]); setOpenSaldo(false); setDetalleCalculo(null); },
   });
 
+  // Calcular días hábiles automáticamente (excluyendo sabados, domingos y feriados)
+  const calcularDiasHabiles = (fechaInicio, fechaFin, empleadoId) => {
+    if (!fechaInicio || !fechaFin) return 0;
+    const emp = empleados.find(e => e.id === empleadoId);
+    if (!emp) return 0;
+
+    const inicio = new Date(fechaInicio + "T00:00:00");
+    const fin = new Date(fechaFin + "T23:59:59");
+    let diasHabiles = 0;
+
+    // Feriados CR 2026 (aproximado)
+    const feriadosCR = [
+      "2026-01-01", "2026-04-09", "2026-04-10", "2026-04-13", "2026-05-01",
+      "2026-07-25", "2026-08-02", "2026-08-15", "2026-09-15", "2026-10-12",
+      "2026-12-25", "2026-12-31"
+    ];
+
+    for (let d = new Date(inicio); d <= fin; d.setDate(d.getDate() + 1)) {
+      const dayOfWeek = d.getDay();
+      const dateStr = d.toISOString().split("T")[0];
+
+      // Verificar si es sábado (6) o domingo (0)
+      const esSabadoDomingo = dayOfWeek === 0 || dayOfWeek === 6;
+      
+      // Verificar si es feriado
+      const esFeriado = feriadosCR.includes(dateStr);
+
+      // Si el empleado tiene jornada diurna y no es sábado/domingo/feriado, contar
+      // Simplificado: solo contar si no es sábado, domingo o feriado
+      if (!esSabadoDomingo && !esFeriado) {
+        diasHabiles++;
+      }
+    }
+
+    return diasHabiles;
+  };
+
+  // Recalcular días cuando cambian las fechas
+  useEffect(() => {
+    if (form.fecha_inicio && form.fecha_fin && form.empleado_id) {
+      const dias = calcularDiasHabiles(form.fecha_inicio, form.fecha_fin, form.empleado_id);
+      setForm(f => ({ ...f, dias_solicitados: dias }));
+    }
+  }, [form.fecha_inicio, form.fecha_fin, form.empleado_id]);
+
   const openNew = () => { setForm({ ...emptySolicitud, empresa_id: empresaId || "" }); setEditing(null); setOpen(true); };
   const openEdit = (s) => { setForm(s); setEditing(s.id); setOpen(true); };
 
