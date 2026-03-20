@@ -456,11 +456,13 @@ Devuelve únicamente JSON con la estructura indicada.`,
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      {p.estado === "abierto" && (
+                      {/* Modificar — disponible si no está pagado/anulado */}
+                      {!['pagado', 'anulado'].includes(p.estado) && (
                         <button onClick={() => handleOpenEdit(p)} title="Modificar periodo" className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
                           <Pencil className="w-4 h-4" />
                         </button>
                       )}
+                      {/* Borrar — bloqueado si pagado */}
                       {p.estado !== "pagado" ? (
                         <button onClick={() => handleDelete(p.id)} title="Eliminar periodo" className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
                           <Trash2 className="w-4 h-4" />
@@ -468,6 +470,20 @@ Devuelve únicamente JSON con la estructura indicada.`,
                       ) : (
                         <button disabled title="No se puede eliminar un periodo pagado" className="p-1.5 text-gray-200 cursor-not-allowed rounded-lg">
                           <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {/* Aprobar Pago — solo si está aprobado */}
+                      {p.estado === "aprobado" && (
+                        <button
+                          onClick={async () => {
+                            if (!confirm(`¿Marcar el período como PAGADO?`)) return;
+                            await base44.entities.PeriodoPlanilla.update(p.id, { estado: "pagado" });
+                            load();
+                          }}
+                          title="Aprobar Pago"
+                          className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg"
+                        >
+                          <BadgeCheck className="w-4 h-4" />
                         </button>
                       )}
                     </div>
