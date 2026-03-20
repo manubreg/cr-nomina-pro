@@ -88,6 +88,21 @@ export default function Periodos() {
     load();
   };
 
+  const handleGenerarAutomatico = async () => {
+    setGenerando(true);
+    const payload = empresaId ? { empresa_id: empresaId } : {};
+    const res = await base44.functions.invoke("generarPeriodos", payload);
+    const data = res.data;
+    setGenerando(false);
+    load();
+    toast({
+      title: `✅ ${data.creados} periodo(s) creado(s)`,
+      description: data.detalle_omitidos?.length > 0
+        ? `${data.omitidos} omitido(s): ${data.detalle_omitidos.map(o => o.razon).join(", ")}`
+        : "Todos los periodos fueron generados correctamente.",
+    });
+  };
+
   const handleDelete = async (id) => {
     if (!confirm("¿Eliminar este periodo?")) return;
     await base44.entities.PeriodoPlanilla.delete(id);
