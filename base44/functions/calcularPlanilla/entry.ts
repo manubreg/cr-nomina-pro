@@ -286,7 +286,10 @@ Deno.serve(async (req) => {
 
   if (todosMovimientos.length > 0) {
     console.log('[calcularPlanilla] guardando', todosMovimientos.length, 'movimientos...');
-    await base44.asServiceRole.entities.MovimientoPlanilla.bulkCreate(todosMovimientos);
+    const MOV_CHUNK = 50;
+    for (let i = 0; i < todosMovimientos.length; i += MOV_CHUNK) {
+      await base44.asServiceRole.entities.MovimientoPlanilla.bulkCreate(todosMovimientos.slice(i, i + MOV_CHUNK));
+    }
     console.log('[calcularPlanilla] movimientos guardados');
   }
 
