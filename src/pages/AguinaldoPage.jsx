@@ -93,6 +93,29 @@ export default function AguinaldoPage() {
   const openNew = () => { setForm({ ...emptyAg, empresa_id: empresaId || "" }); setEditing(null); setDetalleCalculo(null); setOpen(true); };
   const openEdit = (a) => { setForm(a); setEditing(a.id); setDetalleCalculo(null); setOpen(true); };
 
+  // Filtros
+  const [busqueda, setBusqueda] = useState("");
+  const [filtroAnio, setFiltroAnio] = useState("todos");
+  const [filtroEstado, setFiltroEstado] = useState("todos");
+
+  const aniosDisponibles = useMemo(() => {
+    const set = new Set(aguinaldos.map(a => a.anio));
+    return Array.from(set).sort((a, b) => b - a);
+  }, [aguinaldos]);
+
+  const aguinaldosFiltrados = useMemo(() => {
+    return aguinaldos.filter(a => {
+      const nombre = (empleadoMap[a.empleado_id] || "").toLowerCase();
+      if (busqueda && !nombre.includes(busqueda.toLowerCase())) return false;
+      if (filtroAnio !== "todos" && String(a.anio) !== filtroAnio) return false;
+      if (filtroEstado !== "todos" && a.estado !== filtroEstado) return false;
+      return true;
+    });
+  }, [aguinaldos, busqueda, filtroAnio, filtroEstado, empleadoMap]);
+
+  const totalFiltrado = aguinaldosFiltrados.reduce((s, a) => s + Number(a.monto_aguinaldo || 0), 0);
+  const hayFiltros = busqueda || filtroAnio !== "todos" || filtroEstado !== "todos";
+
   return (
     <div className="p-6 space-y-5">
       <div className="flex items-center justify-between">
