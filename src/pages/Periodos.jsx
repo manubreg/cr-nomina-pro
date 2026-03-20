@@ -64,6 +64,7 @@ export default function Periodos() {
   const [editSaving, setEditSaving] = useState(false);
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [filtroTipo, setFiltroTipo] = useState("todos");
+  const [confirmDialog, setConfirmDialog] = useState(null);
   const [generando, setGenerando] = useState(false);
   const [iaModal, setIaModal] = useState(false);
   const [iaAnalizando, setIaAnalizando] = useState(false);
