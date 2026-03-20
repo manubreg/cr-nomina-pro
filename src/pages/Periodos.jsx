@@ -570,7 +570,7 @@ Devuelve únicamente JSON con la estructura indicada.`,
             </DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 mt-1">
-            <div className="space-y-1">
+            <div className="space-y-1 col-span-2">
               <label className="text-xs font-medium text-gray-600">Tipo</label>
               <select value={editForm.tipo_periodo || ""} onChange={e => setEditForm(f => ({ ...f, tipo_periodo: e.target.value }))}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -581,18 +581,6 @@ Devuelve únicamente JSON con la estructura indicada.`,
                 <option value="mensual">Mensual</option>
                 <option value="aguinaldo">Aguinaldo</option>
                 <option value="liquidacion">Liquidación</option>
-                </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-gray-600">Estado</label>
-              <select value={editForm.estado || ""} onChange={e => setEditForm(f => ({ ...f, estado: e.target.value }))}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="abierto">Abierto</option>
-                <option value="calculado">Calculado</option>
-                <option value="en_revision">En Revisión</option>
-                <option value="aprobado">Aprobado</option>
-                <option value="pagado">Pagado</option>
-                <option value="anulado">Anulado</option>
               </select>
             </div>
             <div className="space-y-1">
