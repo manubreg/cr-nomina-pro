@@ -287,6 +287,13 @@ Devuelve únicamente JSON con la estructura indicada.`,
           >
             <FileSpreadsheet className="w-4 h-4 text-green-600" /> Plantilla Excel
           </button>
+          {/* IA */}
+          <button
+            onClick={() => { setIaResultado(null); setIaModal(true); }}
+            className="flex items-center gap-2 border border-violet-200 bg-violet-50 hover:bg-violet-100 text-violet-700 px-3 py-2 rounded-lg text-sm font-medium"
+          >
+            <Sparkles className="w-4 h-4" /> IA Sugerir Período
+          </button>
           {/* Generar automático */}
           <button
             onClick={handleGenerarAutomatico}
