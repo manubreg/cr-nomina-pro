@@ -212,10 +212,18 @@ Devuelve únicamente JSON con la estructura indicada.`,
     });
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("¿Eliminar este periodo?")) return;
-    await base44.entities.PeriodoPlanilla.delete(id);
-    load();
+  const handleDelete = (id) => {
+    setConfirmDialog({
+      title: "Eliminar Período",
+      description: "¿Está seguro que desea eliminar este período? Esta acción no se puede deshacer.",
+      confirmLabel: "Eliminar",
+      btnType: "danger",
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        await base44.entities.PeriodoPlanilla.delete(id);
+        load();
+      }
+    });
   };
 
   const handleOpenEdit = (p) => {
