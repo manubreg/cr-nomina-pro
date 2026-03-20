@@ -381,7 +381,7 @@ export default function Vacaciones() {
               <Label>Empleado *</Label>
               <Select value={form.empleado_id} onValueChange={v => set("empleado_id", v)}>
                 <SelectTrigger><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
-                <SelectContent>{empleados.map(e => <SelectItem key={e.id} value={e.id}>{e.nombre} {e.apellidos}</SelectItem>)}</SelectContent>
+                <SelectContent>{empleados.filter(e => e.estado === "activo").map(e => <SelectItem key={e.id} value={e.id}>{e.nombre} {e.apellidos}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
