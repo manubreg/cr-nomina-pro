@@ -136,7 +136,10 @@ export default function AguinaldoPage() {
                     <td className="px-4 py-3 text-right font-bold text-blue-700 font-mono">₡ {Number(a.monto_aguinaldo).toLocaleString()}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">{a.fecha_calculo}</td>
                     <td className="px-4 py-3"><Badge className={estadoColor[a.estado]}>{a.estado}</Badge></td>
-                    <td className="px-4 py-3 text-right"><button onClick={() => openEdit(a)} className="text-xs text-blue-600 hover:underline">Editar</button></td>
+                    <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
+                       <button onClick={() => openEdit(a)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                       <button onClick={() => { if (confirm("¿Eliminar este aguinaldo?")) eliminar.mutate(a.id); }} className="text-red-400 hover:text-red-600 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                     </td>
                   </tr>
                 ))}
               </tbody>
