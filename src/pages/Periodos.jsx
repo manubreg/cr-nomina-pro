@@ -100,6 +100,7 @@ export default function Periodos() {
       description: data.detalle_omitidos?.length > 0
         ? `${data.omitidos} omitido(s): ${data.detalle_omitidos.map(o => o.razon).join(", ")}`
         : "Todos los periodos fueron generados correctamente.",
+      duration: 4000,
     });
   };
 
