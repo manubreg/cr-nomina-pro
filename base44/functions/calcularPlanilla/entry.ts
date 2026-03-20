@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
   // ── Filtrar empleados ─────────────────────────────────────────────────────
   let empleados = empleadosEmpresa;
   if (fechaInicioPeriodo) {
-    empleados = empleados.filter(e => !e.fecha_ingreso || e.fecha_ingreso <= fechaInicioPeriodo);
+    empleados = empleados.filter(e => e.fecha_ingreso && e.fecha_ingreso <= fechaInicioPeriodo);
   }
   if (empleados_ids && empleados_ids.length > 0) {
     empleados = empleados.filter(e => empleados_ids.includes(e.id));
