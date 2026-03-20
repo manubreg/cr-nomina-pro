@@ -83,6 +83,13 @@ export default function Periodos() {
 
   useEffect(() => { load(); }, [empresaId]);
 
+  // Suscripción en tiempo real: recargar cuando cambie cualquier periodo o planilla
+  useEffect(() => {
+    const unsubPeriodo = base44.entities.PeriodoPlanilla.subscribe(() => load());
+    const unsubPlanilla = base44.entities.Planilla.subscribe(() => load());
+    return () => { unsubPeriodo(); unsubPlanilla(); };
+  }, [empresaId]);
+
   const handleSave = async () => {
     setSaving(true);
     await base44.entities.PeriodoPlanilla.create(form);
