@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, RefreshCw, Trash2, Calendar, Upload, FileSpreadsheet, Loader2, Eye, Pencil, Zap, Sparkles, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, RefreshCw, Trash2, Calendar, Upload, FileSpreadsheet, Loader2, Eye, Pencil, Zap, Sparkles, CheckCircle2, AlertCircle, BadgeCheck } from "lucide-react";
 import { useEmpresaContext } from "@/components/EmpresaContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
