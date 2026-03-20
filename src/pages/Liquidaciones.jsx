@@ -33,6 +33,7 @@ export default function Liquidaciones() {
   const liquidaciones = filterByEmpresa(liquidacionesRaw);
   const { data: empleados = [] } = useQuery({ queryKey: ["empleados"], queryFn: () => base44.entities.Empleado.list() });
   const empleadoMap = Object.fromEntries(empleados.map(e => [e.id, `${e.nombre} ${e.apellidos}`]));
+  const empleadosActivos = empleados.filter(e => e.estado !== 'liquidado');
 
   const save = useMutation({
     mutationFn: (data) => editing ? base44.entities.Liquidacion.update(editing, data) : base44.entities.Liquidacion.create(data),
