@@ -311,7 +311,7 @@ export default function Vacaciones() {
                 <Label>Empleado *</Label>
                 <Select value={saldoForm.empleado_id} onValueChange={v => setSaldoForm(f => ({ ...f, empleado_id: v }))}>
                   <SelectTrigger><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
-                  <SelectContent>{empleados.map(e => <SelectItem key={e.id} value={e.id}>{e.nombre} {e.apellidos}</SelectItem>)}</SelectContent>
+                  <SelectContent>{empleados.filter(e => e.estado === "activo").map(e => <SelectItem key={e.id} value={e.id}>{e.nombre} {e.apellidos}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <Button type="button" variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
