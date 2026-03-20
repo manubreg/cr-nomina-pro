@@ -70,6 +70,8 @@ export default function Periodos() {
   const [iaCreando, setIaCreando] = useState(false);
   const fileRef = useRef();
 
+  const loadRef = useRef(null);
+
   const load = async () => {
     setLoading(true);
     const [data, planData] = await Promise.all([
@@ -81,14 +83,17 @@ export default function Periodos() {
     setLoading(false);
   };
 
+  // Mantener ref actualizada para que la suscripción siempre use la última versión
+  loadRef.current = load;
+
   useEffect(() => { load(); }, [empresaId]);
 
   // Suscripción en tiempo real: recargar cuando cambie cualquier periodo o planilla
   useEffect(() => {
-    const unsubPeriodo = base44.entities.PeriodoPlanilla.subscribe(() => load());
-    const unsubPlanilla = base44.entities.Planilla.subscribe(() => load());
+    const unsubPeriodo = base44.entities.PeriodoPlanilla.subscribe(() => loadRef.current?.());
+    const unsubPlanilla = base44.entities.Planilla.subscribe(() => loadRef.current?.());
     return () => { unsubPeriodo(); unsubPlanilla(); };
-  }, [empresaId]);
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);
