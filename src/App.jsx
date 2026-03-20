@@ -31,6 +31,7 @@ import Usuarios from './pages/Usuarios';
 import AuditoriaPage from './pages/Auditoria';
 import Notificaciones from './pages/Notificaciones';
 import ReporteActualizacionMensual from './pages/ReporteActualizacionMensual';
+import ReporteHistorialSalarial from './pages/ReporteHistorialSalarial';
 import Configuracion from './pages/Configuracion';
 
 // Portal empleado
@@ -94,6 +95,7 @@ const AuthenticatedApp = () => {
         <Route path="/Auditoria" element={<AuditoriaPage />} />
         <Route path="/Notificaciones" element={<Notificaciones />} />
         <Route path="/ReporteActualizacionMensual" element={<ReporteActualizacionMensual />} />
+        <Route path="/ReporteHistorialSalarial" element={<ReporteHistorialSalarial />} />
         <Route path="/Configuracion" element={<Configuracion />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
