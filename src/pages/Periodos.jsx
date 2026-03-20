@@ -192,6 +192,15 @@ export default function Periodos() {
           >
             <FileSpreadsheet className="w-4 h-4 text-green-600" /> Plantilla Excel
           </button>
+          {/* Generar automático */}
+          <button
+            onClick={handleGenerarAutomatico}
+            disabled={generando}
+            className="flex items-center gap-2 border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-60"
+          >
+            {generando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+            {generando ? "Generando..." : "Generar Automático"}
+          </button>
           {/* Carga masiva */}
           <button
             onClick={() => setUploadModal(true)}
