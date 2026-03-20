@@ -37,6 +37,19 @@ export default function Vacaciones() {
     return estado !== 'liquidado' && estado !== 'inactivo';
   });
 
+  // Cálculo de días acumulados según Código de Trabajo CR: 1 día por cada mes trabajado (12 días por año)
+  const calcularDiasAcumulados = (fechaIngreso) => {
+    if (!fechaIngreso) return { diasGanados: 0, mesesTrabajados: 0, anios: 0 };
+    const ingreso = new Date(fechaIngreso + "T00:00:00");
+    const hoy = new Date();
+    let anios = hoy.getFullYear() - ingreso.getFullYear();
+    let meses = hoy.getMonth() - ingreso.getMonth();
+    if (meses < 0) { anios--; meses += 12; }
+    const mesesTotales = anios * 12 + meses;
+    const diasGanados = parseFloat((mesesTotales * 1.25).toFixed(2)); // 15 días por año = 1.25 por mes
+    return { diasGanados, mesesTrabajados: mesesTotales, anios };
+  };
+
   const save = useMutation({
     mutationFn: (data) => editing ? base44.entities.VacacionSolicitud.update(editing, data) : base44.entities.VacacionSolicitud.create(data),
     onSuccess: () => { qc.invalidateQueries(["vacSolicitudes"]); setOpen(false); },
