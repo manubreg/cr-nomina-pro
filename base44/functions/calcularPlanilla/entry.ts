@@ -157,7 +157,25 @@ Deno.serve(async (req) => {
       ? Math.round(normalizarSalarioMensual(emp) * tipoCambioVenta)
       : normalizarSalarioMensual(emp);
     const salarioMensual = Math.round(salarioMensualBase);
-    const salarioPeriodo = Math.round(salarioMensual * factor);
+
+    // Pro-rateo si el empleado ingresó dentro del período
+    let factorEmp = factor;
+    if (fechaInicioPeriodo && fechaFinPeriodo && emp.fecha_ingreso) {
+      const ingreso = emp.fecha_ingreso.substring(0, 10);
+      const inicio  = fechaInicioPeriodo.substring(0, 10);
+      const fin     = fechaFinPeriodo.substring(0, 10);
+      if (ingreso > inicio && ingreso <= fin) {
+        // Días totales del período
+        const msDay = 1000 * 60 * 60 * 24;
+        const diasPeriodo = Math.round((new Date(fin) - new Date(inicio)) / msDay) + 1;
+        const diasTrabajados = Math.round((new Date(fin) - new Date(ingreso)) / msDay) + 1;
+        // Pro-ratear sobre 30 días (base mensual)
+        factorEmp = diasTrabajados / 30;
+        console.log(`[pro-rateo] ${emp.nombre} ${emp.apellidos}: ingreso=${ingreso}, periodo=${inicio}→${fin}, días=${diasTrabajados}/${diasPeriodo}, factor=${factorEmp.toFixed(4)}`);
+      }
+    }
+
+    const salarioPeriodo = Math.round(salarioMensual * factorEmp);
     const movs = [];
 
     movs.push({ tipo_movimiento: 'ingreso', descripcion: 'Salario base', monto: salarioPeriodo,
