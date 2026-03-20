@@ -64,6 +64,9 @@ export default function Vacaciones() {
   const [detalleCalculo, setDetalleCalculo] = useState(null);
   const [openSaldo, setOpenSaldo] = useState(false);
   const [saldoForm, setSaldoForm] = useState({ empleado_id: "", empresa_id: "" });
+  const [modoCalculo, setModoCalculo] = useState("individual"); // "individual" | "total"
+  const [progreso, setProgreso] = useState({ actual: 0, total: 0 });
+  const [resultadosTotal, setResultadosTotal] = useState([]);
 
   const calcularSaldoAuto = async () => {
     if (!saldoForm.empleado_id) return;
@@ -79,6 +82,30 @@ export default function Vacaciones() {
       setDetalleCalculo(r._detalle);
     }
     setCalculando(false);
+  };
+
+  const calcularTodos = async () => {
+    const empsActivos = empleados.filter(e => e.estado === "activo" && e.fecha_ingreso && (!empresaId || e.empresa_id === empresaId));
+    if (empsActivos.length === 0) return;
+    setCalculando(true);
+    setResultadosTotal([]);
+    setProgreso({ actual: 0, total: empsActivos.length });
+    const resultados = [];
+    for (let i = 0; i < empsActivos.length; i++) {
+      const emp = empsActivos[i];
+      setProgreso({ actual: i + 1, total: empsActivos.length });
+      const res = await base44.functions.invoke('calcularVacaciones', {
+        empleado_id: emp.id,
+        empresa_id: emp.empresa_id || empresaId,
+      });
+      if (res.data?.ok) {
+        resultados.push({ emp, resultado: res.data.resultado });
+        await base44.entities.VacacionSaldo.create(res.data.resultado);
+      }
+    }
+    setResultadosTotal(resultados);
+    setCalculando(false);
+    qc.invalidateQueries(["vacSaldos"]);
   };
 
   const saveSaldo = useMutation({
