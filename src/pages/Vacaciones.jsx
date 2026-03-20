@@ -193,6 +193,74 @@ export default function Vacaciones() {
             )}
           </div>
         </TabsContent>
+
+        {/* Pestaña Acumulados: muestra días ganados automáticamente por fecha de ingreso */}
+        <TabsContent value="acumulados" className="mt-4">
+          <div className="mb-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 text-xs text-blue-700 flex items-center gap-2">
+            <Info className="w-4 h-4 shrink-0" />
+            Cálculo automático basado en el Código de Trabajo de Costa Rica: <strong>15 días por año laborado</strong> (1.25 días/mes). Solo empleados activos con fecha de ingreso registrada.
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            {empleados.filter(e => e.estado === "activo" && e.fecha_ingreso && (!empresaId || e.empresa_id === empresaId)).length === 0 ? (
+              <div className="p-12 text-center"><Umbrella className="w-10 h-10 mx-auto mb-3 text-gray-300" /><p className="text-gray-400">Sin empleados activos con fecha de ingreso</p></div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Empleado</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Fecha Ingreso</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Antigüedad</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Días Acumulados</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Días Usados</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Saldo Disponible</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {empleados
+                      .filter(e => e.estado === "activo" && e.fecha_ingreso && (!empresaId || e.empresa_id === empresaId))
+                      .map(emp => {
+                        const { diasGanados, mesesTrabajados, anios } = calcularDiasAcumulados(emp.fecha_ingreso);
+                        // Sumar días usados de solicitudes aprobadas/aplicadas
+                        const diasUsados = solicitudes
+                          .filter(s => s.empleado_id === emp.id && ["aprobada", "aplicada"].includes(s.estado))
+                          .reduce((sum, s) => sum + (s.dias_solicitados || 0), 0);
+                        const saldoDisponible = Math.max(0, diasGanados - diasUsados);
+                        return (
+                          <tr key={emp.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3">
+                              <div className="font-medium text-gray-800">{emp.nombre} {emp.apellidos}</div>
+                              <div className="text-xs text-gray-400">{emp.puesto || ""}</div>
+                            </td>
+                            <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{emp.fecha_ingreso}</td>
+                            <td className="px-4 py-3 hidden md:table-cell">
+                              <span className="text-gray-700">
+                                {anios > 0 ? `${anios} año${anios !== 1 ? "s" : ""}` : ""} {mesesTrabajados % 12 > 0 ? `${mesesTrabajados % 12} mes${(mesesTrabajados % 12) !== 1 ? "es" : ""}` : ""}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="font-semibold text-emerald-700">{diasGanados}</span>
+                            </td>
+                            <td className="px-4 py-3 hidden lg:table-cell text-red-500">{diasUsados}</td>
+                            <td className="px-4 py-3">
+                              <span className={`font-bold text-lg ${saldoDisponible > 5 ? "text-blue-700" : saldoDisponible > 0 ? "text-amber-600" : "text-red-600"}`}>
+                                {saldoDisponible.toFixed(2)}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Pestaña Calendario de Ausencias */}
+        <TabsContent value="calendario" className="mt-4">
+          <CalendarioAusencias solicitudes={solicitudes} empleadoMap={empleadoMap} />
+        </TabsContent>
       </Tabs>
 
       {/* Modal Calcular Saldo Vacaciones */}
