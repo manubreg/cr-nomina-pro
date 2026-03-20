@@ -24,13 +24,14 @@ Deno.serve(async (req) => {
       ? base44.asServiceRole.entities.Novedad.filter({ empresa_id, periodo_id, estado: 'aprobada' }, '-created_date', 300)
       : Promise.resolve([]),
     periodo_id
-      ? base44.asServiceRole.entities.PeriodoPlanilla.filter({ empresa_id }, '-fecha_inicio', 50)
+      ? base44.asServiceRole.entities.PeriodoPlanilla.filter({ id: periodo_id }, '-fecha_inicio', 1)
       : Promise.resolve([]),
   ]);
   const planilla = { id: planilla_id, empresa_id, periodo_id };
   console.log('[calcularPlanilla] empleados:', empleadosEmpresa.length);
 
-  const periodo = periodoArr.find(p => p.id === periodo_id) || periodoArr[0] || null;
+  const periodo = periodoArr[0] || null;
+  console.log('[calcularPlanilla] periodo encontrado:', periodo?.id, '| tipo:', periodo?.tipo_periodo);
 
   // ── Tipo de cambio ────────────────────────────────────────────────────────
   let tipoCambioVenta = 650;
