@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Plus, Gift, Calculator, Loader2, Info, Users, Trash2 } from "lucide-react";
+import { Plus, Gift, Calculator, Loader2, Info, Users, Trash2, Search, X } from "lucide-react";
 import { useEmpresaContext } from "@/components/EmpresaContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
