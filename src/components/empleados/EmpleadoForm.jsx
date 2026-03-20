@@ -17,7 +17,8 @@ const empty = {
   tipo_salario: "mensual", frecuencia_pago: "mensual", moneda: "CRC", tipo_jornada: "diurna", horas_jornada: 8,
   banco: "", cuenta_bancaria: "", cuenta_iban: "", sinpe_movil: "",
   asegurado_ccss: true, observaciones: "", codigo_empleado: "", centro_costo_id: "", jefatura_id: "",
-  tipo_contrato: "indefinido", fecha_fin_contrato: "", apto_horas_extra: false, horas_extra_diarias_max: ""
+  tipo_contrato: "indefinido", fecha_fin_contrato: "", apto_horas_extra: false, horas_extra_diarias_max: "",
+  hora_inicio: "", hora_fin: "", dias_laborales: [1, 2, 3, 4, 5]
 };
 
 export default function EmpleadoForm({ open, onClose, editId, empresas = [], departamentos: depsPropsssss = [], centrosCosto = [], puestos = [], empleados = [] }) {
