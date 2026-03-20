@@ -99,18 +99,19 @@ Deno.serve(async (req) => {
 
   // ── Filtrar empleados ─────────────────────────────────────────────────────
   let empleados = empleadosEmpresa;
-  if (fechaInicioPeriodo) {
+  const fechaCorteIngreso = fechaFinPeriodo || fechaInicioPeriodo;
+  if (fechaCorteIngreso) {
     const antes = empleados.length;
     empleados = empleados.filter(e => {
       if (!e.fecha_ingreso) {
         console.log(`[filtro] EXCLUIDO sin fecha_ingreso: ${e.nombre} ${e.apellidos}`);
         return false;
       }
-      // Normalizar: tomar solo los primeros 10 caracteres (YYYY-MM-DD)
+      // Incluir si el empleado ingresó en cualquier momento dentro del período (hasta fecha_fin inclusive)
       const ingresoNorm = e.fecha_ingreso.substring(0, 10);
-      const periodoNorm = fechaInicioPeriodo.substring(0, 10);
-      const incluir = ingresoNorm <= periodoNorm;
-      if (!incluir) console.log(`[filtro] EXCLUIDO por fecha_ingreso posterior: ${e.nombre} ${e.apellidos} | ingreso=${ingresoNorm} > periodo=${periodoNorm}`);
+      const corteNorm = fechaCorteIngreso.substring(0, 10);
+      const incluir = ingresoNorm <= corteNorm;
+      if (!incluir) console.log(`[filtro] EXCLUIDO por fecha_ingreso posterior al período: ${e.nombre} ${e.apellidos} | ingreso=${ingresoNorm} > fin_periodo=${corteNorm}`);
       return incluir;
     });
     console.log(`[filtro fecha_ingreso] ${antes} → ${empleados.length} empleados`);
