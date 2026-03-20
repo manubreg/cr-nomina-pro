@@ -110,6 +110,8 @@ export default function Vacaciones() {
         <TabsList>
           <TabsTrigger value="solicitudes">Solicitudes ({solicitudes.length})</TabsTrigger>
           <TabsTrigger value="saldos">Saldos ({saldosFiltrados.length})</TabsTrigger>
+          <TabsTrigger value="acumulados">Acumulados</TabsTrigger>
+          <TabsTrigger value="calendario"><CalendarDays className="w-3.5 h-3.5 mr-1" />Calendario</TabsTrigger>
         </TabsList>
 
         <TabsContent value="solicitudes" className="mt-4">
