@@ -64,6 +64,10 @@ export default function Periodos() {
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [filtroTipo, setFiltroTipo] = useState("todos");
   const [generando, setGenerando] = useState(false);
+  const [iaModal, setIaModal] = useState(false);
+  const [iaAnalizando, setIaAnalizando] = useState(false);
+  const [iaResultado, setIaResultado] = useState(null);
+  const [iaCreando, setIaCreando] = useState(false);
   const fileRef = useRef();
 
   const load = async () => {
