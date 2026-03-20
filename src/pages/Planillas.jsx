@@ -303,18 +303,16 @@ export default function Planillas() {
                          </button>
                        )}
                        {/* Eliminar — bloqueado si aprobado/pagado */}
-                       {!['aprobado', 'pagado'].includes(p.estado) && (
-                         <button
-                           onClick={() => handleEliminar(p)}
-                           disabled={eliminando === p.id}
-                           title="Eliminar planilla"
-                           className="text-gray-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
-                         >
-                           {eliminando === p.id
-                             ? <Loader2 className="w-4 h-4 animate-spin" />
-                             : <Trash2 className="w-4 h-4" />}
-                         </button>
-                       )}
+                        {!['aprobado', 'pagado'].includes(p.estado) && (
+                          <button
+                            onClick={() => handleEliminar(p)}
+                            disabled={eliminando === p.id}
+                            title="Eliminar planilla"
+                            className="text-gray-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
+                          >
+                            {eliminando === p.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                          </button>
+                        )}
                      </div>
                     </td>
                   </tr>
