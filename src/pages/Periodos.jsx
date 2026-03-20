@@ -92,6 +92,96 @@ export default function Periodos() {
     load();
   };
 
+  const handleIaAnalizar = async () => {
+    if (!empresaId) {
+      toast({ title: "Seleccione una empresa", variant: "destructive" });
+      return;
+    }
+    setIaAnalizando(true);
+    setIaResultado(null);
+
+    // Cargar datos históricos para la IA
+    const [periodosHist, planillasHist, empleadosAct] = await Promise.all([
+      base44.entities.PeriodoPlanilla.filter({ empresa_id: empresaId }, "-fecha_inicio", 20),
+      base44.entities.Planilla.filter({ empresa_id: empresaId }, "-fecha_calculo", 10),
+      base44.entities.Empleado.filter({ empresa_id: empresaId, estado: "activo" }),
+    ]);
+
+    const empresa = empresas.find(e => e.id === empresaId);
+    const resumen = {
+      empresa: empresa?.nombre_comercial || empresa?.nombre_legal || "Empresa",
+      totalEmpleados: empleadosAct.length,
+      periodosRecientes: periodosHist.slice(0, 8).map(p => ({
+        tipo: p.tipo_periodo,
+        inicio: p.fecha_inicio,
+        fin: p.fecha_fin,
+        pago: p.fecha_pago,
+        estado: p.estado,
+      })),
+      planillasRecientes: planillasHist.slice(0, 5).map(pl => ({
+        tipo: pl.tipo_planilla,
+        totalNeto: pl.total_neto,
+        empleados: pl.cantidad_empleados,
+        estado: pl.estado,
+        fecha: pl.fecha_calculo,
+      })),
+    };
+
+    const resultado = await base44.integrations.Core.InvokeLLM({
+      prompt: `Eres un experto en planillas y recursos humanos de Costa Rica.
+Analiza el siguiente historial de períodos y planillas de la empresa "${resumen.empresa}" con ${resumen.totalEmpleados} empleados activos:
+
+PERÍODOS RECIENTES:
+${JSON.stringify(resumen.periodosRecientes, null, 2)}
+
+PLANILLAS RECIENTES:
+${JSON.stringify(resumen.planillasRecientes, null, 2)}
+
+Hoy es ${new Date().toISOString().split("T")[0]}.
+
+Basándote en el patrón histórico:
+1. Determina el tipo de período más frecuente
+2. Calcula las fechas del PRÓXIMO período que debería crearse (sin duplicar los existentes)
+3. Calcula la fecha de pago apropiada (considerando días hábiles, fines de semana)
+4. Provee una observación breve explicando tu razonamiento
+
+Devuelve únicamente JSON con la estructura indicada.`,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          tipo_periodo: { type: "string" },
+          fecha_inicio: { type: "string" },
+          fecha_fin: { type: "string" },
+          fecha_pago: { type: "string" },
+          observacion: { type: "string" },
+          advertencias: { type: "array", items: { type: "string" } },
+        }
+      }
+    });
+
+    setIaResultado(resultado);
+    setIaAnalizando(false);
+  };
+
+  const handleIaCrear = async () => {
+    if (!iaResultado) return;
+    setIaCreando(true);
+    await base44.entities.PeriodoPlanilla.create({
+      empresa_id: empresaId,
+      tipo_periodo: iaResultado.tipo_periodo,
+      fecha_inicio: iaResultado.fecha_inicio,
+      fecha_fin: iaResultado.fecha_fin,
+      fecha_pago: iaResultado.fecha_pago,
+      estado: "abierto",
+      observaciones: iaResultado.observacion || "",
+    });
+    setIaCreando(false);
+    setIaModal(false);
+    setIaResultado(null);
+    load();
+    toast({ title: "✅ Período creado con IA", description: `${iaResultado.tipo_periodo} · ${iaResultado.fecha_inicio} → ${iaResultado.fecha_fin}` });
+  };
+
   const handleGenerarAutomatico = async () => {
     setGenerando(true);
     const payload = empresaId ? { empresa_id: empresaId } : {};
