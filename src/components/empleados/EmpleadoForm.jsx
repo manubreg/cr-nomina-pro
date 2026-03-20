@@ -14,7 +14,7 @@ const empty = {
   fecha_nacimiento: "", fecha_ingreso: "", estado: "activo", genero: "no_especificado",
   nacionalidad: "Costa Rica", puesto: "", departamento_id: "", empresa_id: "",
   correo: "", telefono: "", direccion: "", salario_base: "",
-  frecuencia_pago: "mensual", moneda: "CRC", tipo_jornada: "diurna", horas_jornada: 8,
+  tipo_salario: "mensual", frecuencia_pago: "mensual", moneda: "CRC", tipo_jornada: "diurna", horas_jornada: 8,
   banco: "", cuenta_bancaria: "", cuenta_iban: "", sinpe_movil: "",
   asegurado_ccss: true, observaciones: "", codigo_empleado: "", centro_costo_id: "", jefatura_id: "",
   tipo_contrato: "indefinido", fecha_fin_contrato: "", apto_horas_extra: false, horas_extra_diarias_max: ""
