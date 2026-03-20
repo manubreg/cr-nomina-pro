@@ -35,6 +35,7 @@ export default function Planillas() {
   const [creandoAuto, setCreandoAuto] = useState(false);
   const [eliminando, setEliminando] = useState(null);
   const [busquedaEmpleados, setBusquedaEmpleados] = useState("");
+  const [confirmDialog, setConfirmDialog] = useState(null); // { type, title, description, confirmLabel, btnType, onConfirm }
 
   const { data: planillasRaw = [], isLoading } = useQuery({
     queryKey: ["planillas", empresaId],
