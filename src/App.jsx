@@ -97,6 +97,7 @@ const AuthenticatedApp = () => {
         <Route path="/Notificaciones" element={<Notificaciones />} />
         <Route path="/ReporteActualizacionMensual" element={<ReporteActualizacionMensual />} />
         <Route path="/ReporteHistorialSalarial" element={<ReporteHistorialSalarial />} />
+        <Route path="/HistorialSalarial" element={<HistorialSalarial />} />
         <Route path="/Configuracion" element={<Configuracion />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
