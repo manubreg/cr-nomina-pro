@@ -88,12 +88,20 @@ Deno.serve(async (req) => {
 
   // ── Limpiar detalles y movimientos anteriores de esta planilla ───────────
   const [detallesAnteriores, movimientosAnteriores] = await Promise.all([
-    base44.asServiceRole.entities.PlanillaDetalle.filter({ planilla_id }),
-    base44.asServiceRole.entities.MovimientoPlanilla.filter({ planilla_id }),
+    base44.asServiceRole.entities.PlanillaDetalle.filter({ planilla_id }, '-created_date', 500),
+    base44.asServiceRole.entities.MovimientoPlanilla.filter({ planilla_id }, '-created_date', 500),
   ]);
+
+  // Eliminar en lotes de 10 para no exceder CPU limit
+  const chunkDelete = async (items, deleteFn) => {
+    const CHUNK = 10;
+    for (let i = 0; i < items.length; i += CHUNK) {
+      await Promise.all(items.slice(i, i + CHUNK).map(x => deleteFn(x.id)));
+    }
+  };
   await Promise.all([
-    ...detallesAnteriores.map(d => base44.asServiceRole.entities.PlanillaDetalle.delete(d.id)),
-    ...movimientosAnteriores.map(m => base44.asServiceRole.entities.MovimientoPlanilla.delete(m.id)),
+    chunkDelete(detallesAnteriores, id => base44.asServiceRole.entities.PlanillaDetalle.delete(id)),
+    chunkDelete(movimientosAnteriores, id => base44.asServiceRole.entities.MovimientoPlanilla.delete(id)),
   ]);
   console.log('[calcularPlanilla] limpiados', detallesAnteriores.length, 'detalles y', movimientosAnteriores.length, 'movimientos anteriores');
 
