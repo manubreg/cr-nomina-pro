@@ -225,10 +225,16 @@ export default function Planillas() {
                     </td>
                     <td className="px-4 py-3 text-right">
                      <div className="flex items-center justify-end gap-1">
-                       {/* Recalcular — bloqueado si aprobado/pagado/anulado */}
+                                       {/* Recalcular — bloqueado si aprobado/pagado/anulado */}
                        {!['aprobado', 'pagado', 'anulado'].includes(p.estado) && (
                          <button
-                           onClick={() => handleCalcular(p)}
+                           onClick={() => setConfirmDialog({
+                             title: "Recalcular Planilla",
+                             description: `¿Desea recalcular la planilla "${p.codigo_planilla}"? Los datos actuales serán reemplazados.`,
+                             confirmLabel: "Recalcular",
+                             btnType: "recalcular",
+                             onConfirm: async () => { setConfirmDialog(null); handleCalcular(p); }
+                           })}
                            disabled={calculando === p.id}
                            title="Recalcular planilla"
                            className="text-gray-400 hover:text-emerald-600 p-1.5 rounded hover:bg-emerald-50 transition-colors disabled:opacity-50"
@@ -241,20 +247,26 @@ export default function Planillas() {
                        {/* Aprobar — solo si está calculado o en_revision */}
                        {['calculado', 'en_revision'].includes(p.estado) && (
                          <button
-                           onClick={async () => {
-                             if (!confirm(`¿Aprobar la planilla "${p.codigo_planilla}"? Una vez aprobada no podrá modificarse.`)) return;
-                             await base44.entities.Planilla.update(p.id, {
-                               estado: 'aprobado',
-                               usuario_aprobo: (await base44.auth.me()).email,
-                               fecha_aprobacion: new Date().toISOString().split("T")[0],
-                             });
-                             if (p.periodo_id) {
-                               await base44.entities.PeriodoPlanilla.update(p.periodo_id, { estado: 'aprobado' });
-                               qc.invalidateQueries(["periodos"]);
+                           onClick={() => setConfirmDialog({
+                             title: "Aprobar Planilla",
+                             description: `¿Aprobar la planilla "${p.codigo_planilla}"? Una vez aprobada no podrá modificarse y el período quedará marcado como aprobado.`,
+                             confirmLabel: "Aprobar",
+                             btnType: "success",
+                             onConfirm: async () => {
+                               setConfirmDialog(null);
+                               await base44.entities.Planilla.update(p.id, {
+                                 estado: 'aprobado',
+                                 usuario_aprobo: (await base44.auth.me()).email,
+                                 fecha_aprobacion: new Date().toISOString().split("T")[0],
+                               });
+                               if (p.periodo_id) {
+                                 await base44.entities.PeriodoPlanilla.update(p.periodo_id, { estado: 'aprobado' });
+                                 qc.invalidateQueries(["periodos"]);
+                               }
+                               qc.invalidateQueries(["planillas"]);
+                               toast({ title: "Planilla aprobada", description: "El período también fue marcado como aprobado." });
                              }
-                             qc.invalidateQueries(["planillas"]);
-                             toast({ title: "Planilla aprobada", description: "El período también fue marcado como aprobado." });
-                           }}
+                           })}
                            title="Aprobar planilla"
                            className="text-gray-400 hover:text-emerald-600 p-1.5 rounded hover:bg-emerald-50 transition-colors"
                          >
