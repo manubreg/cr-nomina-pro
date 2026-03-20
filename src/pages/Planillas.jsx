@@ -102,7 +102,7 @@ export default function Planillas() {
 
   const handleCalcular = async (planilla) => {
     setCalculando(planilla.id);
-    const res = await base44.functions.invoke('calcularPlanilla', { planilla_id: planilla.id });
+    const res = await base44.functions.invoke('calcularPlanilla', { planilla_id: planilla.id, empresa_id: planilla.empresa_id, periodo_id: planilla.periodo_id });
     setCalculando(null);
     if (res.data?.ok) {
       qc.invalidateQueries(["planillas"]);
