@@ -210,61 +210,82 @@ export default function Planillas() {
                       <Badge className={estadoColor[p.estado]}>{p.estado}</Badge>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {/* Recalcular */}
-                        {!['pagado', 'anulado'].includes(p.estado) && (
-                          <button
-                            onClick={() => handleCalcular(p)}
-                            disabled={calculando === p.id}
-                            title="Recalcular planilla"
-                            className="text-gray-400 hover:text-emerald-600 p-1.5 rounded hover:bg-emerald-50 transition-colors disabled:opacity-50"
-                          >
-                            {calculando === p.id
-                              ? <Loader2 className="w-4 h-4 animate-spin" />
-                              : <Calculator className="w-4 h-4" />}
-                          </button>
-                        )}
-                        {/* Visualizar */}
-                        <button
-                          onClick={() => setDetalleModal(p)}
-                          title="Visualizar detalle"
-                          className="text-gray-400 hover:text-blue-600 p-1.5 rounded hover:bg-blue-50 transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        {/* Descargar boletas */}
-                        <button
-                          onClick={() => handleDescargarTodas(p)}
-                          disabled={descargando === p.id}
-                          title="Descargar boletas PDF de todos los empleados"
-                          className="text-gray-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
-                        >
-                          {descargando === p.id
-                            ? <Loader2 className="w-4 h-4 animate-spin" />
-                            : <FileText className="w-4 h-4" />}
-                        </button>
-                        {/* Editar */}
-                        {!['pagado', 'anulado'].includes(p.estado) && (
-                          <button
-                            onClick={() => setEditandoModal(p)}
-                            title="Editar planilla"
-                            className="text-gray-400 hover:text-orange-600 p-1.5 rounded hover:bg-orange-50 transition-colors"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                        )}
-                        {/* Eliminar */}
-                        <button
-                          onClick={() => handleEliminar(p)}
-                          disabled={eliminando === p.id}
-                          title="Eliminar planilla"
-                          className="text-gray-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
-                        >
-                          {eliminando === p.id
-                            ? <Loader2 className="w-4 h-4 animate-spin" />
-                            : <Trash2 className="w-4 h-4" />}
-                        </button>
-                      </div>
+                     <div className="flex items-center justify-end gap-1">
+                       {/* Recalcular — bloqueado si aprobado/pagado/anulado */}
+                       {!['aprobado', 'pagado', 'anulado'].includes(p.estado) && (
+                         <button
+                           onClick={() => handleCalcular(p)}
+                           disabled={calculando === p.id}
+                           title="Recalcular planilla"
+                           className="text-gray-400 hover:text-emerald-600 p-1.5 rounded hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                         >
+                           {calculando === p.id
+                             ? <Loader2 className="w-4 h-4 animate-spin" />
+                             : <Calculator className="w-4 h-4" />}
+                         </button>
+                       )}
+                       {/* Aprobar — solo si está calculado o en_revision */}
+                       {['calculado', 'en_revision'].includes(p.estado) && (
+                         <button
+                           onClick={async () => {
+                             if (!confirm(`¿Aprobar la planilla "${p.codigo_planilla}"? Una vez aprobada no podrá modificarse.`)) return;
+                             await base44.entities.Planilla.update(p.id, {
+                               estado: 'aprobado',
+                               usuario_aprobo: (await base44.auth.me()).email,
+                               fecha_aprobacion: new Date().toISOString().split("T")[0],
+                             });
+                             qc.invalidateQueries(["planillas"]);
+                             toast({ title: "Planilla aprobada" });
+                           }}
+                           title="Aprobar planilla"
+                           className="text-gray-400 hover:text-emerald-600 p-1.5 rounded hover:bg-emerald-50 transition-colors"
+                         >
+                           <CheckCircle className="w-4 h-4" />
+                         </button>
+                       )}
+                       {/* Visualizar */}
+                       <button
+                         onClick={() => setDetalleModal(p)}
+                         title="Visualizar detalle"
+                         className="text-gray-400 hover:text-blue-600 p-1.5 rounded hover:bg-blue-50 transition-colors"
+                       >
+                         <Eye className="w-4 h-4" />
+                       </button>
+                       {/* Descargar boletas */}
+                       <button
+                         onClick={() => handleDescargarTodas(p)}
+                         disabled={descargando === p.id}
+                         title="Descargar boletas PDF de todos los empleados"
+                         className="text-gray-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
+                       >
+                         {descargando === p.id
+                           ? <Loader2 className="w-4 h-4 animate-spin" />
+                           : <FileText className="w-4 h-4" />}
+                       </button>
+                       {/* Editar — bloqueado si aprobado/pagado/anulado */}
+                       {!['aprobado', 'pagado', 'anulado'].includes(p.estado) && (
+                         <button
+                           onClick={() => setEditandoModal(p)}
+                           title="Editar planilla"
+                           className="text-gray-400 hover:text-orange-600 p-1.5 rounded hover:bg-orange-50 transition-colors"
+                         >
+                           <Edit2 className="w-4 h-4" />
+                         </button>
+                       )}
+                       {/* Eliminar — bloqueado si aprobado/pagado */}
+                       {!['aprobado', 'pagado'].includes(p.estado) && (
+                         <button
+                           onClick={() => handleEliminar(p)}
+                           disabled={eliminando === p.id}
+                           title="Eliminar planilla"
+                           className="text-gray-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
+                         >
+                           {eliminando === p.id
+                             ? <Loader2 className="w-4 h-4 animate-spin" />
+                             : <Trash2 className="w-4 h-4" />}
+                         </button>
+                       )}
+                     </div>
                     </td>
                   </tr>
                 ))}
