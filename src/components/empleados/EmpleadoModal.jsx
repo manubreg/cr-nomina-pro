@@ -17,7 +17,14 @@ export default function EmpleadoModal({ empleado, departamentos = [], centrosCos
     tipo_jornada: "diurna", horas_jornada: 8, correo: "", telefono: "",
     banco: "", cuenta_bancaria: "", cuenta_iban: "",
     asegurado_ccss: true, observaciones: "",
-    tipo_contrato: "indefinido", fecha_fin_contrato: ""
+    tipo_contrato: "indefinido", fecha_fin_contrato: "",
+    horario_lunes: { inicio: "08:00", fin: "17:00" },
+    horario_martes: { inicio: "08:00", fin: "17:00" },
+    horario_miercoles: { inicio: "08:00", fin: "17:00" },
+    horario_jueves: { inicio: "08:00", fin: "17:00" },
+    horario_viernes: { inicio: "08:00", fin: "17:00" },
+    horario_sabado: { inicio: "", fin: "" },
+    horario_domingo: { inicio: "", fin: "" }
   });
   const [saving, setSaving] = useState(false);
   const [jefaturaBusqueda, setJefaturaBusqueda] = useState("");
