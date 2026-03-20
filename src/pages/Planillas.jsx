@@ -136,7 +136,19 @@ export default function Planillas() {
   };
 
   const handleEliminar = async (planilla) => {
-    if (!confirm(`¿Eliminar planilla ${planilla.codigo_planilla}? Esta acción no se puede deshacer.`)) return;
+    setConfirmDialog({
+      title: "Eliminar Planilla",
+      description: `¿Está seguro que desea eliminar la planilla "${planilla.codigo_planilla}"? Esta acción no se puede deshacer.`,
+      confirmLabel: "Eliminar",
+      btnType: "danger",
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        await _doEliminar(planilla);
+      }
+    });
+  };
+
+  const _doEliminar = async (planilla) => {
     setEliminando(planilla.id);
     
     try {
