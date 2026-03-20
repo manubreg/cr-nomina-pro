@@ -53,6 +53,7 @@ const navItems = [
   {
     label: "Administración", icon: Settings, path: "/Parametros",
     children: [
+      { label: "Calendario Legal", path: "/CalendarioObligaciones" },
       { label: "Parámetros", path: "/Parametros" },
       { label: "Configuración", path: "/Configuracion" },
       { label: "Usuarios", path: "/Usuarios" },
