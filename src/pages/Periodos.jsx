@@ -646,6 +646,19 @@ Devuelve únicamente JSON con la estructura indicada.`,
         <PlanillaDetalleModal planilla={detalleModal} onClose={() => setDetalleModal(null)} />
       )}
 
+      {/* Diálogo de confirmación */}
+      {confirmDialog && (
+        <ConfirmDialog
+          open={!!confirmDialog}
+          onClose={() => setConfirmDialog(null)}
+          onConfirm={confirmDialog.onConfirm}
+          title={confirmDialog.title}
+          description={confirmDialog.description}
+          confirmLabel={confirmDialog.confirmLabel}
+          type={confirmDialog.btnType}
+        />
+      )}
+
       {/* Modal IA */}
       <Dialog open={iaModal} onOpenChange={(open) => { if (!iaCreando && !iaAnalizando) setIaModal(open); }}>
         <DialogContent className="max-w-md">
