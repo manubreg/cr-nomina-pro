@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
       const ingreso = emp.fecha_ingreso.substring(0, 10);
       const inicio  = fechaInicioPeriodo.substring(0, 10);
       const fin     = fechaFinPeriodo.substring(0, 10);
-      if (ingreso > inicio && ingreso <= fin) {
+      if (ingreso >= inicio && ingreso <= fin) {
         // Días totales del período
         const msDay = 1000 * 60 * 60 * 24;
         const diasPeriodo = Math.round((new Date(fin) - new Date(inicio)) / msDay) + 1;
