@@ -20,6 +20,14 @@ function drawHeader(doc, empresa, empleado, periodo, detalle) {
   const { jsPDF } = window.jspdf || {};
   const pW = 210; // A4 width mm
 
+  // Logo en esquina superior derecha
+  const logoUrl = "https://media.base44.com/images/public/69b3108b56c003fc16c880bd/39c06300e_LOGONUEVOcdr.jpg";
+  try {
+    doc.addImage(logoUrl, "JPEG", 165, 10, 35, 20);
+  } catch (e) {
+    console.log("Logo no disponible");
+  }
+
   // Azul oscuro encabezado empresa / trabajador
   doc.setFillColor(0, 32, 96);
   doc.rect(10, 10, 90, 6, "F");
