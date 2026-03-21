@@ -177,8 +177,8 @@ Deno.serve(async (req) => {
         const msDay = 1000 * 60 * 60 * 24;
         const diasPeriodo = Math.round((new Date(fin) - new Date(inicio)) / msDay) + 1;
         const diasTrabajados = Math.round((new Date(fin) - new Date(ingreso)) / msDay) + 1;
-        // Pro-ratear sobre 30 días (base mensual)
-        factorEmp = diasTrabajados / 30;
+        // Pro-ratear sobre los días reales del período
+        factorEmp = diasTrabajados / diasPeriodo;
         console.log(`[pro-rateo] ${emp.nombre} ${emp.apellidos}: ingreso=${ingreso}, periodo=${inicio}→${fin}, días=${diasTrabajados}/${diasPeriodo}, factor=${factorEmp.toFixed(4)}`);
       }
     }
