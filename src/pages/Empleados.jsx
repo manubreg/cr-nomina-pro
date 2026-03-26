@@ -57,9 +57,13 @@ export default function Empleados() {
 
   // Obtener salario vigente de un empleado (considerando histórico)
   const getSalarioVigente = (emp) => {
+    if (!historialSalario || historialSalario.length === 0) return emp.salario_base || 0;
+    
+    const hoy = new Date().toISOString().split('T')[0];
     const aumentosAplicables = historialSalario
-      .filter(h => h.empleado_id === emp.id && h.fecha_efectiva <= new Date().toISOString().split('T')[0])
-      .sort((a, b) => new Date(b.fecha_efectiva) - new Date(a.fecha_efectiva));
+      .filter(h => h.empleado_id === emp.id && h.fecha_efectiva && h.fecha_efectiva <= hoy)
+      .sort((a, b) => (b.fecha_efectiva || '').localeCompare(a.fecha_efectiva || ''));
+    
     return aumentosAplicables.length > 0 ? aumentosAplicables[0].salario_nuevo : emp.salario_base;
   };
 
