@@ -49,8 +49,8 @@ export default function Empleados() {
   });
 
   const { data: historialSalario = [] } = useQuery({
-    queryKey: ["historialSalario", empresaId],
-    queryFn: () => empresaId ? base44.entities.HistorialSalario.filter({ empresa_id: empresaId }, "-fecha_efectiva", 500) : Promise.resolve([]),
+    queryKey: ["historialSalario"],
+    queryFn: () => base44.entities.HistorialSalario.list("-fecha_efectiva", 500),
   });
 
   const empresaMap = Object.fromEntries(empresas.map(e => [e.id, e.nombre_comercial || e.nombre_legal]));
