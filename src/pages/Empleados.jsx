@@ -48,7 +48,20 @@ export default function Empleados() {
     queryFn: () => empresaId ? base44.entities.Puesto?.filter?.({ empresa_id: empresaId }) : Promise.resolve([]),
   });
 
+  const { data: historialSalario = [] } = useQuery({
+    queryKey: ["historialSalario", empresaId],
+    queryFn: () => empresaId ? base44.entities.HistorialSalario.filter({ empresa_id: empresaId }, "-fecha_efectiva", 500) : Promise.resolve([]),
+  });
+
   const empresaMap = Object.fromEntries(empresas.map(e => [e.id, e.nombre_comercial || e.nombre_legal]));
+
+  // Obtener salario vigente de un empleado (considerando histórico)
+  const getSalarioVigente = (emp) => {
+    const aumentosAplicables = historialSalario
+      .filter(h => h.empleado_id === emp.id && h.fecha_efectiva <= new Date().toISOString().split('T')[0])
+      .sort((a, b) => new Date(b.fecha_efectiva) - new Date(a.fecha_efectiva));
+    return aumentosAplicables.length > 0 ? aumentosAplicables[0].salario_nuevo : emp.salario_base;
+  };
 
   const formatFecha = (fechaStr) => {
     if (!fechaStr) return "—";
@@ -115,14 +128,15 @@ export default function Empleados() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Empleado</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Identificación</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Puesto</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Empresa</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Fecha Salida</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Estado</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Acciones</th>
-                </tr>
+                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Empleado</th>
+                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Identificación</th>
+                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Puesto</th>
+                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Salario Vigente</th>
+                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Empresa</th>
+                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Fecha Salida</th>
+                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Estado</th>
+                   <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Acciones</th>
+                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filtered.map(emp => (
@@ -139,9 +153,10 @@ export default function Empleados() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-gray-600 hidden md:table-cell font-mono text-xs">{emp.identificacion}</td>
-                    <td className="px-4 py-3 text-gray-600 hidden lg:table-cell">{emp.puesto || "—"}</td>
-                    <td className="px-4 py-3 text-gray-600 hidden lg:table-cell text-xs">{empresaMap[emp.empresa_id] || "—"}</td>
-                    <td className="px-4 py-3 text-gray-600 hidden lg:table-cell text-xs">{formatFecha(emp.fecha_salida)}</td>
+                     <td className="px-4 py-3 text-gray-600 hidden lg:table-cell">{emp.puesto || "—"}</td>
+                     <td className="px-4 py-3 text-gray-600 hidden lg:table-cell font-mono text-sm">₡{Number(getSalarioVigente(emp)).toLocaleString()}</td>
+                     <td className="px-4 py-3 text-gray-600 hidden lg:table-cell text-xs">{empresaMap[emp.empresa_id] || "—"}</td>
+                     <td className="px-4 py-3 text-gray-600 hidden lg:table-cell text-xs">{formatFecha(emp.fecha_salida)}</td>
                     <td className="px-4 py-3">
                       <Badge className={estadoColor[emp.estado] || "bg-gray-100 text-gray-600"}>{emp.estado}</Badge>
                     </td>
