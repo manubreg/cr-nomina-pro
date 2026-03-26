@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
 
   // ── FASE 1: Cargar datos en paralelo ──────────────────────────────────────
    const [todosParams, empleadosActivos, empleadosLiquidados, todasNovedades, periodoArr, historialSalario] = await Promise.all([
-      base44.asServiceRole.entities.ParametroLegal.filter({ estado: 'vigente' }, '-created_date', 50),
+     base44.asServiceRole.entities.ParametroLegal.filter({ empresa_id, estado: 'vigente' }, '-created_date', 50),
      base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'activo' }, '-fecha_ingreso', 300),
      base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'liquidado' }, '-fecha_salida', 100),
      periodo_id
@@ -280,7 +280,6 @@ Deno.serve(async (req) => {
     }
     const baseISR = Math.max(0, baseCCSS - totalCCSSEmp);
     const montoISR = calcISR(baseISR);
-    console.log(`[ISR] ${emp.nombre} ${emp.apellidos}: baseCCSS=${baseCCSS}, totalCCSS=${totalCCSSEmp}, baseISR=${baseISR}, montoISR=${montoISR}, tramos=`, tramosISR);
     if (montoISR > 0) {
       movs.push({ tipo_movimiento: 'deduccion', descripcion: 'Impuesto sobre la Renta', monto: montoISR,
         cantidad: 1, tarifa: 0, porcentaje: 0, base_calculo: baseISR, orden_calculo: 30, origen: 'automatico' });
