@@ -39,6 +39,7 @@ const navItems = [
       { label: "Aguinaldo", path: "/Aguinaldo" },
       { label: "Liquidaciones", path: "/Liquidaciones" },
       { label: "Historial Salarial", path: "/HistorialSalarial" },
+      { label: "Historial de Boletas", path: "/HistorialBoletas" },
     ]
   },
   {

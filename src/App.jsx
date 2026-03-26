@@ -32,6 +32,7 @@ import AuditoriaPage from './pages/Auditoria';
 import Notificaciones from './pages/Notificaciones';
 
 import ReporteHistorialSalarial from './pages/ReporteHistorialSalarial';
+import HistorialBoletas from './pages/HistorialBoletas';
 import HistorialSalarial from './pages/HistorialSalarial';
 import Configuracion from './pages/Configuracion';
 import CalendarioObligaciones from './pages/CalendarioObligaciones';
@@ -98,6 +99,7 @@ const AuthenticatedApp = () => {
         <Route path="/Notificaciones" element={<Notificaciones />} />
         <Route path="/ReporteHistorialSalarial" element={<ReporteHistorialSalarial />} />
         <Route path="/HistorialSalarial" element={<HistorialSalarial />} />
+        <Route path="/HistorialBoletas" element={<HistorialBoletas />} />
         <Route path="/Configuracion" element={<Configuracion />} />
         <Route path="/CalendarioObligaciones" element={<CalendarioObligaciones />} />
       </Route>
