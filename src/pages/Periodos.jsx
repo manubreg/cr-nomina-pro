@@ -64,6 +64,7 @@ export default function Periodos() {
   const [editSaving, setEditSaving] = useState(false);
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [filtroTipo, setFiltroTipo] = useState("todos");
+  const [pagina, setPagina] = useState(1);
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [generando, setGenerando] = useState(false);
   const [iaModal, setIaModal] = useState(false);
@@ -295,11 +296,16 @@ Devuelve únicamente JSON con la estructura indicada.`,
   // Obtener planilla asociada a un período
   const getPlanilla = (periodoId) => planillas.find(pl => pl.periodo_id === periodoId);
 
+  const POR_PAGINA = 10;
+
   const periodosFiltrados = periodos.filter(p => {
     const okEstado = filtroEstado === "todos" || p.estado === filtroEstado;
     const okTipo = filtroTipo === "todos" || p.tipo_periodo === filtroTipo;
     return okEstado && okTipo;
   });
+
+  const totalPaginas = Math.ceil(periodosFiltrados.length / POR_PAGINA);
+  const periodosPagina = periodosFiltrados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
 
   return (
     <div className="p-6 space-y-5 max-w-screen-xl mx-auto">
@@ -398,7 +404,7 @@ Devuelve únicamente JSON con la estructura indicada.`,
           <label className="text-xs text-gray-500">Estado</label>
           <select
             value={filtroEstado}
-            onChange={e => setFiltroEstado(e.target.value)}
+            onChange={e => { setFiltroEstado(e.target.value); setPagina(1); }}
             className="px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="todos">Todos</option>
@@ -414,7 +420,7 @@ Devuelve únicamente JSON con la estructura indicada.`,
           <label className="text-xs text-gray-500">Tipo</label>
           <select
             value={filtroTipo}
-            onChange={e => setFiltroTipo(e.target.value)}
+            onChange={e => { setFiltroTipo(e.target.value); setPagina(1); }}
             className="px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="todos">Todos</option>
@@ -450,7 +456,7 @@ Devuelve únicamente JSON con la estructura indicada.`,
               </td></tr>
             ) : periodosFiltrados.length === 0 ? (
               <tr><td colSpan={7} className="text-center py-12 text-gray-400 text-sm">No hay periodos que coincidan con los filtros.</td></tr>
-            ) : periodosFiltrados.map(p => {
+            ) : periodosPagina.map(p => {
               const planilla = getPlanilla(p.id);
               return (
                 <tr key={p.id} className="hover:bg-gray-50">
@@ -530,6 +536,55 @@ Devuelve únicamente JSON con la estructura indicada.`,
           </tbody>
         </table>
       </div>
+
+      {/* Paginación */}
+      {totalPaginas > 1 && (
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs text-gray-400">
+            Página {pagina} de {totalPaginas} · {periodosFiltrados.length} registros
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPagina(1)}
+              disabled={pagina === 1}
+              className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40"
+            >«</button>
+            <button
+              onClick={() => setPagina(p => Math.max(1, p - 1))}
+              disabled={pagina === 1}
+              className="px-3 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40"
+            >Anterior</button>
+            {Array.from({ length: totalPaginas }, (_, i) => i + 1)
+              .filter(n => n === 1 || n === totalPaginas || Math.abs(n - pagina) <= 1)
+              .reduce((acc, n, idx, arr) => {
+                if (idx > 0 && n - arr[idx - 1] > 1) acc.push("...");
+                acc.push(n);
+                return acc;
+              }, [])
+              .map((item, idx) =>
+                item === "..." ? (
+                  <span key={idx} className="px-2 text-xs text-gray-400">…</span>
+                ) : (
+                  <button
+                    key={item}
+                    onClick={() => setPagina(item)}
+                    className={`px-3 py-1 text-xs border rounded ${pagina === item ? "bg-blue-600 text-white border-blue-600" : "border-gray-200 hover:bg-gray-50"}`}
+                  >{item}</button>
+                )
+              )}
+            <button
+              onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))}
+              disabled={pagina === totalPaginas}
+              className="px-3 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40"
+            >Siguiente</button>
+            <button
+              onClick={() => setPagina(totalPaginas)}
+              disabled={pagina === totalPaginas}
+              className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40"
+            >»</button>
+          </div>
+        </div>
+      )}
 
       {/* Modal carga masiva */}
       <Dialog open={uploadModal} onOpenChange={setUploadModal}>
