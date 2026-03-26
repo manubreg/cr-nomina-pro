@@ -88,7 +88,7 @@ export default function Usuarios() {
       </div>
 
       {/* Leyenda de roles */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {[
           { role: "admin", desc: "Ve y gestiona todas las empresas" },
           { role: "admin_rrhh", desc: "Gestiona solo su empresa asignada" },
@@ -97,6 +97,12 @@ export default function Usuarios() {
           <div key={r.role} className="bg-white border border-gray-200 rounded-lg p-3">
             <Badge className={roleColor[r.role]}>{roleLabel[r.role]}</Badge>
             <p className="text-xs text-gray-500 mt-1.5">{r.desc}</p>
+          </div>
+        ))}
+        {roles.filter(r => r.estado === "activo").map(r => (
+          <div key={r.id} className="bg-white border border-blue-200 rounded-lg p-3">
+            <Badge className="bg-blue-100 text-blue-700"><ShieldCheck className="w-3 h-3 mr-1" />{r.nombre}</Badge>
+            <p className="text-xs text-gray-500 mt-1.5">{r.descripcion || "Rol personalizado"}</p>
           </div>
         ))}
       </div>
