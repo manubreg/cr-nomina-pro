@@ -1,0 +1,60 @@
+{
+  "name": "ParametroLegal",
+  "type": "object",
+  "properties": {
+    "empresa_id": {
+      "type": "string"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "tramo_impuesto",
+        "cuota_ccss_empleado",
+        "cuota_ccss_patrono",
+        "regla_vacaciones",
+        "regla_aguinaldo",
+        "regla_horas_extra",
+        "regla_liquidacion",
+        "tope_base",
+        "tipo_cambio"
+      ]
+    },
+    "nombre": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "datos_json": {
+      "type": "string"
+    },
+    "fecha_inicio_vigencia": {
+      "type": "string",
+      "format": "date"
+    },
+    "fecha_fin_vigencia": {
+      "type": "string",
+      "format": "date"
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "vigente",
+        "vencido",
+        "borrador"
+      ],
+      "default": "vigente"
+    },
+    "observacion": {
+      "type": "string"
+    },
+    "usuario_creacion": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "tipo",
+    "nombre",
+    "fecha_inicio_vigencia"
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "name": "PlanillaDetalle",
+  "type": "object",
+  "properties": {
+    "planilla_id": {
+      "type": "string"
+    },
+    "empleado_id": {
+      "type": "string"
+    },
+    "empresa_id": {
+      "type": "string"
+    },
+    "salario_base_periodo": {
+      "type": "number",
+      "default": 0
+    },
+    "ingresos_totales": {
+      "type": "number",
+      "default": 0
+    },
+    "deducciones_totales": {
+      "type": "number",
+      "default": 0
+    },
+    "neto_pagar": {
+      "type": "number",
+      "default": 0
+    },
+    "base_ccss": {
+      "type": "number",
+      "default": 0
+    },
+    "base_impuesto": {
+      "type": "number",
+      "default": 0
+    },
+    "base_aguinaldo": {
+      "type": "number",
+      "default": 0
+    },
+    "base_vacaciones": {
+      "type": "number",
+      "default": 0
+    },
+    "observaciones": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "planilla_id",
+    "empleado_id"
+  ]
+}

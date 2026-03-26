@@ -1,0 +1,201 @@
+{
+  "name": "Empleado",
+  "type": "object",
+  "properties": {
+    "empresa_id": {
+      "type": "string"
+    },
+    "codigo_empleado": {
+      "type": "string"
+    },
+    "nombre": {
+      "type": "string"
+    },
+    "apellidos": {
+      "type": "string"
+    },
+    "identificacion": {
+      "type": "string"
+    },
+    "tipo_identificacion": {
+      "type": "string",
+      "enum": [
+        "cedula",
+        "dimex",
+        "pasaporte"
+      ],
+      "default": "cedula"
+    },
+    "fecha_nacimiento": {
+      "type": "string",
+      "format": "date"
+    },
+    "fecha_ingreso": {
+      "type": "string",
+      "format": "date"
+    },
+    "fecha_salida": {
+      "type": "string",
+      "format": "date"
+    },
+    "tipo_contrato": {
+      "type": "string",
+      "enum": [
+        "indefinido",
+        "temporal"
+      ],
+      "default": "indefinido"
+    },
+    "fecha_fin_contrato": {
+      "type": "string",
+      "format": "date"
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "activo",
+        "suspendido",
+        "inactivo",
+        "liquidado"
+      ],
+      "default": "activo"
+    },
+    "genero": {
+      "type": "string",
+      "enum": [
+        "masculino",
+        "femenino",
+        "otro",
+        "no_especificado"
+      ]
+    },
+    "nacionalidad": {
+      "type": "string"
+    },
+    "puesto": {
+      "type": "string"
+    },
+    "departamento_id": {
+      "type": "string"
+    },
+    "centro_costo_id": {
+      "type": "string"
+    },
+    "jefatura_id": {
+      "type": "string"
+    },
+    "sucursal": {
+      "type": "string"
+    },
+    "correo": {
+      "type": "string"
+    },
+    "telefono": {
+      "type": "string"
+    },
+    "direccion": {
+      "type": "string"
+    },
+    "contacto_emergencia_nombre": {
+      "type": "string"
+    },
+    "contacto_emergencia_tel": {
+      "type": "string"
+    },
+    "salario_base": {
+      "type": "number"
+    },
+    "tipo_salario": {
+      "type": "string",
+      "enum": [
+        "mensual",
+        "quincenal",
+        "semanal",
+        "por_hora"
+      ],
+      "default": "mensual",
+      "description": "Unidad en que est\u00e1 expresado el salario_base"
+    },
+    "moneda": {
+      "type": "string",
+      "enum": [
+        "CRC",
+        "USD"
+      ],
+      "default": "CRC"
+    },
+    "frecuencia_pago": {
+      "type": "string",
+      "enum": [
+        "mensual",
+        "quincenal",
+        "semanal"
+      ],
+      "default": "mensual"
+    },
+    "tipo_jornada": {
+      "type": "string",
+      "enum": [
+        "diurna",
+        "mixta",
+        "nocturna"
+      ],
+      "default": "diurna"
+    },
+    "horas_jornada": {
+      "type": "number",
+      "default": 8
+    },
+    "hora_inicio": {
+      "type": "string",
+      "description": "Hora de inicio de la jornada (HH:mm)"
+    },
+    "hora_fin": {
+      "type": "string",
+      "description": "Hora de finalizaci\u00f3n de la jornada (HH:mm)"
+    },
+    "dias_laborales": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": "D\u00edas de la semana que labora (0=domingo, 1=lunes, ..., 6=s\u00e1bado)",
+      "default": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "banco": {
+      "type": "string"
+    },
+    "cuenta_bancaria": {
+      "type": "string"
+    },
+    "cuenta_iban": {
+      "type": "string"
+    },
+    "sinpe_movil": {
+      "type": "string"
+    },
+    "asegurado_ccss": {
+      "type": "boolean",
+      "default": true
+    },
+    "observaciones": {
+      "type": "string"
+    },
+    "foto_url": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "nombre",
+    "apellidos",
+    "identificacion",
+    "fecha_ingreso",
+    "empresa_id"
+  ]
+}

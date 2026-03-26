@@ -1,0 +1,47 @@
+{
+  "name": "Empresa",
+  "type": "object",
+  "properties": {
+    "nombre_legal": {
+      "type": "string"
+    },
+    "nombre_comercial": {
+      "type": "string"
+    },
+    "cedula_juridica": {
+      "type": "string"
+    },
+    "correo": {
+      "type": "string"
+    },
+    "telefono": {
+      "type": "string"
+    },
+    "direccion": {
+      "type": "string"
+    },
+    "moneda_base": {
+      "type": "string",
+      "enum": [
+        "CRC",
+        "USD"
+      ],
+      "default": "CRC"
+    },
+    "logo_url": {
+      "type": "string"
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "activa",
+        "inactiva"
+      ],
+      "default": "activa"
+    }
+  },
+  "required": [
+    "nombre_legal",
+    "cedula_juridica"
+  ]
+}

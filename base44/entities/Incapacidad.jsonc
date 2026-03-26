@@ -1,0 +1,67 @@
+{
+  "name": "Incapacidad",
+  "type": "object",
+  "properties": {
+    "empleado_id": {
+      "type": "string"
+    },
+    "empresa_id": {
+      "type": "string"
+    },
+    "tipo_incapacidad": {
+      "type": "string",
+      "enum": [
+        "enfermedad_comun",
+        "accidente_trabajo",
+        "maternidad",
+        "paternidad",
+        "riesgo_trabajo",
+        "otro"
+      ]
+    },
+    "entidad_emisora": {
+      "type": "string"
+    },
+    "fecha_inicio": {
+      "type": "string",
+      "format": "date"
+    },
+    "fecha_fin": {
+      "type": "string",
+      "format": "date"
+    },
+    "dias": {
+      "type": "number"
+    },
+    "porcentaje_reconocimiento": {
+      "type": "number",
+      "default": 60
+    },
+    "afecta_planilla": {
+      "type": "boolean",
+      "default": true
+    },
+    "documento_url": {
+      "type": "string"
+    },
+    "observaciones": {
+      "type": "string"
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "activa",
+        "finalizada",
+        "anulada"
+      ],
+      "default": "activa"
+    }
+  },
+  "required": [
+    "empleado_id",
+    "tipo_incapacidad",
+    "fecha_inicio",
+    "fecha_fin",
+    "dias"
+  ]
+}

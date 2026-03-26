@@ -1,0 +1,50 @@
+{
+  "name": "Notificacion",
+  "type": "object",
+  "properties": {
+    "empresa_id": {
+      "type": "string"
+    },
+    "usuario_id": {
+      "type": "string"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "contrato_vencer",
+        "documento_faltante",
+        "planilla_pendiente",
+        "vacaciones_vencer",
+        "incapacidad_finalizar",
+        "parametro_vencido",
+        "error_calculo",
+        "sin_cuenta_bancaria",
+        "general"
+      ]
+    },
+    "titulo": {
+      "type": "string"
+    },
+    "mensaje": {
+      "type": "string"
+    },
+    "entidad_referencia": {
+      "type": "string"
+    },
+    "entidad_id": {
+      "type": "string"
+    },
+    "leida": {
+      "type": "boolean",
+      "default": false
+    },
+    "fecha_hora": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "titulo",
+    "mensaje",
+    "tipo"
+  ]
+}

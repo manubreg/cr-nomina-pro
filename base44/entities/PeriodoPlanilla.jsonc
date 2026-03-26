@@ -1,0 +1,58 @@
+{
+  "name": "PeriodoPlanilla",
+  "type": "object",
+  "properties": {
+    "empresa_id": {
+      "type": "string"
+    },
+    "tipo_periodo": {
+      "type": "string",
+      "enum": [
+        "diario",
+        "semanal",
+        "bisemanal",
+        "quincenal",
+        "mensual",
+        "aguinaldo",
+        "liquidacion"
+      ],
+      "default": "mensual"
+    },
+    "fecha_inicio": {
+      "type": "string",
+      "format": "date"
+    },
+    "fecha_fin": {
+      "type": "string",
+      "format": "date"
+    },
+    "fecha_pago": {
+      "type": "string",
+      "format": "date"
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "abierto",
+        "calculado",
+        "en_revision",
+        "aprobado",
+        "pagado",
+        "anulado"
+      ],
+      "default": "abierto"
+    },
+    "observaciones": {
+      "type": "string"
+    },
+    "usuario_creacion": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "empresa_id",
+    "tipo_periodo",
+    "fecha_inicio",
+    "fecha_fin"
+  ]
+}

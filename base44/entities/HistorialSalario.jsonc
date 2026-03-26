@@ -1,0 +1,50 @@
+{
+  "name": "HistorialSalario",
+  "type": "object",
+  "properties": {
+    "empleado_id": {
+      "type": "string"
+    },
+    "empresa_id": {
+      "type": "string"
+    },
+    "salario_anterior": {
+      "type": "number"
+    },
+    "salario_nuevo": {
+      "type": "number"
+    },
+    "porcentaje_aumento": {
+      "type": "number"
+    },
+    "fecha_efectiva": {
+      "type": "string",
+      "format": "date"
+    },
+    "motivo": {
+      "type": "string",
+      "enum": [
+        "decreto_mtss",
+        "merito",
+        "reclasificacion",
+        "promocion",
+        "ajuste_mercado",
+        "otro"
+      ],
+      "default": "merito"
+    },
+    "descripcion": {
+      "type": "string"
+    },
+    "usuario_registro": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "empleado_id",
+    "salario_anterior",
+    "salario_nuevo",
+    "fecha_efectiva",
+    "motivo"
+  ]
+}
