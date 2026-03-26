@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useState } from "react";
-import { UserCog, Mail, Shield, Building2, Pencil, X } from "lucide-react";
+import { UserCog, Mail, Shield, Building2, Pencil, UserPlus, CheckCircle2, Users, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,13 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEmpresaContext } from "@/components/EmpresaContext";
+import { useToast } from "@/components/ui/use-toast";
 
 const roleColor = { admin: "bg-purple-100 text-purple-700", admin_rrhh: "bg-blue-100 text-blue-700", empleado: "bg-emerald-100 text-emerald-700" };
 const roleLabel = { admin: "Super Admin", admin_rrhh: "Admin RRHH", empleado: "Empleado" };
 
 export default function Usuarios() {
   const qc = useQueryClient();
-  const { empresas } = useEmpresaContext();
+  const { empresas, empresaId: ctxEmpresaId, filterByEmpresa } = useEmpresaContext();
+  const { toast } = useToast();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -25,6 +27,8 @@ export default function Usuarios() {
   const [empleadoId, setEmpleadoId] = useState("");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
+  const [invitandoEmpleado, setInvitandoEmpleado] = useState(null); // empleado.id en proceso
+  const [tab, setTab] = useState("usuarios"); // "usuarios" | "accesos"
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["users"],
@@ -45,13 +49,28 @@ export default function Usuarios() {
     if (!email) return;
     setLoading(true);
     setMsg("");
-    // Invite with base role mapping (admin_rrhh maps to "user" base role, empleado too)
     const baseRole = role === "admin" ? "admin" : "user";
     await base44.users.inviteUser(email, baseRole);
     setMsg("Invitación enviada. Asigna empresa y rol después de que el usuario se registre.");
     setEmail("");
     setLoading(false);
   };
+
+  // Invitar empleado al portal directamente
+  const handleInvitarEmpleado = async (emp) => {
+    if (!emp.correo) {
+      toast({ title: "Sin correo", description: `${emp.nombre} ${emp.apellidos} no tiene correo registrado.`, variant: "destructive" });
+      return;
+    }
+    setInvitandoEmpleado(emp.id);
+    await base44.users.inviteUser(emp.correo, "user");
+    toast({ title: "✅ Invitación enviada", description: `Se envió acceso al portal a ${emp.correo}` });
+    setInvitandoEmpleado(null);
+  };
+
+  // Empleados que YA tienen acceso (tienen usuario vinculado con rol empleado)
+  const empleadosConAcceso = new Set(users.filter(u => u.role === "empleado" && u.empleado_id).map(u => u.empleado_id));
+  const empleadosFiltradosAcceso = filterByEmpresa(empleados).filter(e => e.estado === "activo");
 
   const openEdit = (u) => {
     setSelectedUser(u);
@@ -80,6 +99,23 @@ export default function Usuarios() {
         </Button>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+        <button
+          onClick={() => setTab("usuarios")}
+          className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${tab === "usuarios" ? "bg-white shadow text-blue-700" : "text-gray-500 hover:text-gray-700"}`}
+        >
+          <Shield className="w-4 h-4 inline mr-1.5 -mt-0.5" />Usuarios del Sistema
+        </button>
+        <button
+          onClick={() => setTab("accesos")}
+          className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${tab === "accesos" ? "bg-white shadow text-blue-700" : "text-gray-500 hover:text-gray-700"}`}
+        >
+          <Users className="w-4 h-4 inline mr-1.5 -mt-0.5" />Accesos de Empleados
+        </button>
+      </div>
+
+      {tab === "usuarios" && <>
       {/* Leyenda de roles */}
       <div className="grid grid-cols-3 gap-3">
         {[
@@ -150,6 +186,90 @@ export default function Usuarios() {
           </div>
         )}
       </div>
+
+      </>}
+
+      {tab === "accesos" && (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-gray-700">Accesos al Portal del Empleado</p>
+              <p className="text-xs text-gray-400 mt-0.5">Gestiona quién puede ingresar al portal de autoservicio</p>
+            </div>
+            <div className="flex items-center gap-3 text-xs text-gray-500">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-emerald-400 rounded-full inline-block" /> Con acceso</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-gray-300 rounded-full inline-block" /> Sin acceso</span>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Empleado</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Empresa</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Correo</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Estado Acceso</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Acción</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {empleadosFiltradosAcceso.length === 0 ? (
+                  <tr><td colSpan={5} className="text-center py-10 text-gray-400 text-sm">No hay empleados activos</td></tr>
+                ) : empleadosFiltradosAcceso.map(emp => {
+                  const tieneAcceso = empleadosConAcceso.has(emp.id);
+                  const empresa = empresas.find(e => e.id === emp.empresa_id);
+                  return (
+                    <tr key={emp.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 text-xs font-bold">
+                            {emp.nombre?.[0]}{emp.apellidos?.[0]}
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-800">{emp.nombre} {emp.apellidos}</div>
+                            <div className="text-xs text-gray-400">{emp.puesto || "—"}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">
+                        {empresa?.nombre_comercial || empresa?.nombre_legal || "—"}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">
+                        {emp.correo || <span className="text-orange-400">Sin correo</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        {tieneAcceso ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-medium">
+                            <CheckCircle2 className="w-3 h-3" /> Con acceso
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full font-medium">
+                            Sin acceso
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {!tieneAcceso && (
+                          <button
+                            onClick={() => handleInvitarEmpleado(emp)}
+                            disabled={invitandoEmpleado === emp.id || !emp.correo}
+                            title={!emp.correo ? "El empleado no tiene correo registrado" : "Invitar al portal"}
+                            className="inline-flex items-center gap-1.5 text-xs text-blue-700 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {invitandoEmpleado === emp.id
+                              ? <><Loader2 className="w-3 h-3 animate-spin" /> Enviando...</>
+                              : <><UserPlus className="w-3 h-3" /> Invitar</>}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Invite Dialog */}
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
