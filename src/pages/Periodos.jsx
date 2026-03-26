@@ -66,6 +66,13 @@ export default function Periodos() {
   const [filtroTipo, setFiltroTipo] = useState("todos");
   const [pagina, setPagina] = useState(1);
   const [confirmDialog, setConfirmDialog] = useState(null);
+  const [sortCol, setSortCol] = useState("fecha_inicio");
+  const [sortDir, setSortDir] = useState("desc");
+
+  const handleSort = (col) => {
+    if (sortCol === col) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortCol(col); setSortDir("asc"); }
+  };
   const [generando, setGenerando] = useState(false);
   const [iaModal, setIaModal] = useState(false);
   const [iaAnalizando, setIaAnalizando] = useState(false);
@@ -298,11 +305,18 @@ Devuelve únicamente JSON con la estructura indicada.`,
 
   const POR_PAGINA = 10;
 
-  const periodosFiltrados = periodos.filter(p => {
-    const okEstado = filtroEstado === "todos" || p.estado === filtroEstado;
-    const okTipo = filtroTipo === "todos" || p.tipo_periodo === filtroTipo;
-    return okEstado && okTipo;
-  });
+  const periodosFiltrados = periodos
+    .filter(p => {
+      const okEstado = filtroEstado === "todos" || p.estado === filtroEstado;
+      const okTipo = filtroTipo === "todos" || p.tipo_periodo === filtroTipo;
+      return okEstado && okTipo;
+    })
+    .sort((a, b) => {
+      const va = a[sortCol] || "";
+      const vb = b[sortCol] || "";
+      const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+      return sortDir === "asc" ? cmp : -cmp;
+    });
 
   const totalPaginas = Math.ceil(periodosFiltrados.length / POR_PAGINA);
   const periodosPagina = periodosFiltrados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
@@ -440,11 +454,21 @@ Devuelve únicamente JSON con la estructura indicada.`,
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Tipo</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Inicio</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Fin</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Fecha Pago</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Estado</th>
+              {[
+                { label: "Tipo", col: "tipo_periodo" },
+                { label: "Inicio", col: "fecha_inicio" },
+                { label: "Fin", col: "fecha_fin" },
+                { label: "Fecha Pago", col: "fecha_pago" },
+                { label: "Estado", col: "estado" },
+              ].map(({ label, col }) => (
+                <th key={col} onClick={() => handleSort(col)}
+                  className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase cursor-pointer hover:text-blue-600 select-none">
+                  <span className="inline-flex items-center gap-1">
+                    {label}
+                    {sortCol === col ? (sortDir === "asc" ? " ↑" : " ↓") : <span className="text-gray-300">↕</span>}
+                  </span>
+                </th>
+              ))}
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Planilla</th>
               <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Acciones</th>
             </tr>
