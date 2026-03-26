@@ -50,6 +50,13 @@ export default function Empleados() {
 
   const empresaMap = Object.fromEntries(empresas.map(e => [e.id, e.nombre_comercial || e.nombre_legal]));
 
+  const formatFecha = (fechaStr) => {
+    if (!fechaStr) return "—";
+    const d = new Date(fechaStr + "T00:00:00");
+    const MESES_CORTOS = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+    return `${String(d.getDate()).padStart(2,"0")} ${MESES_CORTOS[d.getMonth()]} ${d.getFullYear()}`;
+  };
+
   const filtered = empleados.filter(e => {
     const matchEstado = estadoFiltro === "todos" || e.estado === estadoFiltro;
     const matchSearch = !search || `${e.nombre} ${e.apellidos} ${e.identificacion} ${e.puesto}`.toLowerCase().includes(search.toLowerCase());
@@ -134,7 +141,7 @@ export default function Empleados() {
                     <td className="px-4 py-3 text-gray-600 hidden md:table-cell font-mono text-xs">{emp.identificacion}</td>
                     <td className="px-4 py-3 text-gray-600 hidden lg:table-cell">{emp.puesto || "—"}</td>
                     <td className="px-4 py-3 text-gray-600 hidden lg:table-cell text-xs">{empresaMap[emp.empresa_id] || "—"}</td>
-                    <td className="px-4 py-3 text-gray-600 hidden lg:table-cell text-xs">{emp.fecha_salida || "—"}</td>
+                    <td className="px-4 py-3 text-gray-600 hidden lg:table-cell text-xs">{formatFecha(emp.fecha_salida)}</td>
                     <td className="px-4 py-3">
                       <Badge className={estadoColor[emp.estado] || "bg-gray-100 text-gray-600"}>{emp.estado}</Badge>
                     </td>
