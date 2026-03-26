@@ -40,6 +40,13 @@ export default function Planillas() {
   const [filtroMes, setFiltroMes] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("");
   const [pagina, setPagina] = useState(1);
+  const [sortCol, setSortCol] = useState("created_date");
+  const [sortDir, setSortDir] = useState("desc");
+
+  const handleSort = (col) => {
+    if (sortCol === col) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortCol(col); setSortDir("asc"); }
+  };
   const POR_PAGINA = 10;
 
   const { data: planillasRaw = [], isLoading } = useQuery({
@@ -65,18 +72,34 @@ export default function Planillas() {
 
   const planillasBase = filterByEmpresa(planillasRaw);
 
-  const planillas = planillasBase.filter(p => {
-    const periodo = periodoMap[p.periodo_id];
-    if (filtroAnio && periodo) {
-      if (!periodo.fecha_inicio?.startsWith(filtroAnio)) return false;
-    }
-    if (filtroMes && periodo) {
-      const mes = String(new Date(periodo.fecha_inicio + "T00:00:00").getMonth() + 1).padStart(2, "0");
-      if (mes !== filtroMes) return false;
-    }
-    if (filtroEstado && p.estado !== filtroEstado) return false;
-    return true;
-  });
+  const planillas = planillasBase
+    .filter(p => {
+      const periodo = periodoMap[p.periodo_id];
+      if (filtroAnio && periodo) {
+        if (!periodo.fecha_inicio?.startsWith(filtroAnio)) return false;
+      }
+      if (filtroMes && periodo) {
+        const mes = String(new Date(periodo.fecha_inicio + "T00:00:00").getMonth() + 1).padStart(2, "0");
+        if (mes !== filtroMes) return false;
+      }
+      if (filtroEstado && p.estado !== filtroEstado) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      let va, vb;
+      if (sortCol === "periodo_inicio") {
+        va = periodoMap[a.periodo_id]?.fecha_inicio || "";
+        vb = periodoMap[b.periodo_id]?.fecha_inicio || "";
+      } else if (sortCol === "empresa") {
+        va = empresaMap[a.empresa_id]?.nombre_comercial || empresaMap[a.empresa_id]?.nombre_legal || "";
+        vb = empresaMap[b.empresa_id]?.nombre_comercial || empresaMap[b.empresa_id]?.nombre_legal || "";
+      } else {
+        va = a[sortCol] ?? "";
+        vb = b[sortCol] ?? "";
+      }
+      const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+      return sortDir === "asc" ? cmp : -cmp;
+    });
 
   const aniosDisponibles = [...new Set(planillasBase.map(p => {
     const per = periodoMap[p.periodo_id];
@@ -267,11 +290,21 @@ export default function Planillas() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Código / Empresa</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Tipo</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Período</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Total Neto</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Estado</th>
+                  {[
+                    { label: "Código / Empresa", col: "codigo_planilla", className: "text-left px-4 py-3" },
+                    { label: "Tipo", col: "tipo_planilla", className: "text-left px-4 py-3 hidden md:table-cell" },
+                    { label: "Período", col: "periodo_inicio", className: "text-left px-4 py-3 hidden lg:table-cell" },
+                    { label: "Total Neto", col: "total_neto", className: "text-right px-4 py-3 hidden md:table-cell" },
+                    { label: "Estado", col: "estado", className: "text-left px-4 py-3" },
+                  ].map(({ label, col, className }) => (
+                    <th key={col} onClick={() => handleSort(col)}
+                      className={`${className} text-xs font-semibold text-gray-500 uppercase cursor-pointer hover:text-blue-600 select-none`}>
+                      <span className="inline-flex items-center gap-1">
+                        {label}
+                        {sortCol === col ? (sortDir === "asc" ? " ↑" : " ↓") : <span className="text-gray-300">↕</span>}
+                      </span>
+                    </th>
+                  ))}
                   <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Acciones</th>
                 </tr>
               </thead>
