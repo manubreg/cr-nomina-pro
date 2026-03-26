@@ -31,7 +31,7 @@ export default function HistorialBoletas() {
   const [empleadoDelUsuario, setEmpleadoDelUsuario] = useState(null);
 
   // Obtener usuario logueado
-  React.useEffect(() => {
+  useEffect(() => {
     base44.auth.me().then(u => {
       setUser(u);
       if (u?.role === "empleado") {
