@@ -57,7 +57,8 @@ export default function Planillas() {
     if (!fechaStr) return "";
     const d = new Date(fechaStr + "T00:00:00");
     const MESES_CORTOS = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-    return `${d.getDate()} ${MESES_CORTOS[d.getMonth()]} ${d.getFullYear()}`;
+    const dia = String(d.getDate()).padStart(2, "0");
+    return `${dia} ${MESES_CORTOS[d.getMonth()]} ${d.getFullYear()}`;
   };
 
   const planillasBase = filterByEmpresa(planillasRaw);
