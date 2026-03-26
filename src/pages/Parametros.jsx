@@ -205,24 +205,28 @@ function ReglaLiquidacionEditor({ value, onChange }) {
   const obj = parseJson(value, defaults);
   const set = (k, v) => onChange(JSON.stringify({ ...obj, [k]: v }));
 
+  // Garantizar que preaviso y cesantia son arrays
+  const preaviso = Array.isArray(obj.preaviso) ? obj.preaviso : [];
+  const cesantia = Array.isArray(obj.cesantia) ? obj.cesantia : [];
+
   // Preaviso
   const updPreaviso = (i, field, val) => {
-    const arr = (obj.preaviso || []).map((r, idx) => idx === i ? { ...r, [field]: val } : r);
+    const arr = preaviso.map((r, idx) => idx === i ? { ...r, [field]: val } : r);
     set("preaviso", arr);
   };
-  const addPreaviso = () => set("preaviso", [...(obj.preaviso || []), { meses_desde: "", meses_hasta: "", dias_salario: "" }]);
-  const delPreaviso = (i) => set("preaviso", (obj.preaviso || []).filter((_, idx) => idx !== i));
+  const addPreaviso = () => set("preaviso", [...preaviso, { meses_desde: "", meses_hasta: "", dias_salario: "" }]);
+  const delPreaviso = (i) => set("preaviso", preaviso.filter((_, idx) => idx !== i));
 
   // Cesantía
   const updCesantia = (i, field, val) => {
-    const arr = (obj.cesantia || []).map((r, idx) => idx === i ? { ...r, [field]: val } : r);
+    const arr = cesantia.map((r, idx) => idx === i ? { ...r, [field]: val } : r);
     set("cesantia", arr);
   };
   const addCesantia = () => {
-    const last = (obj.cesantia || []).length;
-    set("cesantia", [...(obj.cesantia || []), { anio: last + 1, dias: "" }]);
+    const last = cesantia.length;
+    set("cesantia", [...cesantia, { anio: last + 1, dias: "" }]);
   };
-  const delCesantia = (i) => set("cesantia", (obj.cesantia || []).filter((_, idx) => idx !== i));
+  const delCesantia = (i) => set("cesantia", cesantia.filter((_, idx) => idx !== i));
 
   return (
     <div className="space-y-4">
@@ -252,18 +256,18 @@ function ReglaLiquidacionEditor({ value, onChange }) {
               <th className="px-2 py-2 w-8"></th>
             </tr></thead>
             <tbody className="divide-y divide-gray-100">
-              {(obj.preaviso || []).length === 0 && <tr><td colSpan={4} className="px-3 py-4 text-center text-xs text-gray-400">Sin reglas.</td></tr>}
-              {(obj.preaviso || []).map((r, i) => (
+              {preaviso.length === 0 && <tr><td colSpan={4} className="px-3 py-4 text-center text-xs text-gray-400">Sin reglas.</td></tr>}
+              {preaviso.map((r, i) => (
                 <tr key={i} className="bg-white">
-                  <td className="px-2 py-1.5"><Input type="number" className="h-8 text-sm" placeholder="3" value={r.meses_desde ?? ""} onChange={e => updPreaviso(i,"meses_desde", e.target.value === "" ? "" : Number(e.target.value))} /></td>
-                  <td className="px-2 py-1.5">
-                    {i === (obj.preaviso || []).length - 1
-                      ? <span className="text-xs text-gray-400 italic px-1">En adelante</span>
-                      : <Input type="number" className="h-8 text-sm" placeholder="6" value={r.meses_hasta ?? ""} onChange={e => updPreaviso(i,"meses_hasta", e.target.value === "" ? "" : Number(e.target.value))} />}
-                  </td>
-                  <td className="px-2 py-1.5"><Input type="number" className="h-8 text-sm" placeholder="7" value={r.dias_salario ?? ""} onChange={e => updPreaviso(i,"dias_salario", e.target.value === "" ? "" : Number(e.target.value))} /></td>
-                  <td className="px-2 py-1.5 text-center"><button onClick={() => delPreaviso(i)} className="text-gray-300 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button></td>
-                </tr>
+                   <td className="px-2 py-1.5"><Input type="number" className="h-8 text-sm" placeholder="3" value={r.meses_desde ?? ""} onChange={e => updPreaviso(i,"meses_desde", e.target.value === "" ? "" : Number(e.target.value))} /></td>
+                   <td className="px-2 py-1.5">
+                     {i === preaviso.length - 1
+                       ? <span className="text-xs text-gray-400 italic px-1">En adelante</span>
+                       : <Input type="number" className="h-8 text-sm" placeholder="6" value={r.meses_hasta ?? ""} onChange={e => updPreaviso(i,"meses_hasta", e.target.value === "" ? "" : Number(e.target.value))} />}
+                   </td>
+                   <td className="px-2 py-1.5"><Input type="number" className="h-8 text-sm" placeholder="7" value={r.dias_salario ?? ""} onChange={e => updPreaviso(i,"dias_salario", e.target.value === "" ? "" : Number(e.target.value))} /></td>
+                   <td className="px-2 py-1.5 text-center"><button onClick={() => delPreaviso(i)} className="text-gray-300 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button></td>
+                 </tr>
               ))}
             </tbody>
           </table>
@@ -284,13 +288,13 @@ function ReglaLiquidacionEditor({ value, onChange }) {
               <th className="px-2 py-2 w-8"></th>
             </tr></thead>
             <tbody className="divide-y divide-gray-100">
-              {(obj.cesantia || []).length === 0 && <tr><td colSpan={3} className="px-3 py-4 text-center text-xs text-gray-400">Sin tramos.</td></tr>}
-              {(obj.cesantia || []).map((t, i) => (
+              {cesantia.length === 0 && <tr><td colSpan={3} className="px-3 py-4 text-center text-xs text-gray-400">Sin tramos.</td></tr>}
+              {cesantia.map((t, i) => (
                 <tr key={i} className="bg-white">
-                  <td className="px-2 py-1.5"><Input type="number" min="1" className="h-8 text-sm" placeholder={i+1} value={t.anio ?? ""} onChange={e => updCesantia(i,"anio", e.target.value === "" ? "" : Number(e.target.value))} /></td>
-                  <td className="px-2 py-1.5"><Input type="number" step="0.5" className="h-8 text-sm" placeholder="19.5" value={t.dias ?? ""} onChange={e => updCesantia(i,"dias", e.target.value === "" ? "" : Number(e.target.value))} /></td>
-                  <td className="px-2 py-1.5 text-center"><button onClick={() => delCesantia(i)} className="text-gray-300 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button></td>
-                </tr>
+                   <td className="px-2 py-1.5"><Input type="number" min="1" className="h-8 text-sm" placeholder={i+1} value={t.anio ?? ""} onChange={e => updCesantia(i,"anio", e.target.value === "" ? "" : Number(e.target.value))} /></td>
+                   <td className="px-2 py-1.5"><Input type="number" step="0.5" className="h-8 text-sm" placeholder="19.5" value={t.dias ?? ""} onChange={e => updCesantia(i,"dias", e.target.value === "" ? "" : Number(e.target.value))} /></td>
+                   <td className="px-2 py-1.5 text-center"><button onClick={() => delCesantia(i)} className="text-gray-300 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button></td>
+                 </tr>
               ))}
             </tbody>
           </table>
