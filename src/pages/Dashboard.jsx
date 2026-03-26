@@ -8,6 +8,7 @@ import {
   CheckCircle, XCircle, RefreshCw
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
+import { ComposicionCostos, ProximosVencimientos, HistorialAumentosSalariales } from "@/components/dashboard/GraficosCostos";
 
 const COLORS = ["#1e40af", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe"];
 
@@ -61,6 +62,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [departamentos, setDepartamentos] = useState([]);
   const [graficoAgrupacion, setGraficoAgrupacion] = useState("mensual");
+  const [historialSalario, setHistorialSalario] = useState([]);
 
   const [allEmpleados, setAllEmpleados] = useState([]);
   const [allPlanillas, setAllPlanillas] = useState([]);
@@ -79,7 +81,8 @@ export default function Dashboard() {
       base44.entities.Contrato.list("-created_date", 100),
       base44.entities.VacacionSaldo.list("-created_date", 100),
       base44.entities.Incapacidad.list("-created_date", 50),
-    ]).then(([emp, plan, per, nov, cont, vac, inc]) => {
+      base44.entities.HistorialSalario.list("-created_date", 100),
+    ]).then(([emp, plan, per, nov, cont, vac, inc, hist]) => {
       setAllEmpleados(emp);
       setAllPlanillas(plan);
       setAllPeriodos(per);
@@ -87,6 +90,7 @@ export default function Dashboard() {
       setAllContratos(cont);
       setAllVacaciones(vac);
       setAllIncapacidades(inc);
+      setHistorialSalario(hist);
       setLoading(false);
     });
     base44.entities.Departamento.list("-created_date", 100).then(setDepartamentos);
@@ -241,7 +245,7 @@ export default function Dashboard() {
         <StatCard title="Incapacidades Activas" value={incapActivas} icon={Activity} color="purple" linkTo="/Incapacidades" />
       </div>
 
-      {/* Charts Row */}
+      {/* Charts Row 1 */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Evolución */}
         <div className="xl:col-span-2 bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
@@ -291,6 +295,13 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Charts Row 2 */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <ComposicionCostos planillas={planillas} periodoMap={periodoMap} />
+        <ProximosVencimientos contratos={contratos} vacaciones={vacaciones} periodos={periodos} />
+        <HistorialAumentosSalariales historialSalario={historialSalario} empleados={empleados} />
       </div>
 
       {/* Recent rows */}
