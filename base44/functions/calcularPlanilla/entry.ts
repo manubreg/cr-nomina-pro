@@ -17,17 +17,18 @@ Deno.serve(async (req) => {
   console.log('[calcularPlanilla] empresa_id =', empresa_id, '| periodo_id =', periodo_id);
 
   // ── FASE 1: Cargar datos en paralelo ──────────────────────────────────────
-  const [todosParams, empleadosActivos, empleadosLiquidados, todasNovedades, periodoArr] = await Promise.all([
-    base44.asServiceRole.entities.ParametroLegal.filter({ empresa_id, estado: 'vigente' }, '-created_date', 50),
-    base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'activo' }, '-fecha_ingreso', 300),
-    base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'liquidado' }, '-fecha_salida', 100),
-    periodo_id
-      ? base44.asServiceRole.entities.Novedad.filter({ empresa_id, periodo_id, estado: 'aprobada' }, '-created_date', 300)
-      : Promise.resolve([]),
-    periodo_id
-      ? base44.asServiceRole.entities.PeriodoPlanilla.filter({ id: periodo_id }, '-fecha_inicio', 1)
-      : Promise.resolve([]),
-  ]);
+   const [todosParams, empleadosActivos, empleadosLiquidados, todasNovedades, periodoArr, historialSalario] = await Promise.all([
+     base44.asServiceRole.entities.ParametroLegal.filter({ empresa_id, estado: 'vigente' }, '-created_date', 50),
+     base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'activo' }, '-fecha_ingreso', 300),
+     base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'liquidado' }, '-fecha_salida', 100),
+     periodo_id
+       ? base44.asServiceRole.entities.Novedad.filter({ empresa_id, periodo_id, estado: 'aprobada' }, '-created_date', 300)
+       : Promise.resolve([]),
+     periodo_id
+       ? base44.asServiceRole.entities.PeriodoPlanilla.filter({ id: periodo_id }, '-fecha_inicio', 1)
+       : Promise.resolve([]),
+     base44.asServiceRole.entities.HistorialSalario.filter({ empresa_id }, '-fecha_efectiva', 500).catch(() => []),
+   ]);
   const planilla = { id: planilla_id, empresa_id, periodo_id };
 
   // Combinar activos + liquidados que salieron dentro del período
@@ -160,21 +161,37 @@ Deno.serve(async (req) => {
   const detallesData = [];
   const movimientosTemp = [];
 
+  // Obtener salario vigente considerando histórico de aumentos
+  const getSalarioVigente = (emp, fechaReferencia) => {
+    // Buscar aumentos aplicables hasta la fecha de referencia
+    const aumentosAplicables = historialSalario
+      .filter(h => h.empleado_id === emp.id && h.fecha_efectiva <= fechaReferencia)
+      .sort((a, b) => new Date(b.fecha_efectiva) - new Date(a.fecha_efectiva));
+
+    if (aumentosAplicables.length > 0) {
+      return aumentosAplicables[0].salario_nuevo;
+    }
+    return emp.salario_base || 0;
+  };
+
   // Convierte cualquier tipo de salario base a mensual
-  const normalizarSalarioMensual = (emp) => {
-    const base = emp.salario_base || 0;
-    switch (emp.tipo_salario || 'mensual') {
+  const normalizarSalarioMensual = (base, tipoSalario, horas) => {
+    switch (tipoSalario || 'mensual') {
       case 'quincenal': return base * 2;
       case 'semanal':   return base * (52 / 12);
-      case 'por_hora':  return base * (emp.horas_jornada || 8) * 30;
+      case 'por_hora':  return base * (horas || 8) * 30;
       default:          return base; // mensual
     }
   };
 
   for (const emp of empleados) {
+    // Obtener salario vigente al final del período
+    const fechaRef = fechaFinPeriodo || fechaInicioPeriodo || new Date().toISOString().split('T')[0];
+    const salarioBaseVigente = getSalarioVigente(emp, fechaRef);
+
     const salarioMensualBase = emp.moneda === "USD"
-      ? Math.round(normalizarSalarioMensual(emp) * tipoCambioVenta)
-      : normalizarSalarioMensual(emp);
+      ? Math.round(normalizarSalarioMensual(salarioBaseVigente, emp.tipo_salario, emp.horas_jornada) * tipoCambioVenta)
+      : normalizarSalarioMensual(salarioBaseVigente, emp.tipo_salario, emp.horas_jornada);
     const salarioMensual = Math.round(salarioMensualBase);
 
     // Pro-rateo si el empleado ingresó o salió dentro del período
