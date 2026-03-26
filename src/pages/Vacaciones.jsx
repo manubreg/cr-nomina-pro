@@ -19,15 +19,34 @@ const emptySolicitud = { empleado_id: "", empresa_id: "", fecha_solicitud: new D
 export default function Vacaciones() {
   const qc = useQueryClient();
   const { empresaId, filterByEmpresa } = useEmpresaContext();
+  const [user, setUser] = useState(null);
+  const [empleadoDelUsuario, setEmpleadoDelUsuario] = useState(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptySolicitud);
   const [editing, setEditing] = useState(null);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
+  // Obtener usuario logueado
+  React.useEffect(() => {
+    base44.auth.me().then(u => {
+      setUser(u);
+      if (u?.role === "empleado") {
+        // Si es empleado, encontrar su registro de empleado por email
+        base44.entities.Empleado.filter({ correo: u.email }).then(emps => {
+          if (emps.length > 0) setEmpleadoDelUsuario(emps[0].id);
+        });
+      }
+    });
+  }, []);
+
   const { data: solicitudesRaw = [], isLoading } = useQuery({ queryKey: ["vacSolicitudes", empresaId], queryFn: () => base44.entities.VacacionSolicitud.list("-fecha_solicitud") });
-  const solicitudes = filterByEmpresa(solicitudesRaw);
+  const solicitudes = user?.role === "empleado" && empleadoDelUsuario 
+    ? solicitudesRaw.filter(s => s.empleado_id === empleadoDelUsuario)
+    : filterByEmpresa(solicitudesRaw);
   const { data: saldosRaw = [] } = useQuery({ queryKey: ["vacSaldos", empresaId], queryFn: () => base44.entities.VacacionSaldo.list("-fecha_generacion") });
-  const saldos = filterByEmpresa(saldosRaw);
+  const saldos = user?.role === "empleado" && empleadoDelUsuario
+    ? saldosRaw.filter(s => s.empleado_id === empleadoDelUsuario)
+    : filterByEmpresa(saldosRaw);
   const { data: empleados = [] } = useQuery({ queryKey: ["empleados"], queryFn: () => base44.entities.Empleado.list() });
   const empleadoMap = Object.fromEntries(empleados.map(e => [e.id, `${e.nombre} ${e.apellidos}`]));
   const empleadoEstadoMap = Object.fromEntries(empleados.map(e => [e.id, e.estado]));
@@ -158,7 +177,15 @@ export default function Vacaciones() {
     }
   }, [form.fecha_inicio, form.fecha_fin, form.empleado_id]);
 
-  const openNew = () => { setForm({ ...emptySolicitud, empresa_id: empresaId || "" }); setEditing(null); setOpen(true); };
+  const openNew = () => { 
+    if (user?.role === "empleado" && empleadoDelUsuario) {
+      setForm({ ...emptySolicitud, empresa_id: empresaId || "", empleado_id: empleadoDelUsuario }); 
+    } else {
+      setForm({ ...emptySolicitud, empresa_id: empresaId || "" });
+    }
+    setEditing(null); 
+    setOpen(true); 
+  };
   const openEdit = (s) => { setForm(s); setEditing(s.id); setOpen(true); };
 
   return (
@@ -169,9 +196,11 @@ export default function Vacaciones() {
           <p className="text-gray-500 text-sm mt-1">Solicitudes y saldos de vacaciones</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50" onClick={() => { setSaldoForm({ empleado_id: "", empresa_id: empresaId || "" }); setDetalleCalculo(null); setOpenSaldo(true); }}>
-            <Calculator className="w-4 h-4 mr-2" /> Calcular Saldo
-          </Button>
+          {user?.role !== "empleado" && (
+            <Button variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50" onClick={() => { setSaldoForm({ empleado_id: "", empresa_id: empresaId || "" }); setDetalleCalculo(null); setOpenSaldo(true); }}>
+              <Calculator className="w-4 h-4 mr-2" /> Calcular Saldo
+            </Button>
+          )}
           <Button onClick={openNew} className="bg-blue-700 hover:bg-blue-800">
             <Plus className="w-4 h-4 mr-2" /> Nueva Solicitud
           </Button>
@@ -235,12 +264,14 @@ export default function Vacaciones() {
 
         {/* Pestaña Acumulados: muestra días ganados automáticamente por fecha de ingreso */}
         <TabsContent value="acumulados" className="mt-4">
-          <div className="mb-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 text-xs text-blue-700 flex items-center gap-2">
-            <Info className="w-4 h-4 shrink-0" />
-            Cálculo automático basado en el Código de Trabajo de Costa Rica: <strong>15 días por año laborado</strong> (1.25 días/mes). Solo empleados activos con fecha de ingreso registrada.
-          </div>
-          {/* Alerta empleados con 8+ días disponibles */}
-          {(() => {
+          {user?.role !== "empleado" && (
+            <div className="mb-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 text-xs text-blue-700 flex items-center gap-2">
+              <Info className="w-4 h-4 shrink-0" />
+              Cálculo automático basado en el Código de Trabajo de Costa Rica: <strong>15 días por año laborado</strong> (1.25 días/mes). Solo empleados activos con fecha de ingreso registrada.
+            </div>
+          )}
+          {/* Alerta empleados con 8+ días disponibles — solo para admin */}
+          {user?.role !== "empleado" && (() => {
             const conAlerta = empleados
               .filter(e => e.estado === "activo" && e.fecha_ingreso && (!empresaId || e.empresa_id === empresaId))
               .filter(emp => {
@@ -263,26 +294,63 @@ export default function Vacaciones() {
               </div>
             );
           })()}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            {empleados.filter(e => e.estado === "activo" && e.fecha_ingreso && (!empresaId || e.empresa_id === empresaId)).length === 0 ? (
-              <div className="p-12 text-center"><Umbrella className="w-10 h-10 mx-auto mb-3 text-gray-300" /><p className="text-gray-400">Sin empleados activos con fecha de ingreso</p></div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Empleado</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Fecha Ingreso</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Antigüedad</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Días Acumulados</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Días Usados</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Saldo Disponible</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {empleados
-                      .filter(e => e.estado === "activo" && e.fecha_ingreso && (!empresaId || e.empresa_id === empresaId))
-                      .map(emp => {
+          {user?.role === "empleado" && empleadoDelUsuario ? (
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              {(() => {
+                const emp = empleados.find(e => e.id === empleadoDelUsuario);
+                if (!emp || emp.estado !== "activo" || !emp.fecha_ingreso) {
+                  return <div className="p-12 text-center"><Umbrella className="w-10 h-10 mx-auto mb-3 text-gray-300" /><p className="text-gray-400">Sin información de vacaciones disponible</p></div>;
+                }
+                const { diasGanados, mesesTrabajados, anios } = calcularDiasAcumulados(emp.fecha_ingreso);
+                const diasUsados = solicitudes
+                  .filter(s => s.empleado_id === emp.id && ["aprobada", "aplicada"].includes(s.estado))
+                  .reduce((sum, s) => sum + (s.dias_solicitados || 0), 0);
+                const saldoDisponible = Math.max(0, diasGanados - diasUsados);
+                return (
+                  <div className="p-6 space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="bg-blue-50 rounded-lg p-4 text-center">
+                        <div className="text-2xl font-bold text-blue-700">{diasGanados}</div>
+                        <div className="text-xs text-gray-600 mt-1">Días acumulados</div>
+                      </div>
+                      <div className="bg-red-50 rounded-lg p-4 text-center">
+                        <div className="text-2xl font-bold text-red-700">{diasUsados}</div>
+                        <div className="text-xs text-gray-600 mt-1">Días usados</div>
+                      </div>
+                      <div className="bg-emerald-50 rounded-lg p-4 text-center">
+                        <div className={`text-2xl font-bold ${saldoDisponible >= 8 ? "text-amber-600" : saldoDisponible > 0 ? "text-emerald-700" : "text-red-600"}`}>{saldoDisponible.toFixed(2)}</div>
+                        <div className="text-xs text-gray-600 mt-1">Saldo disponible</div>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-4 text-center">
+                        <div className="text-2xl font-bold text-gray-700">{anios > 0 ? `${anios}a` : ""} {mesesTrabajados % 12 > 0 ? `${mesesTrabajados % 12}m` : ""}</div>
+                        <div className="text-xs text-gray-600 mt-1">Antigüedad</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              {empleados.filter(e => e.estado === "activo" && e.fecha_ingreso && (!empresaId || e.empresa_id === empresaId)).length === 0 ? (
+                <div className="p-12 text-center"><Umbrella className="w-10 h-10 mx-auto mb-3 text-gray-300" /><p className="text-gray-400">Sin empleados activos con fecha de ingreso</p></div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Empleado</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Fecha Ingreso</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Antigüedad</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Días Acumulados</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Días Usados</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Saldo Disponible</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {empleados
+                        .filter(e => e.estado === "activo" && e.fecha_ingreso && (!empresaId || e.empresa_id === empresaId))
+                        .map(emp => {
                         const { diasGanados, mesesTrabajados, anios } = calcularDiasAcumulados(emp.fecha_ingreso);
                         // Sumar días usados de solicitudes aprobadas/aplicadas
                         const diasUsados = solicitudes
@@ -320,12 +388,13 @@ export default function Vacaciones() {
                           </tr>
                         );
                       })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </TabsContent>
+                      </tbody>
+                      </table>
+                      </div>
+                      )}
+                      </div>
+                      )}
+                      </TabsContent>
 
         {/* Pestaña Calendario de Ausencias */}
         <TabsContent value="calendario" className="mt-4">

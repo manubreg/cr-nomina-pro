@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useEmpresaContext } from "@/components/EmpresaContext";
@@ -26,7 +26,22 @@ export default function HistorialBoletas() {
   const [filtroPeriodo, setFiltroPeriodo] = useState("todos");
   const [filtroAnio, setFiltroAnio] = useState("todos");
   const [expandidos, setExpandidos] = useState({});
-  const [descargando, setDescargando] = useState(null); // "planillaId_empleadoId"
+  const [descargando, setDescargando] = useState(null);
+  const [user, setUser] = useState(null);
+  const [empleadoDelUsuario, setEmpleadoDelUsuario] = useState(null);
+
+  // Obtener usuario logueado
+  React.useEffect(() => {
+    base44.auth.me().then(u => {
+      setUser(u);
+      if (u?.role === "empleado") {
+        // Si es empleado, encontrar su registro por email
+        base44.entities.Empleado.filter({ correo: u.email }).then(emps => {
+          if (emps.length > 0) setEmpleadoDelUsuario(emps[0].id);
+        });
+      }
+    });
+  }, []);
 
   const { data: planillasRaw = [], isLoading: loadingPlanillas } = useQuery({
     queryKey: ["planillas", empresaId],
@@ -65,9 +80,19 @@ export default function HistorialBoletas() {
     return [...set].sort().reverse();
   }, [planillas, periodoMap]);
 
-  // Planillas filtradas
+  // Planillas filtradas — si es empleado, mostrar solo sus boletas
   const planillasFiltradas = useMemo(() => {
-    return planillas.filter(p => {
+    let filtered = planillas;
+    
+    // Si es empleado, filtrar solo sus detalles
+    if (user?.role === "empleado" && empleadoDelUsuario) {
+      filtered = planillas.filter(p => {
+        const detallesPlanilla = detalles.filter(d => d.planilla_id === p.id && d.empleado_id === empleadoDelUsuario);
+        return detallesPlanilla.length > 0;
+      });
+    }
+    
+    return filtered.filter(p => {
       const per = periodoMap[p.periodo_id];
       if (filtroAnio !== "todos" && per?.fecha_inicio?.substring(0, 4) !== filtroAnio) return false;
       if (filtroPeriodo !== "todos" && per?.tipo_periodo !== filtroPeriodo) return false;
@@ -75,17 +100,11 @@ export default function HistorialBoletas() {
         const q = busqueda.toLowerCase();
         const nombrePlanilla = (p.codigo_planilla || "").toLowerCase();
         const nombreEmpresa = (empresaMap[p.empresa_id]?.nombre_comercial || empresaMap[p.empresa_id]?.nombre_legal || "").toLowerCase();
-        // También buscar por empleado dentro de los detalles
-        const detallesPlanilla = detalles.filter(d => d.planilla_id === p.id);
-        const tieneEmpleado = detallesPlanilla.some(d => {
-          const emp = empleadoMap[d.empleado_id];
-          return `${emp?.nombre || ""} ${emp?.apellidos || ""}`.toLowerCase().includes(q);
-        });
-        if (!nombrePlanilla.includes(q) && !nombreEmpresa.includes(q) && !tieneEmpleado) return false;
+        if (!nombrePlanilla.includes(q) && !nombreEmpresa.includes(q)) return false;
       }
       return true;
     });
-  }, [planillas, periodoMap, filtroAnio, filtroPeriodo, busqueda, detalles, empleadoMap, empresaMap]);
+  }, [planillas, periodoMap, filtroAnio, filtroPeriodo, busqueda, detalles, empleadoMap, empresaMap, user, empleadoDelUsuario]);
 
   const toggleExpandido = (id) => setExpandidos(prev => ({ ...prev, [id]: !prev[id] }));
 
@@ -179,7 +198,9 @@ export default function HistorialBoletas() {
           {planillasFiltradas.map(planilla => {
             const periodo = periodoMap[planilla.periodo_id];
             const empresa = empresaMap[planilla.empresa_id];
-            const detallesPlanilla = detalles.filter(d => d.planilla_id === planilla.id);
+            const detallesPlanilla = user?.role === "empleado" && empleadoDelUsuario
+              ? detalles.filter(d => d.planilla_id === planilla.id && d.empleado_id === empleadoDelUsuario)
+              : detalles.filter(d => d.planilla_id === planilla.id);
             const isOpen = expandidos[planilla.id];
             const descargandoTodas = descargando === `all_${planilla.id}`;
 
@@ -244,13 +265,15 @@ export default function HistorialBoletas() {
                             const emp = empleadoMap[det.empleado_id];
                             const key = `${planilla.id}_${det.empleado_id}`;
                             const isDesc = descargando === key;
-                            // Filtrar por búsqueda a nivel de empleado
-                            if (busqueda) {
-                              const q = busqueda.toLowerCase();
-                              const nombre = `${emp?.nombre || ""} ${emp?.apellidos || ""}`.toLowerCase();
-                              const codPlan = (planilla.codigo_planilla || "").toLowerCase();
-                              const empresa_ = (empresaMap[planilla.empresa_id]?.nombre_comercial || "").toLowerCase();
-                              if (!nombre.includes(q) && !codPlan.includes(q) && !empresa_.includes(q)) return null;
+                            // Filtrar por búsqueda a nivel de empleado (solo para admin)
+                            if (!user || user.role !== "empleado") {
+                              if (busqueda) {
+                                const q = busqueda.toLowerCase();
+                                const nombre = `${emp?.nombre || ""} ${emp?.apellidos || ""}`.toLowerCase();
+                                const codPlan = (planilla.codigo_planilla || "").toLowerCase();
+                                const empresa_ = (empresaMap[planilla.empresa_id]?.nombre_comercial || "").toLowerCase();
+                                if (!nombre.includes(q) && !codPlan.includes(q) && !empresa_.includes(q)) return null;
+                              }
                             }
                             return (
                               <tr key={det.id} className="hover:bg-gray-50">
