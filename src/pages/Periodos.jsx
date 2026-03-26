@@ -284,6 +284,14 @@ Devuelve únicamente JSON con la estructura indicada.`,
     });
   };
 
+  const formatFecha = (fechaStr) => {
+    if (!fechaStr) return "—";
+    const d = new Date(fechaStr + "T00:00:00");
+    const MESES_CORTOS = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+    const dia = String(d.getDate()).padStart(2, "0");
+    return `${dia} ${MESES_CORTOS[d.getMonth()]} ${d.getFullYear()}`;
+  };
+
   // Obtener planilla asociada a un período
   const getPlanilla = (periodoId) => planillas.find(pl => pl.periodo_id === periodoId);
 
@@ -452,9 +460,9 @@ Devuelve únicamente JSON con la estructura indicada.`,
                       <span className="capitalize text-gray-700">{p.tipo_periodo}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{p.fecha_inicio}</td>
-                  <td className="px-4 py-3 text-gray-600">{p.fecha_fin}</td>
-                  <td className="px-4 py-3 text-gray-600">{p.fecha_pago || "—"}</td>
+                  <td className="px-4 py-3 text-gray-600">{formatFecha(p.fecha_inicio)}</td>
+                  <td className="px-4 py-3 text-gray-600">{formatFecha(p.fecha_fin)}</td>
+                  <td className="px-4 py-3 text-gray-600">{formatFecha(p.fecha_pago)}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${estadoColors[p.estado] || "bg-gray-100 text-gray-600"}`}>
                       {p.estado}
