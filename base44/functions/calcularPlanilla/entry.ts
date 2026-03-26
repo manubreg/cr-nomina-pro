@@ -173,13 +173,11 @@ Deno.serve(async (req) => {
       const inicio  = fechaInicioPeriodo.substring(0, 10);
       const fin     = fechaFinPeriodo.substring(0, 10);
       if (ingreso >= inicio && ingreso <= fin) {
-        // Días totales del período
         const msDay = 1000 * 60 * 60 * 24;
-        const diasPeriodo = Math.round((new Date(fin) - new Date(inicio)) / msDay) + 1;
         const diasTrabajados = Math.round((new Date(fin) - new Date(ingreso)) / msDay) + 1;
-        // Pro-ratear sobre los días reales del período
-        factorEmp = diasTrabajados / diasPeriodo;
-        console.log(`[pro-rateo] ${emp.nombre} ${emp.apellidos}: ingreso=${ingreso}, periodo=${inicio}→${fin}, días=${diasTrabajados}/${diasPeriodo}, factor=${factorEmp.toFixed(4)}`);
+        // Pro-ratear siempre sobre 30 días del mes (salario diario = salario mensual / 30)
+        factorEmp = diasTrabajados / 30;
+        console.log(`[pro-rateo] ${emp.nombre} ${emp.apellidos}: ingreso=${ingreso}, fin_periodo=${fin}, días trabajados=${diasTrabajados}/30, factor=${factorEmp.toFixed(4)}`);
       }
     }
 
