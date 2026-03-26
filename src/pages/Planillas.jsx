@@ -39,6 +39,8 @@ export default function Planillas() {
   const [filtroAnio, setFiltroAnio] = useState("");
   const [filtroMes, setFiltroMes] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("");
+  const [pagina, setPagina] = useState(1);
+  const POR_PAGINA = 10;
 
   const { data: planillasRaw = [], isLoading } = useQuery({
     queryKey: ["planillas", empresaId],
@@ -217,21 +219,21 @@ export default function Planillas() {
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-3 items-center">
-        <Select value={filtroAnio} onValueChange={setFiltroAnio}>
+        <Select value={filtroAnio} onValueChange={v => { setFiltroAnio(v); setPagina(1); }}>
           <SelectTrigger className="w-32 h-8 text-sm"><SelectValue placeholder="Año" /></SelectTrigger>
           <SelectContent>
             <SelectItem value={null}>Todos los años</SelectItem>
             {aniosDisponibles.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={filtroMes} onValueChange={setFiltroMes}>
+        <Select value={filtroMes} onValueChange={v => { setFiltroMes(v); setPagina(1); }}>
           <SelectTrigger className="w-36 h-8 text-sm"><SelectValue placeholder="Mes" /></SelectTrigger>
           <SelectContent>
             <SelectItem value={null}>Todos los meses</SelectItem>
             {MESES_LABEL.slice(1).map((m, i) => <SelectItem key={i+1} value={String(i+1).padStart(2,"0")}>{m}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={filtroEstado} onValueChange={setFiltroEstado}>
+        <Select value={filtroEstado} onValueChange={v => { setFiltroEstado(v); setPagina(1); }}>
           <SelectTrigger className="w-36 h-8 text-sm"><SelectValue placeholder="Estado" /></SelectTrigger>
           <SelectContent>
             <SelectItem value={null}>Todos los estados</SelectItem>
@@ -244,7 +246,7 @@ export default function Planillas() {
           </SelectContent>
         </Select>
         {(filtroAnio || filtroMes || filtroEstado) && (
-          <button onClick={() => { setFiltroAnio(""); setFiltroMes(""); setFiltroEstado(""); }} className="text-xs text-gray-400 hover:text-gray-600 underline">
+          <button onClick={() => { setFiltroAnio(""); setFiltroMes(""); setFiltroEstado(""); setPagina(1); }} className="text-xs text-gray-400 hover:text-gray-600 underline">
             Limpiar filtros
           </button>
         )}
@@ -274,7 +276,7 @@ export default function Planillas() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {planillas.map(p => (
+                {planillas.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA).map(p => (
                   <tr key={p.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-900">{p.codigo_planilla || "—"}</div>
@@ -389,6 +391,55 @@ export default function Planillas() {
           </div>
         )}
       </div>
+
+      {/* Paginación */}
+      {Math.ceil(planillas.length / POR_PAGINA) > 1 && (
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs text-gray-400">
+            Página {pagina} de {Math.ceil(planillas.length / POR_PAGINA)} · {planillas.length} registros
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPagina(1)}
+              disabled={pagina === 1}
+              className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40"
+            >«</button>
+            <button
+              onClick={() => setPagina(p => Math.max(1, p - 1))}
+              disabled={pagina === 1}
+              className="px-3 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40"
+            >Anterior</button>
+            {Array.from({ length: Math.ceil(planillas.length / POR_PAGINA) }, (_, i) => i + 1)
+              .filter(n => n === 1 || n === Math.ceil(planillas.length / POR_PAGINA) || Math.abs(n - pagina) <= 1)
+              .reduce((acc, n, idx, arr) => {
+                if (idx > 0 && n - arr[idx - 1] > 1) acc.push("...");
+                acc.push(n);
+                return acc;
+              }, [])
+              .map((item, idx) =>
+                item === "..." ? (
+                  <span key={idx} className="px-2 text-xs text-gray-400">…</span>
+                ) : (
+                  <button
+                    key={item}
+                    onClick={() => setPagina(item)}
+                    className={`px-3 py-1 text-xs border rounded ${pagina === item ? "bg-blue-600 text-white border-blue-600" : "border-gray-200 hover:bg-gray-50"}`}
+                  >{item}</button>
+                )
+              )}
+            <button
+              onClick={() => setPagina(p => Math.min(Math.ceil(planillas.length / POR_PAGINA), p + 1))}
+              disabled={pagina === Math.ceil(planillas.length / POR_PAGINA)}
+              className="px-3 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40"
+            >Siguiente</button>
+            <button
+              onClick={() => setPagina(Math.ceil(planillas.length / POR_PAGINA))}
+              disabled={pagina === Math.ceil(planillas.length / POR_PAGINA)}
+              className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40"
+            >»</button>
+          </div>
+        </div>
+      )}
 
       {/* Modal Planilla Automática */}
       <Dialog open={autoModal} onOpenChange={(open) => { if (!creandoAuto) setAutoModal(open); }}>
