@@ -36,12 +36,35 @@ export default function Planillas() {
   const [eliminando, setEliminando] = useState(null);
   const [busquedaEmpleados, setBusquedaEmpleados] = useState("");
   const [confirmDialog, setConfirmDialog] = useState(null); // { type, title, description, confirmLabel, btnType, onConfirm }
+  const [filtroAnio, setFiltroAnio] = useState("");
+  const [filtroMes, setFiltroMes] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState("");
 
   const { data: planillasRaw = [], isLoading } = useQuery({
     queryKey: ["planillas", empresaId],
     queryFn: () => base44.entities.Planilla.list("-created_date"),
   });
-  const planillas = filterByEmpresa(planillasRaw);
+  const planillasBase = filterByEmpresa(planillasRaw);
+
+  const MESES_LABEL = ["","Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+  const planillas = planillasBase.filter(p => {
+    const periodo = periodoMap[p.periodo_id];
+    if (filtroAnio && periodo) {
+      if (!periodo.fecha_inicio?.startsWith(filtroAnio)) return false;
+    }
+    if (filtroMes && periodo) {
+      const mes = String(new Date(periodo.fecha_inicio + "T00:00:00").getMonth() + 1).padStart(2, "0");
+      if (mes !== filtroMes) return false;
+    }
+    if (filtroEstado && p.estado !== filtroEstado) return false;
+    return true;
+  });
+
+  const aniosDisponibles = [...new Set(planillasBase.map(p => {
+    const per = periodoMap[p.periodo_id];
+    return per?.fecha_inicio?.slice(0, 4);
+  }).filter(Boolean))].sort((a, b) => b - a);
 
   const { data: empresas = [] } = useQuery({ queryKey: ["empresas"], queryFn: () => base44.entities.Empresa.list() });
   const { data: periodos = [] } = useQuery({ queryKey: ["periodos"], queryFn: () => base44.entities.PeriodoPlanilla.list("-fecha_inicio") });
@@ -182,6 +205,42 @@ export default function Planillas() {
         <Button onClick={() => setAutoModal(true)} className="bg-emerald-600 hover:bg-emerald-700">
           <Zap className="w-4 h-4 mr-2" /> Planilla Automática
         </Button>
+      </div>
+
+      {/* Filtros */}
+      <div className="flex flex-wrap gap-3 items-center">
+        <Select value={filtroAnio} onValueChange={setFiltroAnio}>
+          <SelectTrigger className="w-32 h-8 text-sm"><SelectValue placeholder="Año" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value={null}>Todos los años</SelectItem>
+            {aniosDisponibles.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={filtroMes} onValueChange={setFiltroMes}>
+          <SelectTrigger className="w-36 h-8 text-sm"><SelectValue placeholder="Mes" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value={null}>Todos los meses</SelectItem>
+            {MESES_LABEL.slice(1).map((m, i) => <SelectItem key={i+1} value={String(i+1).padStart(2,"0")}>{m}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={filtroEstado} onValueChange={setFiltroEstado}>
+          <SelectTrigger className="w-36 h-8 text-sm"><SelectValue placeholder="Estado" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value={null}>Todos los estados</SelectItem>
+            <SelectItem value="borrador">Borrador</SelectItem>
+            <SelectItem value="calculado">Calculado</SelectItem>
+            <SelectItem value="en_revision">En Revisión</SelectItem>
+            <SelectItem value="aprobado">Aprobado</SelectItem>
+            <SelectItem value="pagado">Pagado</SelectItem>
+            <SelectItem value="anulado">Anulado</SelectItem>
+          </SelectContent>
+        </Select>
+        {(filtroAnio || filtroMes || filtroEstado) && (
+          <button onClick={() => { setFiltroAnio(""); setFiltroMes(""); setFiltroEstado(""); }} className="text-xs text-gray-400 hover:text-gray-600 underline">
+            Limpiar filtros
+          </button>
+        )}
+        <span className="text-xs text-gray-400 ml-auto">{planillas.length} resultado(s)</span>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
