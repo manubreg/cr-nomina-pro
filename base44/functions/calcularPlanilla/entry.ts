@@ -278,7 +278,8 @@ Deno.serve(async (req) => {
       movs.push({ tipo_movimiento: 'deduccion', descripcion: `CCSS - IVM (${ccssEmpleado.ivm}%)`, monto: ivm, cantidad: 1, tarifa: 0, porcentaje: ccssEmpleado.ivm, base_calculo: baseCCSS, orden_calculo: 21, origen: 'automatico' });
       movs.push({ tipo_movimiento: 'deduccion', descripcion: `Banco Popular (${ccssEmpleado.banco_popular}%)`, monto: bp, cantidad: 1, tarifa: 0, porcentaje: ccssEmpleado.banco_popular, base_calculo: baseCCSS, orden_calculo: 22, origen: 'automatico' });
     }
-    const baseISR = Math.max(0, baseCCSS - totalCCSSEmp);
+    const baseISRAnual = totalIngresos / factor;
+    const baseISR = Math.max(0, baseISRAnual - totalCCSSEmp);
     const montoISR = calcISR(baseISR);
     console.log(`[ISR] ${emp.nombre} ${emp.apellidos}: baseCCSS=${baseCCSS}, totalCCSS=${totalCCSSEmp}, baseISR=${baseISR}, montoISR=${montoISR}, tramos=`, tramosISR);
     if (montoISR > 0) {
