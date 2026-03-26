@@ -278,7 +278,8 @@ Deno.serve(async (req) => {
       movs.push({ tipo_movimiento: 'deduccion', descripcion: `CCSS - IVM (${ccssEmpleado.ivm}%)`, monto: ivm, cantidad: 1, tarifa: 0, porcentaje: ccssEmpleado.ivm, base_calculo: baseCCSS, orden_calculo: 21, origen: 'automatico' });
       movs.push({ tipo_movimiento: 'deduccion', descripcion: `Banco Popular (${ccssEmpleado.banco_popular}%)`, monto: bp, cantidad: 1, tarifa: 0, porcentaje: ccssEmpleado.banco_popular, base_calculo: baseCCSS, orden_calculo: 22, origen: 'automatico' });
     }
-    const baseISR = Math.max(0, baseCCSS - totalCCSSEmp);
+    // ISR se calcula sobre el total de ingresos (antes de CCSS)
+    const baseISR = Math.max(0, totalIngresos);
     const montoISR = calcISR(baseISR);
     if (montoISR > 0) {
       movs.push({ tipo_movimiento: 'deduccion', descripcion: 'Impuesto sobre la Renta', monto: montoISR,
