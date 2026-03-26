@@ -279,11 +279,8 @@ Deno.serve(async (req) => {
       movs.push({ tipo_movimiento: 'deduccion', descripcion: `Banco Popular (${ccssEmpleado.banco_popular}%)`, monto: bp, cantidad: 1, tarifa: 0, porcentaje: ccssEmpleado.banco_popular, base_calculo: baseCCSS, orden_calculo: 22, origen: 'automatico' });
     }
     const baseISR = Math.max(0, baseCCSS - totalCCSSEmp);
-    // Anualizar la base para comparar con tramos ISR (que son anuales/mensuales)
-    const baseISRAnual = baseISR / factor;
-    const montoISRAnual = calcISR(baseISRAnual);
-    const montoISR = Math.round(montoISRAnual * factor);
-    console.log(`[ISR] ${emp.nombre} ${emp.apellidos}: baseISR=${baseISR}, baseISRAnual=${baseISRAnual}, montoISRAnual=${montoISRAnual}, montoISR=${montoISR}, factor=${factor}`);
+    const montoISR = calcISR(baseISR);
+    console.log(`[ISR] ${emp.nombre} ${emp.apellidos}: baseCCSS=${baseCCSS}, totalCCSS=${totalCCSSEmp}, baseISR=${baseISR}, montoISR=${montoISR}, tramos=`, tramosISR);
     if (montoISR > 0) {
       movs.push({ tipo_movimiento: 'deduccion', descripcion: 'Impuesto sobre la Renta', monto: montoISR,
         cantidad: 1, tarifa: 0, porcentaje: 0, base_calculo: baseISR, orden_calculo: 30, origen: 'automatico' });
