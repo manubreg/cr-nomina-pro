@@ -37,6 +37,7 @@ import HistorialSalarial from './pages/HistorialSalarial';
 import Configuracion from './pages/Configuracion';
 import Roles from './pages/Roles';
 import CalendarioObligaciones from './pages/CalendarioObligaciones';
+import GestionAumentos from './pages/GestionAumentos';
 
 // Portal empleado
 import MisDatos from './pages/portal/MisDatos';
@@ -104,6 +105,7 @@ const AuthenticatedApp = () => {
         <Route path="/Configuracion" element={<Configuracion />} />
         <Route path="/Roles" element={<Roles />} />
         <Route path="/CalendarioObligaciones" element={<CalendarioObligaciones />} />
+        <Route path="/GestionAumentos" element={<GestionAumentos />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

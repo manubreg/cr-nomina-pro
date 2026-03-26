@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { ArrowLeft, User, Briefcase, CreditCard, FileText, Activity, Calendar, ChevronRight } from "lucide-react";
+import { ArrowLeft, User, Briefcase, CreditCard, FileText, Activity, Calendar, ChevronRight, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -21,6 +21,7 @@ export default function EmpleadoPerfil() {
   const [contratos, setContratos] = useState([]);
   const [documentos, setDocumentos] = useState([]);
   const [novedades, setNovedades] = useState([]);
+  const [aumentos, setAumentos] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,11 +31,13 @@ export default function EmpleadoPerfil() {
       base44.entities.Contrato.filter({ empleado_id: id }),
       base44.entities.DocumentoEmpleado.filter({ empleado_id: id }),
       base44.entities.Novedad.filter({ empleado_id: id }),
-    ]).then(([emps, contratos, docs, novedades]) => {
+      base44.entities.HistorialSalario.filter({ empleado_id: id }),
+    ]).then(([emps, contratos, docs, novedades, aumentos]) => {
       setEmp(emps[0]);
       setContratos(contratos);
       setDocumentos(docs);
       setNovedades(novedades);
+      setAumentos(aumentos.sort((a, b) => new Date(b.fecha_efectiva) - new Date(a.fecha_efectiva)));
     }).finally(() => setLoading(false));
   }, [id]);
 
@@ -61,6 +64,7 @@ export default function EmpleadoPerfil() {
           <TabsTrigger value="contratos"><FileText className="w-3.5 h-3.5 mr-1.5" />Contratos ({contratos.length})</TabsTrigger>
           <TabsTrigger value="documentos"><CreditCard className="w-3.5 h-3.5 mr-1.5" />Documentos ({documentos.length})</TabsTrigger>
           <TabsTrigger value="novedades"><Activity className="w-3.5 h-3.5 mr-1.5" />Novedades ({novedades.length})</TabsTrigger>
+          <TabsTrigger value="aumentos"><TrendingUp className="w-3.5 h-3.5 mr-1.5" />Aumentos ({aumentos.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="personal" className="mt-4">
@@ -132,25 +136,51 @@ export default function EmpleadoPerfil() {
         </TabsContent>
 
         <TabsContent value="novedades" className="mt-4">
-          {novedades.length === 0 ? (
-            <div className="text-center py-10 text-gray-400">Sin novedades registradas</div>
+           {novedades.length === 0 ? (
+             <div className="text-center py-10 text-gray-400">Sin novedades registradas</div>
+           ) : (
+             <div className="space-y-2">
+               {novedades.map(n => (
+                 <div key={n.id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between">
+                   <div>
+                     <div className="font-medium text-sm text-gray-800 capitalize">{n.tipo_novedad?.replace(/_/g, " ")}</div>
+                     <div className="text-xs text-gray-400">{n.fecha} · {n.cantidad} {n.unidad}</div>
+                   </div>
+                   <Badge className={n.estado === "aprobada" ? "bg-emerald-100 text-emerald-700" : n.estado === "rechazada" ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-700"}>
+                     {n.estado}
+                   </Badge>
+                 </div>
+               ))}
+             </div>
+           )}
+         </TabsContent>
+
+        <TabsContent value="aumentos" className="mt-4">
+          {aumentos.length === 0 ? (
+            <div className="text-center py-10 text-gray-400">Sin registros de aumentos salariales</div>
           ) : (
             <div className="space-y-2">
-              {novedades.map(n => (
-                <div key={n.id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between">
-                  <div>
-                    <div className="font-medium text-sm text-gray-800 capitalize">{n.tipo_novedad?.replace(/_/g, " ")}</div>
-                    <div className="text-xs text-gray-400">{n.fecha} · {n.cantidad} {n.unidad}</div>
+              {aumentos.map(a => (
+                <div key={a.id} className="bg-white rounded-xl border border-gray-200 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm text-gray-800">Aumento Salarial</span>
+                      <Badge className="bg-blue-100 text-blue-700">+{a.porcentaje_aumento}%</Badge>
+                    </div>
+                    <span className="text-xs text-gray-400">{a.fecha_efectiva}</span>
                   </div>
-                  <Badge className={n.estado === "aprobada" ? "bg-emerald-100 text-emerald-700" : n.estado === "rechazada" ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-700"}>
-                    {n.estado}
-                  </Badge>
+                  <div className="grid grid-cols-3 gap-3 text-sm text-gray-500">
+                    <div><span className="text-xs block text-gray-400">Anterior</span>₡ {Number(a.salario_anterior).toLocaleString()}</div>
+                    <div><span className="text-xs block text-gray-400">Nuevo</span><span className="text-emerald-700 font-semibold">₡ {Number(a.salario_nuevo).toLocaleString()}</span></div>
+                    <div><span className="text-xs block text-gray-400">Motivo</span><span className="capitalize text-gray-700">{a.motivo?.replace(/_/g, " ")}</span></div>
+                  </div>
+                  {a.descripcion && <p className="text-xs text-gray-500 mt-2 italic">{a.descripcion}</p>}
                 </div>
               ))}
             </div>
           )}
         </TabsContent>
-      </Tabs>
+        </Tabs>
     </div>
   );
 }
