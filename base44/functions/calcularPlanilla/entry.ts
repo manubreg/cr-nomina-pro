@@ -17,9 +17,10 @@ Deno.serve(async (req) => {
   console.log('[calcularPlanilla] empresa_id =', empresa_id, '| periodo_id =', periodo_id);
 
   // ── FASE 1: Cargar datos en paralelo ──────────────────────────────────────
-  const [todosParams, empleadosEmpresa, todasNovedades, periodoArr] = await Promise.all([
+  const [todosParams, empleadosActivos, empleadosLiquidados, todasNovedades, periodoArr] = await Promise.all([
     base44.asServiceRole.entities.ParametroLegal.filter({ empresa_id, estado: 'vigente' }, '-created_date', 50),
     base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'activo' }, '-fecha_ingreso', 300),
+    base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'liquidado' }, '-fecha_salida', 100),
     periodo_id
       ? base44.asServiceRole.entities.Novedad.filter({ empresa_id, periodo_id, estado: 'aprobada' }, '-created_date', 300)
       : Promise.resolve([]),
@@ -28,7 +29,17 @@ Deno.serve(async (req) => {
       : Promise.resolve([]),
   ]);
   const planilla = { id: planilla_id, empresa_id, periodo_id };
-  console.log('[calcularPlanilla] empleados:', empleadosEmpresa.length);
+
+  // Combinar activos + liquidados que salieron dentro del período
+  const fechaInicioPeriodoTemp = periodoArr[0]?.fecha_inicio || '';
+  const fechaFinPeriodoTemp    = periodoArr[0]?.fecha_fin    || '';
+  const liquidadosEnPeriodo = empleadosLiquidados.filter(e => {
+    if (!e.fecha_salida) return false;
+    const salida = e.fecha_salida.substring(0, 10);
+    return salida >= fechaInicioPeriodoTemp && salida <= fechaFinPeriodoTemp;
+  });
+  const empleadosEmpresa = [...empleadosActivos, ...liquidadosEnPeriodo];
+  console.log('[calcularPlanilla] activos:', empleadosActivos.length, '| liquidados en período:', liquidadosEnPeriodo.length);
 
   const periodo = periodoArr[0] || null;
   console.log('[calcularPlanilla] periodo encontrado:', periodo?.id, '| tipo:', periodo?.tipo_periodo);
@@ -166,25 +177,41 @@ Deno.serve(async (req) => {
       : normalizarSalarioMensual(emp);
     const salarioMensual = Math.round(salarioMensualBase);
 
-    // Pro-rateo si el empleado ingresó dentro del período
+    // Pro-rateo si el empleado ingresó o salió dentro del período
     let factorEmp = factor;
-    if (fechaInicioPeriodo && fechaFinPeriodo && emp.fecha_ingreso) {
-      const ingreso = emp.fecha_ingreso.substring(0, 10);
+    if (fechaInicioPeriodo && fechaFinPeriodo) {
       const inicio  = fechaInicioPeriodo.substring(0, 10);
       const fin     = fechaFinPeriodo.substring(0, 10);
-      if (ingreso >= inicio && ingreso <= fin) {
-        const msDay = 1000 * 60 * 60 * 24;
-        const diasTrabajados = Math.round((new Date(fin) - new Date(ingreso)) / msDay) + 1;
-        // Pro-ratear siempre sobre 30 días del mes (salario diario = salario mensual / 30)
+      const msDay   = 1000 * 60 * 60 * 24;
+
+      // Determinar rango efectivo del empleado dentro del período
+      let desdeFecha = inicio;
+      let hastaFecha = fin;
+
+      if (emp.fecha_ingreso) {
+        const ingreso = emp.fecha_ingreso.substring(0, 10);
+        if (ingreso > inicio && ingreso <= fin) desdeFecha = ingreso;
+      }
+      if (emp.estado === 'liquidado' && emp.fecha_salida) {
+        const salida = emp.fecha_salida.substring(0, 10);
+        if (salida >= inicio && salida < fin) hastaFecha = salida;
+      }
+
+      if (desdeFecha !== inicio || hastaFecha !== fin) {
+        const diasTrabajados = Math.round((new Date(hastaFecha) - new Date(desdeFecha)) / msDay) + 1;
         factorEmp = diasTrabajados / 30;
-        console.log(`[pro-rateo] ${emp.nombre} ${emp.apellidos}: ingreso=${ingreso}, fin_periodo=${fin}, días trabajados=${diasTrabajados}/30, factor=${factorEmp.toFixed(4)}`);
+        console.log(`[pro-rateo] ${emp.nombre} ${emp.apellidos}: desde=${desdeFecha}, hasta=${hastaFecha}, días=${diasTrabajados}/30, factor=${factorEmp.toFixed(4)}`);
       }
     }
 
     const salarioPeriodo = Math.round(salarioMensual * factorEmp);
     const movs = [];
 
-    movs.push({ tipo_movimiento: 'ingreso', descripcion: 'Salario base', monto: salarioPeriodo,
+    const esSalidaParcial = emp.estado === 'liquidado' && emp.fecha_salida;
+    const descSalario = esSalidaParcial
+      ? `Salario proporcional (salida ${emp.fecha_salida.substring(0, 10)})`
+      : 'Salario base';
+    movs.push({ tipo_movimiento: 'ingreso', descripcion: descSalario, monto: salarioPeriodo,
       cantidad: 1, tarifa: salarioPeriodo, porcentaje: 0, base_calculo: salarioPeriodo, orden_calculo: 1, origen: 'automatico' });
 
     let totalIngresos = salarioPeriodo;
@@ -250,7 +277,8 @@ Deno.serve(async (req) => {
       deducciones_totales: Number(deducciones) || 0,
       neto_pagar: Number(ingresos - deducciones) || 0,
       base_ccss: baseCCSS, base_impuesto: baseISR,
-      base_aguinaldo: totalIngresos, base_vacaciones: totalIngresos });
+      base_aguinaldo: totalIngresos, base_vacaciones: totalIngresos,
+      observaciones: esSalidaParcial ? `Salida parcial en período: ${emp.fecha_salida.substring(0, 10)}` : undefined });
     movimientosTemp.push({ empleado_id: emp.id, movs });
   }
 
