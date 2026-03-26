@@ -44,9 +44,16 @@ export default function Planillas() {
     queryKey: ["planillas", empresaId],
     queryFn: () => base44.entities.Planilla.list("-created_date"),
   });
-  const planillasBase = filterByEmpresa(planillasRaw);
+  const { data: empresas = [] } = useQuery({ queryKey: ["empresas"], queryFn: () => base44.entities.Empresa.list() });
+  const { data: periodos = [] } = useQuery({ queryKey: ["periodos"], queryFn: () => base44.entities.PeriodoPlanilla.list("-fecha_inicio") });
+  const { data: empleadosAll = [] } = useQuery({ queryKey: ["empleados"], queryFn: () => base44.entities.Empleado.list() });
+
+  const empresaMap = Object.fromEntries(empresas.map(e => [e.id, e]));
+  const periodoMap = Object.fromEntries(periodos.map(p => [p.id, p]));
 
   const MESES_LABEL = ["","Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+  const planillasBase = filterByEmpresa(planillasRaw);
 
   const planillas = planillasBase.filter(p => {
     const periodo = periodoMap[p.periodo_id];
@@ -65,13 +72,6 @@ export default function Planillas() {
     const per = periodoMap[p.periodo_id];
     return per?.fecha_inicio?.slice(0, 4);
   }).filter(Boolean))].sort((a, b) => b - a);
-
-  const { data: empresas = [] } = useQuery({ queryKey: ["empresas"], queryFn: () => base44.entities.Empresa.list() });
-  const { data: periodos = [] } = useQuery({ queryKey: ["periodos"], queryFn: () => base44.entities.PeriodoPlanilla.list("-fecha_inicio") });
-  const { data: empleadosAll = [] } = useQuery({ queryKey: ["empleados"], queryFn: () => base44.entities.Empleado.list() });
-
-  const empresaMap = Object.fromEntries(empresas.map(e => [e.id, e]));
-  const periodoMap = Object.fromEntries(periodos.map(p => [p.id, p]));
 
   const handleCrearAutomatica = async () => {
     if (!autoForm.empresa_id || !autoForm.periodo_id) {
