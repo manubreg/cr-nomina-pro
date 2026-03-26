@@ -1,0 +1,25 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "admin_rrhh",
+        "empleado"
+      ],
+      "default": "admin_rrhh"
+    },
+    "empresa_id": {
+      "type": "string"
+    },
+    "empleado_id": {
+      "type": "string"
+    },
+    "rol_personalizado_id": {
+      "type": "string",
+      "description": "ID del RolPersonalizado asignado (para usuarios admin_rrhh con accesos restringidos)"
+    }
+  }
+}

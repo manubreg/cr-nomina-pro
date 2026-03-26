@@ -1,0 +1,31 @@
+{
+  "name": "RolPersonalizado",
+  "type": "object",
+  "properties": {
+    "nombre": {
+      "type": "string",
+      "description": "Nombre del rol (ej: Contador, Supervisor)"
+    },
+    "descripcion": {
+      "type": "string"
+    },
+    "permisos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Lista de claves de m\u00f3dulos permitidos (ej: Dashboard, Empleados, Planillas)"
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "activo",
+        "inactivo"
+      ],
+      "default": "activo"
+    }
+  },
+  "required": [
+    "nombre"
+  ]
+}

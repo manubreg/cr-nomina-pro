@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { useEmpresaContext } from "@/components/EmpresaContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -56,6 +57,7 @@ const navItems = [
       { label: "Calendario Legal", path: "/CalendarioObligaciones" },
       { label: "Parámetros", path: "/Parametros" },
       { label: "Configuración", path: "/Configuracion" },
+      { label: "Roles y Permisos", path: "/Roles" },
       { label: "Usuarios", path: "/Usuarios" },
       { label: "Auditoría", path: "/Auditoria" },
     ]
@@ -121,6 +123,34 @@ export default function Layout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const { data: roles = [] } = useQuery({
+    queryKey: ["roles"],
+    queryFn: () => base44.entities.RolPersonalizado.list(),
+    enabled: !!user?.rol_personalizado_id,
+  });
+
+  // Si el usuario tiene un rol personalizado asignado, filtrar el menú
+  const permisosActivos = (() => {
+    if (!user?.rol_personalizado_id) return null; // null = sin restricción
+    const rol = roles.find(r => r.id === user.rol_personalizado_id);
+    return rol?.permisos || [];
+  })();
+
+  const navItemsFiltrados = permisosActivos === null ? navItems : navItems
+    .map(item => {
+      if (item.children) {
+        const childrenFiltrados = item.children.filter(c => {
+          const key = c.path.replace("/", "");
+          return permisosActivos.includes(key);
+        });
+        if (childrenFiltrados.length === 0) return null;
+        return { ...item, children: childrenFiltrados };
+      }
+      const key = item.path.replace("/", "");
+      return permisosActivos.includes(key) ? item : null;
+    })
+    .filter(Boolean);
+
   const handleLogout = () => base44.auth.logout("/");
 
   const sidebarContent = (
@@ -140,7 +170,7 @@ export default function Layout() {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        {navItems.map(item => (
+        {navItemsFiltrados.map(item => (
           <NavItem key={item.label} item={item} collapsed={collapsed} location={location} />
         ))}
       </nav>

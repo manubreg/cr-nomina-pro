@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useState } from "react";
-import { UserCog, Mail, Shield, Building2, Pencil, X } from "lucide-react";
+import { UserCog, Mail, Shield, Building2, Pencil, X, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ export default function Usuarios() {
   const [role, setRole] = useState("admin_rrhh");
   const [empresaId, setEmpresaId] = useState("");
   const [empleadoId, setEmpleadoId] = useState("");
+  const [rolPersonalizadoId, setRolPersonalizadoId] = useState("");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -34,6 +35,11 @@ export default function Usuarios() {
   const { data: empleados = [] } = useQuery({
     queryKey: ["empleados"],
     queryFn: () => base44.entities.Empleado.list(),
+  });
+
+  const { data: roles = [] } = useQuery({
+    queryKey: ["roles"],
+    queryFn: () => base44.entities.RolPersonalizado.list(),
   });
 
   const updateUser = useMutation({
@@ -58,11 +64,12 @@ export default function Usuarios() {
     setRole(u.role || "admin_rrhh");
     setEmpresaId(u.empresa_id || "");
     setEmpleadoId(u.empleado_id || "");
+    setRolPersonalizadoId(u.rol_personalizado_id || "");
     setEditOpen(true);
   };
 
   const handleSave = () => {
-    updateUser.mutate({ id: selectedUser.id, data: { role, empresa_id: empresaId, empleado_id: empleadoId } });
+    updateUser.mutate({ id: selectedUser.id, data: { role, empresa_id: empresaId, empleado_id: empleadoId, rol_personalizado_id: rolPersonalizadoId || null } });
   };
 
   // Filtrar empleados por empresa seleccionada en el edit
@@ -104,6 +111,7 @@ export default function Usuarios() {
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Rol</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Empresa</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Empleado Vinculado</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden xl:table-cell">Rol Personalizado</th>
                   <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Acción</th>
                 </tr>
               </thead>
@@ -136,6 +144,14 @@ export default function Usuarios() {
                       </td>
                       <td className="px-4 py-3 text-gray-600 text-xs hidden lg:table-cell">
                         {empleado ? `${empleado.nombre} ${empleado.apellidos}` : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-xs hidden xl:table-cell">
+                        {(() => {
+                          const rp = roles.find(r => r.id === u.rol_personalizado_id);
+                          return rp ? (
+                            <span className="flex items-center gap-1 text-blue-700"><ShieldCheck className="w-3 h-3" />{rp.nombre}</span>
+                          ) : "—";
+                        })()}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button onClick={() => openEdit(u)} className="text-gray-400 hover:text-blue-600 p-1.5 rounded hover:bg-blue-50">
@@ -219,6 +235,21 @@ export default function Usuarios() {
                     {empleadosFiltrados.map(e => <SelectItem key={e.id} value={e.id}>{e.nombre} {e.apellidos}</SelectItem>)}
                   </SelectContent>
                 </Select>
+              </div>
+            )}
+            {role === "admin_rrhh" && (
+              <div className="space-y-1">
+                <Label>Rol Personalizado (opcional)</Label>
+                <Select value={rolPersonalizadoId || "ninguno"} onValueChange={v => setRolPersonalizadoId(v === "ninguno" ? "" : v)}>
+                  <SelectTrigger><SelectValue placeholder="Sin restricción de módulos" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ninguno">Sin restricción (acceso completo)</SelectItem>
+                    {roles.filter(r => r.estado === "activo").map(r => (
+                      <SelectItem key={r.id} value={r.id}>{r.nombre}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-400">Si asigna un rol, el usuario solo verá los módulos definidos en ese rol.</p>
               </div>
             )}
           </div>

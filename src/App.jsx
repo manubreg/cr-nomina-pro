@@ -35,6 +35,7 @@ import ReporteHistorialSalarial from './pages/ReporteHistorialSalarial';
 import HistorialBoletas from './pages/HistorialBoletas';
 import HistorialSalarial from './pages/HistorialSalarial';
 import Configuracion from './pages/Configuracion';
+import Roles from './pages/Roles';
 import CalendarioObligaciones from './pages/CalendarioObligaciones';
 
 // Portal empleado
@@ -101,6 +102,7 @@ const AuthenticatedApp = () => {
         <Route path="/HistorialSalarial" element={<HistorialSalarial />} />
         <Route path="/HistorialBoletas" element={<HistorialBoletas />} />
         <Route path="/Configuracion" element={<Configuracion />} />
+        <Route path="/Roles" element={<Roles />} />
         <Route path="/CalendarioObligaciones" element={<CalendarioObligaciones />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
