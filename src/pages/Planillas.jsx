@@ -53,6 +53,13 @@ export default function Planillas() {
 
   const MESES_LABEL = ["","Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
+  const formatFecha = (fechaStr) => {
+    if (!fechaStr) return "";
+    const d = new Date(fechaStr + "T00:00:00");
+    const MESES_CORTOS = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+    return `${d.getDate()} ${MESES_CORTOS[d.getMonth()]} ${d.getFullYear()}`;
+  };
+
   const planillasBase = filterByEmpresa(planillasRaw);
 
   const planillas = planillasBase.filter(p => {
@@ -274,7 +281,7 @@ export default function Planillas() {
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell capitalize text-gray-600">{p.tipo_planilla}</td>
                     <td className="px-4 py-3 hidden lg:table-cell text-xs text-gray-500">
-                      {periodoMap[p.periodo_id] ? `${periodoMap[p.periodo_id].tipo_periodo} · ${periodoMap[p.periodo_id].fecha_inicio} → ${periodoMap[p.periodo_id].fecha_fin}` : "—"}
+                      {periodoMap[p.periodo_id] ? `${periodoMap[p.periodo_id].tipo_periodo} · ${formatFecha(periodoMap[p.periodo_id].fecha_inicio)} → ${formatFecha(periodoMap[p.periodo_id].fecha_fin)}` : "—"}
                     </td>
                     <td className="px-4 py-3 text-right hidden md:table-cell font-mono text-gray-800">
                       {p.total_neto ? `₡ ${Number(p.total_neto).toLocaleString()}` : "—"}
@@ -410,7 +417,7 @@ export default function Planillas() {
                     .filter(p => !autoForm.empresa_id || p.empresa_id === autoForm.empresa_id)
                     .map(p => (
                       <SelectItem key={p.id} value={p.id}>
-                        {p.tipo_periodo} · {p.fecha_inicio} → {p.fecha_fin}
+                        {p.tipo_periodo} · {formatFecha(p.fecha_inicio)} → {formatFecha(p.fecha_fin)}
                       </SelectItem>
                     ))}
                 </SelectContent>
