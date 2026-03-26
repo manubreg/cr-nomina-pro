@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useEmpresaContext } from "@/components/EmpresaContext";
@@ -40,6 +40,19 @@ const empty = {
 export default function HistorialSalarial() {
   const { empresaId, filterByEmpresa } = useEmpresaContext();
   const [filtroEmpleado, setFiltroEmpleado] = useState("");
+  const [user, setUser] = useState(null);
+  const [empleadoDelUsuario, setEmpleadoDelUsuario] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(u => {
+      setUser(u);
+      if (u?.role === "empleado") {
+        base44.entities.Empleado.filter({ correo: u.email }).then(emps => {
+          if (emps.length > 0) setEmpleadoDelUsuario(emps[0].id);
+        });
+      }
+    });
+  }, []);
 
   const { data: historial = [], isLoading } = useQuery({
     queryKey: ["historial_salario", empresaId],
@@ -56,6 +69,10 @@ export default function HistorialSalarial() {
   const empleadoMap = Object.fromEntries(empleadosRaw.map(e => [e.id, e]));
 
   const historialFiltrado = historial.filter(h => {
+    // Si es empleado, mostrar solo su propio historial
+    if (user?.role === "empleado" && empleadoDelUsuario && h.empleado_id !== empleadoDelUsuario) {
+      return false;
+    }
     if (!filtroEmpleado) return true;
     const emp = empleadoMap[h.empleado_id];
     return emp && `${emp.nombre} ${emp.apellidos}`.toLowerCase().includes(filtroEmpleado.toLowerCase());
