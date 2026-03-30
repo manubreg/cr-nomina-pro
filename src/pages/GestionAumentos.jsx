@@ -113,7 +113,7 @@ export default function GestionAumentos() {
   const aumentosFiltrados = aumentos.filter(a => {
     if (!a.empleado_id) return false;
     const emp = empleados.find(e => e.id === a.empleado_id);
-    if (!emp || (!emp.nombre && !emp.apellidos)) return false;
+    if (!emp || !emp.nombre) return false;
     if (!filtroEmpleado) return true;
     return `${emp.nombre} ${emp.apellidos}`.toLowerCase().includes(filtroEmpleado.toLowerCase());
   });
