@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format, parse } from "date-fns";
+import { es } from "date-fns/locale";
 import { base44 } from "@/api/base44Client";
 import { useEmpresaContext } from "@/components/EmpresaContext";
 import { Button } from "@/components/ui/button";
@@ -101,6 +103,25 @@ export default function HorasExtras() {
     return map[estado] || "bg-gray-100 text-gray-800";
   };
 
+  const formatDate = (fecha) => {
+    if (!fecha) return "—";
+    try {
+      const num = Number(fecha);
+      if (!isNaN(num) && num > 30000) {
+        const excelEpoch = new Date(1900, 0, 1);
+        const date = new Date(excelEpoch.getTime() + (num - 2) * 24 * 60 * 60 * 1000);
+        return format(date, "dd/MM/yyyy", { locale: es });
+      }
+      const parsed = parse(String(fecha), "yyyy-MM-dd", new Date());
+      if (!isNaN(parsed.getTime())) {
+        return format(parsed, "dd/MM/yyyy", { locale: es });
+      }
+      return String(fecha);
+    } catch {
+      return String(fecha);
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
@@ -150,7 +171,7 @@ export default function HorasExtras() {
                 return (
                   <TableRow key={nov.id}>
                     <TableCell className="font-medium">{emp ? `${emp.nombre} ${emp.apellidos}` : "?"}</TableCell>
-                    <TableCell>{nov.fecha}</TableCell>
+                    <TableCell>{formatDate(nov.fecha)}</TableCell>
                     <TableCell className="text-right font-mono">{nov.cantidad}h</TableCell>
                     <TableCell>
                       <Badge className={estadoColor(nov.estado)} variant="outline">
