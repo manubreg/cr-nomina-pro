@@ -130,6 +130,9 @@ export default function Layout() {
     enabled: !!user?.rol_personalizado_id,
   });
 
+  // Usuario sin rol asignado aún (role === "user" = recién registrado, sin configurar)
+  const isPendingAccess = user?.role === "user";
+
   // Si el usuario tiene un rol personalizado asignado, filtrar el menú
   const permisosActivos = (() => {
     if (!user?.rol_personalizado_id) return null; // null = sin restricción
@@ -285,7 +288,25 @@ export default function Layout() {
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto">
-          <Outlet />
+          {isPendingAccess ? (
+            <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
+                <ShieldCheck className="w-8 h-8 text-yellow-500" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">Acceso pendiente de configuración</h2>
+              <p className="text-gray-500 text-sm max-w-sm">
+                Tu cuenta ha sido creada pero aún no tiene permisos asignados. Por favor, contacta al administrador del sistema para que configure tu acceso.
+              </p>
+              <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg px-5 py-3 text-xs text-yellow-700">
+                <strong>{user?.email}</strong> — esperando asignación de rol y empresa
+              </div>
+              <button onClick={handleLogout} className="mt-6 text-sm text-gray-400 hover:text-gray-600 underline">
+                Cerrar sesión
+              </button>
+            </div>
+          ) : (
+            <Outlet />
+          )}
         </main>
       </div>
     </div>

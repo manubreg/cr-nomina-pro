@@ -10,8 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEmpresaContext } from "@/components/EmpresaContext";
 
-const roleColor = { admin: "bg-purple-100 text-purple-700", admin_rrhh: "bg-blue-100 text-blue-700", empleado: "bg-emerald-100 text-emerald-700" };
-const roleLabel = { admin: "Super Admin", admin_rrhh: "Admin RRHH", empleado: "Empleado" };
+const roleColor = { admin: "bg-purple-100 text-purple-700", admin_rrhh: "bg-blue-100 text-blue-700", empleado: "bg-emerald-100 text-emerald-700", user: "bg-yellow-100 text-yellow-700" };
+const roleLabel = { admin: "Super Admin", admin_rrhh: "Admin RRHH", empleado: "Empleado", user: "Sin acceso" };
 
 export default function Usuarios() {
   const qc = useQueryClient();
@@ -20,7 +20,7 @@ export default function Usuarios() {
   const [editOpen, setEditOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("admin_rrhh");
+  const [role, setRole] = useState("user");
   const [empresaId, setEmpresaId] = useState("");
   const [empleadoId, setEmpleadoId] = useState("");
   const [rolPersonalizadoId, setRolPersonalizadoId] = useState("");
@@ -51,10 +51,9 @@ export default function Usuarios() {
     if (!email) return;
     setLoading(true);
     setMsg("");
-    // Invite with base role mapping (admin_rrhh maps to "user" base role, empleado too)
-    const baseRole = role === "admin" ? "admin" : "user";
-    await base44.users.inviteUser(email, baseRole);
-    setMsg("Invitación enviada. Asigna empresa y rol después de que el usuario se registre.");
+    // Invitar sin acceso inicial; el admin configura luego
+    await base44.users.inviteUser(email, "user");
+    setMsg("Invitación enviada. El usuario no tendrá acceso hasta que le asignes un rol desde la tabla.");
     setEmail("");
     setLoading(false);
   };
@@ -69,7 +68,13 @@ export default function Usuarios() {
   };
 
   const handleSave = () => {
-    updateUser.mutate({ id: selectedUser.id, data: { role, empresa_id: empresaId, empleado_id: empleadoId, rol_personalizado_id: rolPersonalizadoId || null } });
+    const data = { role };
+    if (role !== "user") {
+      data.empresa_id = empresaId || null;
+      data.empleado_id = empleadoId || null;
+      data.rol_personalizado_id = rolPersonalizadoId || null;
+    }
+    updateUser.mutate({ id: selectedUser.id, data });
   };
 
   // Filtrar empleados por empresa seleccionada en el edit
@@ -86,6 +91,21 @@ export default function Usuarios() {
           <Mail className="w-4 h-4 mr-2" /> Invitar Usuario
         </Button>
       </div>
+
+      {/* Alerta usuarios pendientes */}
+      {users.filter(u => u.role === "user").length > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 flex items-start gap-3">
+          <ShieldCheck className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-yellow-800">
+              {users.filter(u => u.role === "user").length} usuario(s) sin acceso configurado
+            </p>
+            <p className="text-xs text-yellow-600 mt-0.5">
+              Los usuarios marcados con <Badge className="bg-yellow-100 text-yellow-700 text-xs">Sin acceso</Badge> no pueden ingresar al sistema. Edítalos para asignarles un rol y empresa.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Leyenda de roles */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -182,18 +202,9 @@ export default function Usuarios() {
               <Label>Correo Electrónico *</Label>
               <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="usuario@empresa.com" />
             </div>
-            <div className="space-y-1">
-              <Label>Rol inicial</Label>
-              <Select value={role} onValueChange={setRole}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin_rrhh">Admin RRHH</SelectItem>
-                  <SelectItem value="empleado">Empleado</SelectItem>
-                  <SelectItem value="admin">Super Admin</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700">
+              El usuario será invitado <strong>sin acceso</strong>. Luego de que se registre, podrás asignarle un rol y empresa desde la tabla.
             </div>
-            <p className="text-xs text-gray-400 bg-gray-50 rounded p-2">Después de que el usuario se registre, asígnale empresa y empleado vinculado desde la tabla.</p>
             {msg && <p className="text-sm text-emerald-600">{msg}</p>}
           </div>
           <div className="flex justify-end gap-2 mt-4">
@@ -215,9 +226,10 @@ export default function Usuarios() {
               <Select value={role} onValueChange={setRole}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Super Admin</SelectItem>
+                  <SelectItem value="user">Sin acceso (pendiente)</SelectItem>
                   <SelectItem value="admin_rrhh">Admin RRHH</SelectItem>
                   <SelectItem value="empleado">Empleado</SelectItem>
+                  <SelectItem value="admin">Super Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
