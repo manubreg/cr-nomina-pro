@@ -154,25 +154,30 @@ export default function Layout() {
 
   const handleLogout = () => base44.auth.logout("/");
 
-  const sidebarContent = (
+  const sidebarContent = (isMobile = false) => (
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-blue-700">
         <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shrink-0">
           <Receipt className="w-5 h-5 text-blue-800" />
         </div>
-        {!collapsed && (
-          <div>
+        {(!collapsed || isMobile) && (
+          <div className="flex-1">
             <div className="text-white font-bold text-sm leading-tight">CR Nómina</div>
             <div className="text-blue-300 text-xs">Pro</div>
           </div>
+        )}
+        {isMobile && (
+          <button onClick={() => setMobileOpen(false)} className="text-blue-300 hover:text-white transition-colors p-1 ml-auto">
+            <X className="w-5 h-5" />
+          </button>
         )}
       </div>
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
         {navItemsFiltrados.map(item => (
-          <NavItem key={item.label} item={item} collapsed={collapsed} location={location} />
+          <NavItem key={item.label} item={item} collapsed={!isMobile && collapsed} location={location} />
         ))}
       </nav>
 
@@ -184,13 +189,13 @@ export default function Layout() {
               {user?.full_name?.[0] || user?.email?.[0] || "U"}
             </span>
           </div>
-          {!collapsed && (
+          {(!collapsed || isMobile) && (
             <div className="flex-1 min-w-0">
               <div className="text-white text-xs font-medium truncate">{user?.full_name || user?.email}</div>
               <div className="text-blue-300 text-xs capitalize">{user?.role || "usuario"}</div>
             </div>
           )}
-          {!collapsed && (
+          {(!collapsed || isMobile) && (
             <button onClick={handleLogout} className="text-blue-300 hover:text-white transition-colors">
               <LogOutIcon className="w-4 h-4" />
             </button>
@@ -204,15 +209,15 @@ export default function Layout() {
     <div className="flex h-screen bg-gray-50 font-sans">
       {/* Desktop Sidebar */}
       <aside className={`hidden lg:flex flex-col bg-blue-900 transition-all duration-300 shrink-0 ${collapsed ? "w-16" : "w-60"}`}>
-        {sidebarContent}
+        {sidebarContent(false)}
       </aside>
 
       {/* Mobile Overlay */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 h-full w-64 bg-blue-900 z-50">
-            {sidebarContent}
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
+          <aside className="absolute left-0 top-0 h-full w-72 bg-blue-900 z-50 shadow-2xl overflow-y-auto">
+            {sidebarContent(true)}
           </aside>
         </div>
       )}
