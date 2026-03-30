@@ -239,8 +239,8 @@ export default function Layout() {
             <button className="hidden lg:flex text-gray-500 hover:text-gray-700" onClick={() => setCollapsed(!collapsed)}>
               <Menu className="w-5 h-5" />
             </button>
-            {/* Selector de empresa — solo para super admin */}
-            {isAdmin && empresas.length > 0 && (
+            {/* Selector de empresa — solo para super admin (ocultar en Parámetros) */}
+            {isAdmin && empresas.length > 0 && location.pathname !== "/Parametros" && (
               <div className="hidden md:flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-gray-400" />
                 <Select value={selectedEmpresaId || "todas"} onValueChange={v => setSelectedEmpresaId(v === "todas" ? null : v)}>
