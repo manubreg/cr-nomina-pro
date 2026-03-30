@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Clock, Zap } from "lucide-react";
+import { Clock, Zap, Plus, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const tipoHoraExtraLabels = {
   diurna: { label: "Diurna", color: "bg-amber-100 text-amber-800" },
@@ -13,6 +15,9 @@ export default function MisHorasExtras() {
   const [horasExtras, setHorasExtras] = useState([]);
   const [loading, setLoading] = useState(true);
   const [empresa, setEmpresa] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({ fecha: "", cantidad: "", tipo: "diurna", comentario: "" });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(async (me) => {
@@ -39,6 +44,43 @@ export default function MisHorasExtras() {
     });
   }, []);
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.fecha || !formData.cantidad || formData.cantidad <= 0) {
+      alert("Por favor completa los campos requeridos");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await base44.entities.Novedad.create({
+        empleado_id: empleado.id,
+        empresa_id: empresa.id,
+        tipo_novedad: "horas_extra",
+        tipo_hora_extra: formData.tipo,
+        fecha: formData.fecha,
+        cantidad: parseFloat(formData.cantidad),
+        unidad: "horas",
+        comentario: formData.comentario,
+        estado: "pendiente",
+      });
+
+      // Recargar horas
+      const novedadesRes = await base44.entities.Novedad.filter({
+        empleado_id: empleado.id,
+        tipo_novedad: "horas_extra",
+      }, "-fecha", 100);
+      setHorasExtras(novedadesRes || []);
+
+      setFormData({ fecha: "", cantidad: "", tipo: "diurna", comentario: "" });
+      setShowModal(false);
+    } catch (error) {
+      alert("Error al registrar horas: " + error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) return <div className="p-8 text-center text-gray-400">Cargando...</div>;
   if (!empleado) return <div className="p-8 text-center text-gray-400">No se encontró información de empleado.</div>;
 
@@ -47,14 +89,20 @@ export default function MisHorasExtras() {
   return (
     <div className="p-6 max-w-4xl space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-          <Zap className="w-6 h-6 text-amber-700" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+            <Zap className="w-6 h-6 text-amber-700" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Mis Horas Extras</h1>
+            <p className="text-gray-500 text-sm">Historial de horas extra registradas</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mis Horas Extras</h1>
-          <p className="text-gray-500 text-sm">Historial de horas extra registradas</p>
-        </div>
+        <Button onClick={() => setShowModal(true)} className="gap-2">
+          <Plus className="w-4 h-4" />
+          Solicitar Horas
+        </Button>
       </div>
 
       {/* Resumen */}
@@ -135,6 +183,74 @@ export default function MisHorasExtras() {
           </div>
         )}
       </div>
+
+      {/* Modal Solicitar Horas */}
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Solicitar Horas Extras</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+              <input
+                type="date"
+                required
+                value={formData.fecha}
+                onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad de Horas</label>
+              <input
+                type="number"
+                step="0.5"
+                min="0.5"
+                required
+                value={formData.cantidad}
+                onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ej: 2.5"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Hora Extra</label>
+              <select
+                value={formData.tipo}
+                onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="diurna">Diurna</option>
+                <option value="nocturna">Nocturna</option>
+                <option value="feriado">Feriado</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+              <textarea
+                value={formData.comentario}
+                onChange={(e) => setFormData({ ...formData, comentario: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                rows="3"
+                placeholder="Describe el motivo o detalles de las horas"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowModal(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={submitting} className="flex-1">
+                {submitting ? "Guardando..." : "Solicitar Horas"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
