@@ -100,9 +100,9 @@ export default function Usuarios() {
             <p className="text-sm font-medium text-yellow-800">
               {users.filter(u => u.role === "user").length} usuario(s) sin acceso configurado
             </p>
-            <p className="text-xs text-yellow-600 mt-0.5">
-              Los usuarios marcados con <Badge className="bg-yellow-100 text-yellow-700 text-xs">Sin acceso</Badge> no pueden ingresar al sistema. Edítalos para asignarles un rol y empresa.
-            </p>
+            <div className="text-xs text-yellow-600 mt-0.5">
+              Los usuarios marcados con <Badge className="bg-yellow-100 text-yellow-700 text-xs inline-block">Sin acceso</Badge> no pueden ingresar al sistema. Edítalos para asignarles un rol y empresa.
+            </div>
           </div>
         </div>
       )}
