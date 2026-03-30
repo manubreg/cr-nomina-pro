@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Plus, Briefcase, Calculator, Loader2, Info } from "lucide-react";
+import { Plus, Briefcase, Calculator, Loader2, Info, Upload } from "lucide-react";
+import ImportarLiquidacionesModal from "@/components/liquidaciones/ImportarLiquidacionesModal";
 import { useEmpresaContext } from "@/components/EmpresaContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,7 @@ export default function Liquidaciones() {
     onSuccess: () => { qc.invalidateQueries(["liquidaciones"]); setOpen(false); },
   });
 
+  const [importOpen, setImportOpen] = useState(false);
   const [calculando, setCalculando] = useState(false);
   const [detalleCalculo, setDetalleCalculo] = useState(null);
 
@@ -71,9 +73,14 @@ export default function Liquidaciones() {
           <h1 className="text-2xl font-bold text-gray-900">Liquidaciones</h1>
           <p className="text-gray-500 text-sm mt-1">{liquidaciones.length} liquidaciones registradas</p>
         </div>
-        <Button onClick={openNew} className="bg-blue-700 hover:bg-blue-800">
-          <Plus className="w-4 h-4 mr-2" /> Nueva Liquidación
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Upload className="w-4 h-4 mr-2" /> Importar Excel
+          </Button>
+          <Button onClick={openNew} className="bg-blue-700 hover:bg-blue-800">
+            <Plus className="w-4 h-4 mr-2" /> Nueva Liquidación
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -209,6 +216,13 @@ export default function Liquidaciones() {
           </div>
         </DialogContent>
       </Dialog>
+      <ImportarLiquidacionesModal
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        empresaId={empresaId}
+        empleados={empleados}
+        onSuccess={() => qc.invalidateQueries(["liquidaciones"])}
+      />
     </div>
   );
 }
