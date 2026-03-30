@@ -22,6 +22,7 @@ import Novedades from './pages/Novedades';
 import Conceptos from './pages/Conceptos';
 import Vacaciones from './pages/Vacaciones';
 import Incapacidades from './pages/Incapacidades';
+import HorasExtras from './pages/HorasExtras';
 import AguinaldoPage from './pages/AguinaldoPage';
 import Liquidaciones from './pages/Liquidaciones';
 import Reportes from './pages/Reportes';
@@ -91,6 +92,7 @@ const AuthenticatedApp = () => {
         <Route path="/Conceptos" element={<Conceptos />} />
         <Route path="/Vacaciones" element={<Vacaciones />} />
         <Route path="/Incapacidades" element={<Incapacidades />} />
+        <Route path="/HorasExtras" element={<HorasExtras />} />
         <Route path="/Aguinaldo" element={<AguinaldoPage />} />
         <Route path="/Liquidaciones" element={<Liquidaciones />} />
         <Route path="/Reportes" element={<Reportes />} />

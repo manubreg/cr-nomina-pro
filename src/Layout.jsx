@@ -37,6 +37,7 @@ const navItems = [
     children: [
       { label: "Vacaciones", path: "/Vacaciones" },
       { label: "Incapacidades", path: "/Incapacidades" },
+      { label: "Horas Extras", path: "/HorasExtras" },
       { label: "Aguinaldo", path: "/Aguinaldo" },
       { label: "Liquidaciones", path: "/Liquidaciones" },
       { label: "Gestión de Aumentos", path: "/GestionAumentos" },
