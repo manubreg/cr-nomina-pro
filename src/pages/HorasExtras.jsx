@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Edit2, Search, Upload } from "lucide-react";
+import { Plus, Trash2, Edit2, Search, Upload, CheckCircle2 } from "lucide-react";
 import ImportarHorasExtrasModal from "@/components/horasExtras/ImportarHorasExtrasModal";
 
 export default function HorasExtras() {
@@ -84,6 +84,13 @@ export default function HorasExtras() {
     });
     setEditingId(novedad.id);
     setOpen(true);
+  };
+
+  const handleApprobar = (id, estado) => {
+    updateMutation.mutate({
+      id,
+      data: { estado: estado === "pendiente" ? "aprobada" : "pendiente" },
+    });
   };
 
   const handleNew = () => {
@@ -180,6 +187,15 @@ export default function HorasExtras() {
                     </TableCell>
                     <TableCell className="text-sm text-gray-600">{nov.observaciones || "—"}</TableCell>
                     <TableCell className="text-right space-x-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleApprobar(nov.id, nov.estado)}
+                        title={nov.estado === "pendiente" ? "Aprobar" : "Desaprobar"}
+                        className={nov.estado === "aprobada" ? "text-green-600" : "text-gray-400 hover:text-green-600"}
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                      </Button>
                       <Button size="icon" variant="ghost" onClick={() => handleEdit(nov)}>
                         <Edit2 className="w-4 h-4 text-blue-600" />
                       </Button>
