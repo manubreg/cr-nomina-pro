@@ -156,34 +156,16 @@ export default function Layout() {
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      {/* Logo + Toggle */}
+      {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-blue-700">
         <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shrink-0">
           <Receipt className="w-5 h-5 text-blue-800" />
         </div>
         {!collapsed && (
-          <>
-            <div className="flex-1">
-              <div className="text-white font-bold text-sm leading-tight">CR Nómina</div>
-              <div className="text-blue-300 text-xs">Pro</div>
-            </div>
-            <button
-              onClick={() => setCollapsed(true)}
-              className="text-blue-300 hover:text-white transition-colors p-1 rounded hidden lg:flex"
-              title="Ocultar menú"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </>
-        )}
-        {collapsed && (
-          <button
-            onClick={() => setCollapsed(false)}
-            className="text-blue-300 hover:text-white transition-colors p-1 rounded hidden lg:flex"
-            title="Mostrar menú"
-          >
-            <Menu className="w-4 h-4" />
-          </button>
+          <div>
+            <div className="text-white font-bold text-sm leading-tight">CR Nómina</div>
+            <div className="text-blue-300 text-xs">Pro</div>
+          </div>
         )}
       </div>
 
@@ -244,7 +226,10 @@ export default function Layout() {
             <button className="lg:hidden text-gray-500 hover:text-gray-700" onClick={() => setMobileOpen(true)}>
               <Menu className="w-5 h-5" />
             </button>
-
+            {/* Desktop toggle */}
+            <button className="hidden lg:flex text-gray-500 hover:text-gray-700" onClick={() => setCollapsed(!collapsed)}>
+              <Menu className="w-5 h-5" />
+            </button>
             {/* Selector de empresa — solo para super admin */}
             {isAdmin && empresas.length > 0 && (
               <div className="hidden md:flex items-center gap-2">
