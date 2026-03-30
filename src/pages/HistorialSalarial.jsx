@@ -69,13 +69,11 @@ export default function HistorialSalarial() {
   const empleadoMap = Object.fromEntries(empleadosRaw.map(e => [e.id, e]));
 
   const historialFiltrado = historial.filter(h => {
-    // Si es empleado, mostrar solo su propio historial
-    if (user?.role === "empleado" && empleadoDelUsuario && h.empleado_id !== empleadoDelUsuario) {
-      return false;
-    }
-    if (!filtroEmpleado) return true;
     const emp = empleadoMap[h.empleado_id];
-    return emp && `${emp.nombre} ${emp.apellidos}`.toLowerCase().includes(filtroEmpleado.toLowerCase());
+    if (!emp) return false; // Ocultar registros sin empleado asociado
+    if (user?.role === "empleado" && empleadoDelUsuario && h.empleado_id !== empleadoDelUsuario) return false;
+    if (!filtroEmpleado) return true;
+    return `${emp.nombre} ${emp.apellidos}`.toLowerCase().includes(filtroEmpleado.toLowerCase());
   });
 
   return (
