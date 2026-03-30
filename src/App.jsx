@@ -44,6 +44,7 @@ import GestionAumentos from './pages/GestionAumentos';
 import MisDatos from './pages/portal/MisDatos';
 import MisColillas from './pages/portal/MisColillas';
 import MisVacaciones from './pages/portal/MisVacaciones';
+import MisHorasExtras from './pages/portal/MisHorasExtras';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
@@ -70,6 +71,7 @@ const AuthenticatedApp = () => {
           <Route path="/portal/datos" element={<MisDatos />} />
           <Route path="/portal/colillas" element={<MisColillas />} />
           <Route path="/portal/vacaciones" element={<MisVacaciones />} />
+          <Route path="/portal/horas-extras" element={<MisHorasExtras />} />
         </Route>
         <Route path="*" element={<Navigate to="/portal/datos" replace />} />
       </Routes>

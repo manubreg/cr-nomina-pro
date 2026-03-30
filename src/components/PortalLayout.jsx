@@ -1,12 +1,13 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
-import { FileText, Umbrella, User, LogOut, Receipt } from "lucide-react";
+import { FileText, Umbrella, User, LogOut, Receipt, Zap } from "lucide-react";
 
 const portalNav = [
   { label: "Mis Datos", path: "/portal/datos", icon: User },
   { label: "Mis Colillas", path: "/portal/colillas", icon: FileText },
   { label: "Mis Vacaciones", path: "/portal/vacaciones", icon: Umbrella },
+  { label: "Mis Horas Extras", path: "/portal/horas-extras", icon: Zap },
 ];
 
 export default function PortalLayout() {
