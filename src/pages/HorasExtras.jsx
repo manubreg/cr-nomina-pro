@@ -86,11 +86,34 @@ export default function HorasExtras() {
     setOpen(true);
   };
 
-  const handleApprobar = (id, estado) => {
-    updateMutation.mutate({
-      id,
-      data: { estado: estado === "pendiente" ? "aprobada" : "pendiente" },
-    });
+  const handleApprobar = async (id, estado) => {
+    const novedad = novedades.find(n => n.id === id);
+    if (!novedad) return;
+
+    const nuevoEstado = estado === "pendiente" ? "aprobada" : "pendiente";
+    
+    updateMutation.mutate(
+      { id, data: { estado: nuevoEstado } },
+      {
+        onSuccess: async () => {
+          // Si se aprueba, crear movimiento en planilla
+          if (nuevoEstado === "aprobada") {
+            try {
+              await base44.functions.invoke("crearMovimientoHorasExtras", {
+                novedad_id: id,
+                empleado_id: novedad.empleado_id,
+                cantidad_horas: novedad.cantidad,
+                fecha: novedad.fecha,
+                empresa_id: empresaId,
+              });
+              qc.invalidateQueries(["planillas"]);
+            } catch (error) {
+              console.error("Error al crear movimiento en planilla:", error);
+            }
+          }
+        },
+      }
+    );
   };
 
   const handleNew = () => {
