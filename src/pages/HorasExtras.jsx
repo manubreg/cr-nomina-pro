@@ -92,32 +92,28 @@ export default function HorasExtras() {
 
     const nuevoEstado = estado === "pendiente" ? "aprobada" : "pendiente";
     
-    try {
-      // Primero actualizar estado
-      await base44.entities.Novedad.update(id, { estado: nuevoEstado });
-      
-      // Si se aprueba, crear movimiento en planilla
-      if (nuevoEstado === "aprobada") {
-        try {
-          const resultado = await base44.functions.invoke("crearMovimientoHorasExtras", {
-            novedad_id: id,
-            empleado_id: novedad.empleado_id,
-            cantidad_horas: novedad.cantidad,
-            fecha: novedad.fecha,
-            empresa_id: empresaId,
-          });
-          console.log("Movimiento creado:", resultado);
-        } catch (error) {
-          console.error("Error al crear movimiento en planilla:", error);
-        }
+    updateMutation.mutate(
+      { id, data: { estado: nuevoEstado } },
+      {
+        onSuccess: async () => {
+          // Si se aprueba, crear movimiento en planilla
+          if (nuevoEstado === "aprobada") {
+            try {
+              await base44.functions.invoke("crearMovimientoHorasExtras", {
+                novedad_id: id,
+                empleado_id: novedad.empleado_id,
+                cantidad_horas: novedad.cantidad,
+                fecha: novedad.fecha,
+                empresa_id: empresaId,
+              });
+              qc.invalidateQueries(["planillas"]);
+            } catch (error) {
+              console.error("Error al crear movimiento en planilla:", error);
+            }
+          }
+        },
       }
-      
-      // Invalidar queries
-      qc.invalidateQueries(["novedades"]);
-      qc.invalidateQueries(["planillas"]);
-    } catch (error) {
-      console.error("Error al aprobar:", error);
-    }
+    );
   };
 
   const handleNew = () => {
