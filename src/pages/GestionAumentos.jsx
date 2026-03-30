@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useState } from "react";
-import { TrendingUp, Plus, Pencil, Trash2, AlertCircle, Calendar, DollarSign } from "lucide-react";
+import { TrendingUp, Plus, Pencil, Trash2, AlertCircle, Calendar, Upload, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useEmpresaContext } from "@/components/EmpresaContext";
+import ImportarAumentosModal from "@/components/aumentos/ImportarAumentosModal";
 
 const motivoLabel = {
   decreto_mtss: "Decreto MTSS",
@@ -33,10 +34,10 @@ export default function GestionAumentos() {
   const qc = useQueryClient();
   const { empresaId, filterByEmpresa } = useEmpresaContext();
   const [openDialog, setOpenDialog] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [selectedAumento, setSelectedAumento] = useState(null);
   const [filtroEmpleado, setFiltroEmpleado] = useState("");
 
-  // Estados del formulario
   const [empleadoId, setEmpleadoId] = useState("");
   const [salarioAnterior, setSalarioAnterior] = useState("");
   const [salarioNuevo, setSalarioNuevo] = useState("");
@@ -59,20 +60,12 @@ export default function GestionAumentos() {
 
   const createAumento = useMutation({
     mutationFn: (data) => base44.entities.HistorialSalario.create(data),
-    onSuccess: () => {
-      qc.invalidateQueries(["aumentos"]);
-      resetForm();
-      setOpenDialog(false);
-    }
+    onSuccess: () => { qc.invalidateQueries(["aumentos"]); resetForm(); setOpenDialog(false); }
   });
 
   const updateAumento = useMutation({
     mutationFn: ({ id, data }) => base44.entities.HistorialSalario.update(id, data),
-    onSuccess: () => {
-      qc.invalidateQueries(["aumentos"]);
-      resetForm();
-      setOpenDialog(false);
-    }
+    onSuccess: () => { qc.invalidateQueries(["aumentos"]); resetForm(); setOpenDialog(false); }
   });
 
   const deleteAumento = useMutation({
@@ -81,19 +74,12 @@ export default function GestionAumentos() {
   });
 
   const resetForm = () => {
-    setEmpleadoId("");
-    setSalarioAnterior("");
-    setSalarioNuevo("");
-    setFechaEfectiva("");
-    setMotivo("merito");
-    setDescripcion("");
+    setEmpleadoId(""); setSalarioAnterior(""); setSalarioNuevo("");
+    setFechaEfectiva(""); setMotivo("merito"); setDescripcion("");
     setSelectedAumento(null);
   };
 
-  const handleOpenNew = () => {
-    resetForm();
-    setOpenDialog(true);
-  };
+  const handleOpenNew = () => { resetForm(); setOpenDialog(true); };
 
   const handleEdit = (aumento) => {
     setSelectedAumento(aumento);
@@ -107,7 +93,6 @@ export default function GestionAumentos() {
   };
 
   const handleSave = () => {
-    const user = base44.auth.me?.();
     const data = {
       empleado_id: empleadoId,
       empresa_id: empresaId,
@@ -117,9 +102,7 @@ export default function GestionAumentos() {
       fecha_efectiva: fechaEfectiva,
       motivo,
       descripcion,
-      usuario_registro: user?.email || ""
     };
-
     if (selectedAumento) {
       updateAumento.mutate({ id: selectedAumento.id, data });
     } else {
@@ -131,8 +114,7 @@ export default function GestionAumentos() {
     const emp = empleados.find(e => e.id === a.empleado_id);
     if (!emp) return false;
     if (!filtroEmpleado) return true;
-    const q = filtroEmpleado.toLowerCase();
-    return `${emp.nombre} ${emp.apellidos}`.toLowerCase().includes(q);
+    return `${emp.nombre} ${emp.apellidos}`.toLowerCase().includes(filtroEmpleado.toLowerCase());
   });
 
   return (
@@ -144,12 +126,16 @@ export default function GestionAumentos() {
           </h1>
           <p className="text-gray-500 text-sm mt-1">Registre y consulte histórico de aumentos de salario</p>
         </div>
-        <Button onClick={handleOpenNew} className="bg-blue-700 hover:bg-blue-800">
-          <Plus className="w-4 h-4 mr-2" /> Registrar Aumento
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Upload className="w-4 h-4 mr-2" /> Importar Excel
+          </Button>
+          <Button onClick={handleOpenNew} className="bg-blue-700 hover:bg-blue-800">
+            <Plus className="w-4 h-4 mr-2" /> Registrar Aumento
+          </Button>
+        </div>
       </div>
 
-      {/* Búsqueda */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <Input
           placeholder="Buscar empleado..."
@@ -159,7 +145,6 @@ export default function GestionAumentos() {
         />
       </div>
 
-      {/* Tabla */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center text-gray-400">Cargando aumentos...</div>
@@ -198,19 +183,13 @@ export default function GestionAumentos() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-gray-600">
-                        ₡ {aumento.salario_anterior?.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-semibold text-emerald-700">
-                        ₡ {aumento.salario_nuevo?.toLocaleString()}
-                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-gray-600">₡ {aumento.salario_anterior?.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right font-mono font-semibold text-emerald-700">₡ {aumento.salario_nuevo?.toLocaleString()}</td>
                       <td className="px-4 py-3 text-right">
                         <Badge className="bg-blue-100 text-blue-700">+{aumento.porcentaje_aumento}%</Badge>
                       </td>
                       <td className="px-4 py-3">
-                        <Badge className={motivoColor[aumento.motivo]}>
-                          {motivoLabel[aumento.motivo]}
-                        </Badge>
+                        <Badge className={motivoColor[aumento.motivo]}>{motivoLabel[aumento.motivo]}</Badge>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
                         <div className="flex items-center gap-1">
@@ -235,7 +214,7 @@ export default function GestionAumentos() {
         )}
       </div>
 
-      {/* Dialog */}
+      {/* Dialog registro manual */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -256,32 +235,16 @@ export default function GestionAumentos() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Salario Anterior *</Label>
-                <Input
-                  type="number"
-                  value={salarioAnterior}
-                  onChange={e => setSalarioAnterior(e.target.value)}
-                  placeholder="0.00"
-                  step="0.01"
-                />
+                <Input type="number" value={salarioAnterior} onChange={e => setSalarioAnterior(e.target.value)} placeholder="0.00" step="0.01" />
               </div>
               <div className="space-y-1">
                 <Label>Salario Nuevo *</Label>
-                <Input
-                  type="number"
-                  value={salarioNuevo}
-                  onChange={e => setSalarioNuevo(e.target.value)}
-                  placeholder="0.00"
-                  step="0.01"
-                />
+                <Input type="number" value={salarioNuevo} onChange={e => setSalarioNuevo(e.target.value)} placeholder="0.00" step="0.01" />
               </div>
             </div>
             <div className="space-y-1">
               <Label>Fecha Efectiva *</Label>
-              <Input
-                type="date"
-                value={fechaEfectiva}
-                onChange={e => setFechaEfectiva(e.target.value)}
-              />
+              <Input type="date" value={fechaEfectiva} onChange={e => setFechaEfectiva(e.target.value)} />
             </div>
             <div className="space-y-1">
               <Label>Motivo *</Label>
@@ -296,12 +259,7 @@ export default function GestionAumentos() {
             </div>
             <div className="space-y-1">
               <Label>Descripción</Label>
-              <Textarea
-                value={descripcion}
-                onChange={e => setDescripcion(e.target.value)}
-                placeholder="Notas adicionales..."
-                rows={3}
-              />
+              <Textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Notas adicionales..." rows={3} />
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">
@@ -312,6 +270,15 @@ export default function GestionAumentos() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modal importar Excel */}
+      <ImportarAumentosModal
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        empresaId={empresaId}
+        empleados={empleados.filter(e => e.empresa_id === empresaId)}
+        onSuccess={() => qc.invalidateQueries(["aumentos"])}
+      />
     </div>
   );
 }
