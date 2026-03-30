@@ -36,7 +36,7 @@ import HistorialBoletas from './pages/HistorialBoletas';
 import HistorialSalarial from './pages/HistorialSalarial';
 import Configuracion from './pages/Configuracion';
 import Roles from './pages/Roles';
-import CalendarioObligaciones from './pages/CalendarioObligaciones.jsx';
+import CalendarioObligaciones from './pages/CalendarioObligaciones';
 import GestionAumentos from './pages/GestionAumentos';
 
 // Portal empleado
