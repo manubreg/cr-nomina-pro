@@ -26,6 +26,15 @@ import HorasExtras from './pages/HorasExtras';
 import AguinaldoPage from './pages/AguinaldoPage';
 import Liquidaciones from './pages/Liquidaciones';
 import Reportes from './pages/Reportes';
+import ReporteHorasExtras from './pages/ReporteHorasExtras';
+import ReporteAusencias from './pages/ReporteAusencias';
+import ReporteIncapacidades from './pages/ReporteIncapacidades';
+import ReporteVacaciones from './pages/ReporteVacaciones';
+import ReportePresupuesto from './pages/ReportePresupuesto';
+import ReporteConceptosPago from './pages/ReporteConceptosPago';
+import ReporteCCSS from './pages/ReporteCCSS';
+import ReporteISR from './pages/ReporteISR';
+import ReporteCambiosSalariales from './pages/ReporteCambiosSalariales';
 import ReportesLegales from './pages/ReportesLegales';
 import Parametros from './pages/Parametros';
 import Usuarios from './pages/Usuarios';
@@ -45,6 +54,8 @@ import MisDatos from './pages/portal/MisDatos';
 import MisColillas from './pages/portal/MisColillas';
 import MisVacaciones from './pages/portal/MisVacaciones';
 import MisHorasExtras from './pages/portal/MisHorasExtras';
+import CertificadoIngresos from './pages/portal/CertificadoIngresos';
+import ResumenAnualIngresos from './pages/portal/ResumenAnualIngresos';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
@@ -72,6 +83,8 @@ const AuthenticatedApp = () => {
           <Route path="/portal/colillas" element={<MisColillas />} />
           <Route path="/portal/vacaciones" element={<MisVacaciones />} />
           <Route path="/portal/horas-extras" element={<MisHorasExtras />} />
+          <Route path="/portal/certificado" element={<CertificadoIngresos />} />
+          <Route path="/portal/resumen-anual" element={<ResumenAnualIngresos />} />
         </Route>
         <Route path="*" element={<Navigate to="/portal/datos" replace />} />
       </Routes>
@@ -98,6 +111,15 @@ const AuthenticatedApp = () => {
         <Route path="/Aguinaldo" element={<AguinaldoPage />} />
         <Route path="/Liquidaciones" element={<Liquidaciones />} />
         <Route path="/Reportes" element={<Reportes />} />
+        <Route path="/ReporteHorasExtras" element={<ReporteHorasExtras />} />
+        <Route path="/ReporteAusencias" element={<ReporteAusencias />} />
+        <Route path="/ReporteIncapacidades" element={<ReporteIncapacidades />} />
+        <Route path="/ReporteVacaciones" element={<ReporteVacaciones />} />
+        <Route path="/ReportePresupuesto" element={<ReportePresupuesto />} />
+        <Route path="/ReporteConceptosPago" element={<ReporteConceptosPago />} />
+        <Route path="/ReporteCCSS" element={<ReporteCCSS />} />
+        <Route path="/ReporteISR" element={<ReporteISR />} />
+        <Route path="/ReporteCambiosSalariales" element={<ReporteCambiosSalariales />} />
         <Route path="/ReportesLegales" element={<ReportesLegales />} />
         <Route path="/Parametros" element={<Parametros />} />
         <Route path="/Usuarios" element={<Usuarios />} />

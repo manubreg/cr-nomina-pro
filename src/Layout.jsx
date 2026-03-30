@@ -49,6 +49,15 @@ const navItems = [
     label: "Reportes", icon: BarChart3, path: "/Reportes",
     children: [
       { label: "Reportes Generales", path: "/Reportes" },
+      { label: "Horas Extras", path: "/ReporteHorasExtras" },
+      { label: "Ausencias y Permisos", path: "/ReporteAusencias" },
+      { label: "Incapacidades", path: "/ReporteIncapacidades" },
+      { label: "Vacaciones", path: "/ReporteVacaciones" },
+      { label: "Presupuesto vs Gasto", path: "/ReportePresupuesto" },
+      { label: "Conceptos de Pago", path: "/ReporteConceptosPago" },
+      { label: "Comprobante CCSS", path: "/ReporteCCSS" },
+      { label: "Retenciones ISR", path: "/ReporteISR" },
+      { label: "Cambios Salariales", path: "/ReporteCambiosSalariales" },
       { label: "Reportes Legales", path: "/ReportesLegales" },
       { label: "Historial Salarial", path: "/ReporteHistorialSalarial" },
     ]
