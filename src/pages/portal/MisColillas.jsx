@@ -3,48 +3,70 @@ import { base44 } from "@/api/base44Client";
 import { FileText, ChevronDown, ChevronUp, Download } from "lucide-react";
 import { jsPDF } from "jspdf";
 
-const formatCRC = (v) => `₡${Number(v || 0).toLocaleString("es-CR")}`;
+const formatCRC = (v) => `\u20a1${Number(v || 0).toLocaleString("es-CR")}`;
 const formatUSD = (v) => `$${Number(v || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const formatCurrency = (v, moneda) => moneda === "USD" ? formatUSD(v) : formatCRC(v);
 
-function descargarPDF({ detalle, movimientos, periodo, monedaEmpleado, empleadoNombre }) {
+// Para PDF usamos texto plano sin caracteres especiales
+const formatPDF = (v, moneda) => {
+  const num = Number(v || 0).toLocaleString("es-CR");
+  return moneda === "USD" ? `$${num}` : `CRC ${num}`;
+};
+
+function descargarPDF({ detalle, movimientos, periodo, monedaEmpleado, empleadoNombre, empresa }) {
   const doc = new jsPDF();
   const ingresos = movimientos.filter(m => m.tipo_movimiento === "ingreso");
   const deducciones = movimientos.filter(m => m.tipo_movimiento === "deduccion");
-
   const periodLabel = periodo ? `${periodo.fecha_inicio} al ${periodo.fecha_fin}` : "Periodo";
 
-  // Header
+  const nombreEmpresa = empresa?.nombre_comercial || empresa?.nombre_legal || "Empresa";
+  const cedulaEmpresa = empresa?.cedula_juridica ? `Cedula Juridica: ${empresa.cedula_juridica}` : "";
+  const telEmpresa = empresa?.telefono ? `Tel: ${empresa.telefono}` : "";
+  const correoEmpresa = empresa?.correo || "";
+  const dirEmpresa = empresa?.direccion || "";
+
+  // ── Cabecera con info de empresa ──
   doc.setFillColor(30, 64, 175);
-  doc.rect(0, 0, 210, 28, "F");
+  doc.rect(0, 0, 210, 38, "F");
+
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(16);
+  doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text("Colilla de Pago", 14, 12);
-  doc.setFontSize(10);
+  doc.text(nombreEmpresa, 14, 12);
+
+  doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
-  doc.text(periodLabel, 14, 22);
+  let hx = 14;
+  if (cedulaEmpresa) { doc.text(cedulaEmpresa, hx, 19); hx += 60; }
+  if (telEmpresa)    { doc.text(telEmpresa, hx, 19);    hx += 45; }
+  if (correoEmpresa) { doc.text(correoEmpresa, hx, 19); }
+  if (dirEmpresa)    { doc.text(dirEmpresa, 14, 25); }
 
-  doc.setTextColor(30, 30, 30);
-
-  // Empleado
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text("Empleado:", 14, 38);
+  doc.text("Colilla de Pago", 14, 33);
+  doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  doc.text(empleadoNombre || "—", 50, 38);
+  doc.text(`Periodo: ${periodLabel}`, 100, 33);
+
+  // ── Info empleado ──
+  doc.setTextColor(30, 30, 30);
+  doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
-  doc.text("Moneda:", 14, 46);
+  doc.text("Empleado:", 14, 48);
   doc.setFont("helvetica", "normal");
-  doc.text(monedaEmpleado, 50, 46);
+  doc.text(empleadoNombre || "—", 50, 48);
+  doc.setFont("helvetica", "bold");
+  doc.text("Moneda:", 14, 55);
+  doc.setFont("helvetica", "normal");
+  doc.text(monedaEmpleado, 50, 55);
 
-  // Línea separadora
   doc.setDrawColor(200, 200, 200);
-  doc.line(14, 52, 196, 52);
+  doc.line(14, 60, 196, 60);
 
-  let y = 60;
+  let y = 68;
 
-  // Ingresos
+  // ── Ingresos ──
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(5, 150, 105);
@@ -55,16 +77,16 @@ function descargarPDF({ detalle, movimientos, periodo, monedaEmpleado, empleadoN
   doc.setTextColor(50, 50, 50);
   ingresos.forEach(m => {
     doc.text(m.descripcion || m.concepto_id || "—", 14, y);
-    doc.text(formatCurrency(m.monto, monedaEmpleado), 196, y, { align: "right" });
+    doc.text(formatPDF(m.monto, monedaEmpleado), 196, y, { align: "right" });
     y += 7;
   });
   doc.setFont("helvetica", "bold");
   doc.setTextColor(5, 150, 105);
   doc.text("Total Ingresos", 14, y);
-  doc.text(formatCurrency(detalle.ingresos_totales, monedaEmpleado), 196, y, { align: "right" });
+  doc.text(formatPDF(detalle.ingresos_totales, monedaEmpleado), 196, y, { align: "right" });
   y += 10;
 
-  // Deducciones
+  // ── Deducciones ──
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(220, 38, 38);
@@ -75,28 +97,34 @@ function descargarPDF({ detalle, movimientos, periodo, monedaEmpleado, empleadoN
   doc.setTextColor(50, 50, 50);
   deducciones.forEach(m => {
     doc.text(m.descripcion || m.concepto_id || "—", 14, y);
-    doc.text(formatCurrency(m.monto, monedaEmpleado), 196, y, { align: "right" });
+    doc.text(formatPDF(m.monto, monedaEmpleado), 196, y, { align: "right" });
     y += 7;
   });
   doc.setFont("helvetica", "bold");
   doc.setTextColor(220, 38, 38);
   doc.text("Total Deducciones", 14, y);
-  doc.text(formatCurrency(detalle.deducciones_totales, monedaEmpleado), 196, y, { align: "right" });
+  doc.text(formatPDF(detalle.deducciones_totales, monedaEmpleado), 196, y, { align: "right" });
   y += 12;
 
-  // Neto
+  // ── Neto ──
   doc.setFillColor(239, 246, 255);
   doc.roundedRect(14, y, 182, 14, 3, 3, "F");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   doc.setTextColor(30, 64, 175);
   doc.text("NETO A PAGAR", 20, y + 9);
-  doc.text(formatCurrency(detalle.neto_pagar, monedaEmpleado), 190, y + 9, { align: "right" });
+  doc.text(formatPDF(detalle.neto_pagar, monedaEmpleado), 190, y + 9, { align: "right" });
+
+  // ── Pie de página ──
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "italic");
+  doc.setTextColor(150, 150, 150);
+  doc.text("Documento generado electronicamente - No requiere firma", 105, 285, { align: "center" });
 
   doc.save(`colilla_${periodLabel.replace(/ /g, "_")}.pdf`);
 }
 
-function ColillaCard({ detalle, movimientos, periodo, monedaEmpleado, empleadoNombre }) {
+function ColillaCard({ detalle, movimientos, periodo, monedaEmpleado, empleadoNombre, empresa }) {
   const [expanded, setExpanded] = useState(false);
   const ingresos = movimientos.filter(m => m.tipo_movimiento === "ingreso");
   const deducciones = movimientos.filter(m => m.tipo_movimiento === "deduccion");
@@ -162,12 +190,11 @@ function ColillaCard({ detalle, movimientos, periodo, monedaEmpleado, empleadoNo
             </div>
           </div>
 
-          {/* Botón descargar PDF */}
           <div className="mt-4 flex justify-end">
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                descargarPDF({ detalle, movimientos, periodo, monedaEmpleado, empleadoNombre });
+                descargarPDF({ detalle, movimientos, periodo, monedaEmpleado, empleadoNombre, empresa });
               }}
               className="flex items-center gap-2 text-sm px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition-colors"
             >
@@ -189,6 +216,7 @@ export default function MisColillas() {
   const [empleadoId, setEmpleadoId] = useState(null);
   const [monedaEmpleado, setMonedaEmpleado] = useState("CRC");
   const [empleadoNombre, setEmpleadoNombre] = useState("");
+  const [empresa, setEmpresa] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(async (me) => {
@@ -204,6 +232,11 @@ export default function MisColillas() {
       const empleado = emps[0];
       setMonedaEmpleado(empleado?.moneda || "CRC");
       setEmpleadoNombre(empleado ? `${empleado.nombre} ${empleado.apellidos}` : "");
+      // Cargar empresa del empleado
+      if (empleado?.empresa_id) {
+        const empresas = await base44.entities.Empresa.filter({ id: empleado.empresa_id });
+        setEmpresa(empresas[0] || null);
+      }
       setDetalles(dets);
       setMovimientos(movs);
       setPlanillas(plans);
@@ -244,6 +277,7 @@ export default function MisColillas() {
                 periodo={periodo}
                 monedaEmpleado={monedaEmpleado}
                 empleadoNombre={empleadoNombre}
+                empresa={empresa}
               />
             );
           })}
