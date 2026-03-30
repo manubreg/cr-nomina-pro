@@ -24,11 +24,12 @@ export default function ImportarHorasExtrasModal({ open, onOpenChange, empresaId
 
   const descargarPlantilla = () => {
     const ws = XLSX.utils.aoa_to_sheet([
-      ["identificacion_empleado", "fecha", "cantidad_horas", "observaciones"],
-      ["123456789", "2026-03-30", "2.5", "Proyecto urgente"],
-      ["987654321", "2026-03-30", "4", "Mantenimiento nocturno"],
+      ["identificacion_empleado", "fecha", "cantidad_horas", "tipo_hora_extra", "observaciones"],
+      ["123456789", "2026-03-30", "2.5", "diurna", "Proyecto urgente"],
+      ["987654321", "2026-03-30", "4", "nocturna", "Mantenimiento nocturno"],
+      ["123456789", "2026-04-01", "8", "feriado", "Feriado trabajado"],
     ]);
-    ws["!cols"] = [{ wch: 26 }, { wch: 16 }, { wch: 18 }, { wch: 30 }];
+    ws["!cols"] = [{ wch: 26 }, { wch: 16 }, { wch: 18 }, { wch: 16 }, { wch: 30 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "HorasExtras");
     XLSX.writeFile(wb, "plantilla_horas_extras.xlsx");
@@ -54,6 +55,10 @@ export default function ImportarHorasExtrasModal({ open, onOpenChange, empresaId
         if (!row.cantidad_horas) errs.push(`Fila ${num}: cantidad_horas requerida.`);
         const cantidad = Number(row.cantidad_horas) || 0;
         if (cantidad <= 0) errs.push(`Fila ${num}: cantidad_horas debe ser > 0.`);
+        const tipoHoraExtra = String(row.tipo_hora_extra || "diurna").trim().toLowerCase();
+        if (!["diurna", "nocturna", "feriado"].includes(tipoHoraExtra)) {
+          errs.push(`Fila ${num}: tipo_hora_extra debe ser 'diurna', 'nocturna' o 'feriado'.`);
+        }
         const valido = !errs.some((e) => e.startsWith(`Fila ${num}:`));
         return {
           _valido: valido,
@@ -62,6 +67,7 @@ export default function ImportarHorasExtrasModal({ open, onOpenChange, empresaId
           empresa_id: empresaId,
           fecha: String(row.fecha).trim(),
           cantidad_horas: cantidad,
+          tipo_hora_extra: tipoHoraExtra,
           observaciones: String(row.observaciones || "").trim(),
         };
       });
@@ -84,6 +90,7 @@ export default function ImportarHorasExtrasModal({ open, onOpenChange, empresaId
         empleado_id: row.empleado_id,
         empresa_id: row.empresa_id,
         tipo_novedad: "horas_extra",
+        tipo_hora_extra: row.tipo_hora_extra,
         fecha: row.fecha,
         cantidad: row.cantidad_horas,
         unidad: "horas",
@@ -115,14 +122,15 @@ export default function ImportarHorasExtrasModal({ open, onOpenChange, empresaId
         <div className="space-y-4 mt-2">
           {/* Instrucciones */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-            <p className="font-semibold mb-1">Instrucciones:</p>
-            <ul className="list-disc list-inside space-y-0.5 text-xs">
-              <li>Descargue la plantilla y complete los 4 campos.</li>
-              <li>Use la <strong>cédula o DIMEX</strong> del empleado tal como está registrada.</li>
-              <li>Fechas en formato YYYY-MM-DD (ej: 2026-03-30).</li>
-              <li>Cantidad de horas: números decimales (ej: 2, 4.5, etc).</li>
-              <li>Observaciones es opcional.</li>
-            </ul>
+           <p className="font-semibold mb-1">Instrucciones:</p>
+           <ul className="list-disc list-inside space-y-0.5 text-xs">
+             <li>Descargue la plantilla y complete los 5 campos.</li>
+             <li>Use la <strong>cédula o DIMEX</strong> del empleado tal como está registrada.</li>
+             <li>Fechas en formato YYYY-MM-DD (ej: 2026-03-30).</li>
+             <li>Cantidad de horas: números decimales (ej: 2, 4.5, etc).</li>
+             <li>Tipo de hora extra: <strong>diurna</strong> (25%), <strong>nocturna</strong> (35%) o <strong>feriado</strong>.</li>
+             <li>Observaciones es opcional.</li>
+           </ul>
           </div>
 
           <div className="flex gap-3 flex-wrap">
@@ -159,26 +167,36 @@ export default function ImportarHorasExtrasModal({ open, onOpenChange, empresaId
                       <th className="text-left px-3 py-2 font-semibold text-gray-500">Empleado</th>
                       <th className="text-left px-3 py-2 font-semibold text-gray-500">Fecha</th>
                       <th className="text-right px-3 py-2 font-semibold text-gray-500">Horas</th>
+                      <th className="text-left px-3 py-2 font-semibold text-gray-500">Tipo</th>
                       <th className="text-left px-3 py-2 font-semibold text-gray-500">Observaciones</th>
                       <th className="px-3 py-2 font-semibold text-gray-500">Estado</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {preview.map((r, i) => (
-                      <tr key={i} className={r._valido ? "bg-white" : "bg-red-50"}>
-                        <td className="px-3 py-2">{r.empleado_nombre}</td>
-                        <td className="px-3 py-2">{r.fecha}</td>
-                        <td className="px-3 py-2 text-right font-mono">{r.cantidad_horas}h</td>
-                        <td className="px-3 py-2 text-xs text-gray-600">{r.observaciones || "—"}</td>
-                        <td className="px-3 py-2">
-                          {r._valido ? (
-                            <span className="text-emerald-600 font-semibold">✓ OK</span>
-                          ) : (
-                            <span className="text-red-600 font-semibold">✗ Error</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                       <tr key={i} className={r._valido ? "bg-white" : "bg-red-50"}>
+                         <td className="px-3 py-2">{r.empleado_nombre}</td>
+                         <td className="px-3 py-2">{r.fecha}</td>
+                         <td className="px-3 py-2 text-right font-mono">{r.cantidad_horas}h</td>
+                         <td className="px-3 py-2 text-xs font-medium">
+                           <span className={
+                             r.tipo_hora_extra === "diurna" ? "bg-amber-100 text-amber-800 px-2 py-1 rounded" :
+                             r.tipo_hora_extra === "nocturna" ? "bg-purple-100 text-purple-800 px-2 py-1 rounded" :
+                             "bg-red-100 text-red-800 px-2 py-1 rounded"
+                           }>
+                             {r.tipo_hora_extra === "diurna" ? "Diurna" : r.tipo_hora_extra === "nocturna" ? "Nocturna" : "Feriado"}
+                           </span>
+                         </td>
+                         <td className="px-3 py-2 text-xs text-gray-600">{r.observaciones || "—"}</td>
+                         <td className="px-3 py-2">
+                           {r._valido ? (
+                             <span className="text-emerald-600 font-semibold">✓ OK</span>
+                           ) : (
+                             <span className="text-red-600 font-semibold">✗ Error</span>
+                           )}
+                         </td>
+                       </tr>
+                     ))}
                   </tbody>
                 </table>
               </div>

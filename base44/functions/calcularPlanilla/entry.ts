@@ -255,14 +255,24 @@ Deno.serve(async (req) => {
        let monto = 0, desc = '', tipo_mov = 'ingreso', orden = 10;
        switch (nov.tipo_novedad) {
          case 'horas_extra': {
-           // Detectar si es feriado y aplicar recargo automático
-           const feriado = esFeriado(nov.fecha);
-           let f = emp.tipo_jornada === 'nocturna' ? 1.75 : (emp.tipo_jornada === 'mixta' ? 1.625 : 1.5);
-           if (feriado) {
-             f = feriado.recargo_porcentaje / 100 + 1; // Convertir porcentaje a factor
-             desc = `Horas extra en ${feriado.nombre} (${nov.cantidad}h)`;
+           let f = 1.25; // Factor por defecto (diurna 25%)
+
+           // Usar tipo_hora_extra si está disponible, sino usar tipo_jornada
+           if (nov.tipo_hora_extra === 'nocturna') {
+             f = 1.35; // Nocturna 35%
+             desc = `Horas extra nocturnas (${nov.cantidad}h)`;
+           } else if (nov.tipo_hora_extra === 'feriado') {
+             const feriado = esFeriado(nov.fecha);
+             if (feriado) {
+               f = feriado.recargo_porcentaje / 100 + 1;
+               desc = `Horas extra en ${feriado.nombre} (${nov.cantidad}h)`;
+             } else {
+               f = 2.0; // 100% recargo si no se encuentra el feriado
+               desc = `Horas extra feriado (${nov.cantidad}h)`;
+             }
            } else {
-             desc = `Horas extra (${nov.cantidad}h)`;
+             // Diurna o caso por defecto
+             desc = `Horas extra diurnas (${nov.cantidad}h)`;
            }
            monto = Math.round((salarioMensual / 240) * f * (nov.cantidad || 0));
            break;

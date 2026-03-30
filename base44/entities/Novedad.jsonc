@@ -1,0 +1,85 @@
+{
+  "name": "Novedad",
+  "type": "object",
+  "properties": {
+    "empleado_id": {
+      "type": "string"
+    },
+    "empresa_id": {
+      "type": "string"
+    },
+    "periodo_id": {
+      "type": "string"
+    },
+    "tipo_novedad": {
+      "type": "string",
+      "enum": [
+        "horas_extra",
+        "ausencia",
+        "tardia",
+        "vacacion",
+        "incapacidad",
+        "permiso_con_goce",
+        "permiso_sin_goce",
+        "feriado_trabajado",
+        "bono",
+        "comision",
+        "rebajo_especial",
+        "ajuste_manual"
+      ]
+    },
+    "tipo_hora_extra": {
+      "type": "string",
+      "enum": [
+        "diurna",
+        "nocturna",
+        "feriado"
+      ],
+      "description": "Tipo de hora extra (solo para tipo_novedad = horas_extra)"
+    },
+    "fecha": {
+      "type": "string",
+      "format": "date"
+    },
+    "cantidad": {
+      "type": "number"
+    },
+    "unidad": {
+      "type": "string",
+      "enum": [
+        "horas",
+        "dias",
+        "monto"
+      ],
+      "default": "horas"
+    },
+    "monto": {
+      "type": "number",
+      "default": 0
+    },
+    "comentario": {
+      "type": "string"
+    },
+    "soporte_url": {
+      "type": "string"
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "pendiente",
+        "aprobada",
+        "rechazada",
+        "aplicada"
+      ],
+      "default": "pendiente"
+    },
+    "usuario_registro": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "empleado_id",
+    "tipo_novedad",
+    "fecha"
+  ]
+}

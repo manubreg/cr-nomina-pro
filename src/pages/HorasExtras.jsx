@@ -21,7 +21,7 @@ export default function HorasExtras() {
   const [importOpen, setImportOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
-  const [form, setForm] = useState({ empleado_id: "", fecha: "", cantidad: "", observaciones: "" });
+  const [form, setForm] = useState({ empleado_id: "", fecha: "", cantidad: "", tipo_hora_extra: "diurna", observaciones: "" });
   const [feriadoInfo, setFeriadoInfo] = useState(null);
   const [loadingFeriado, setLoadingFeriado] = useState(false);
 
@@ -49,7 +49,7 @@ export default function HorasExtras() {
     onSuccess: () => {
       qc.invalidateQueries(["novedades"]);
       setOpen(false);
-      setForm({ empleado_id: "", fecha: "", cantidad: "", observaciones: "" });
+      setForm({ empleado_id: "", fecha: "", cantidad: "", tipo_hora_extra: "diurna", observaciones: "" });
     },
   });
 
@@ -59,7 +59,7 @@ export default function HorasExtras() {
       qc.invalidateQueries(["novedades"]);
       setOpen(false);
       setEditingId(null);
-      setForm({ empleado_id: "", fecha: "", cantidad: "", observaciones: "" });
+      setForm({ empleado_id: "", fecha: "", cantidad: "", tipo_hora_extra: "diurna", observaciones: "" });
     },
   });
 
@@ -82,6 +82,7 @@ export default function HorasExtras() {
       empleado_id: novedad.empleado_id,
       fecha: novedad.fecha,
       cantidad: String(novedad.cantidad),
+      tipo_hora_extra: novedad.tipo_hora_extra || "diurna",
       observaciones: novedad.observaciones || "",
     });
     setEditingId(novedad.id);
@@ -96,7 +97,7 @@ export default function HorasExtras() {
   };
 
   const handleNew = () => {
-    setForm({ empleado_id: "", fecha: "", cantidad: "", observaciones: "" });
+    setForm({ empleado_id: "", fecha: "", cantidad: "", tipo_hora_extra: "diurna", observaciones: "" });
     setEditingId(null);
     setFeriadoInfo(null);
     setOpen(true);
@@ -183,6 +184,7 @@ export default function HorasExtras() {
               <TableHead>Empleado</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead className="text-right">Horas</TableHead>
+              <TableHead>Tipo</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Observaciones</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
@@ -191,24 +193,33 @@ export default function HorasExtras() {
           <TableBody>
             {filteredNovedades.length === 0 ? (
               <TableRow>
-                <TableCell colSpan="6" className="text-center py-8 text-gray-500">
-                  No hay horas extras registradas
-                </TableCell>
+                <TableCell colSpan="7" className="text-center py-8 text-gray-500">
+                    No hay horas extras registradas
+                  </TableCell>
               </TableRow>
             ) : (
               filteredNovedades.map((nov) => {
                 const emp = empleados.find(e => e.id === nov.empleado_id);
                 return (
                   <TableRow key={nov.id}>
-                    <TableCell className="font-medium">{emp ? `${emp.nombre} ${emp.apellidos}` : "?"}</TableCell>
-                    <TableCell>{formatDate(nov.fecha)}</TableCell>
-                    <TableCell className="text-right font-mono">{nov.cantidad}h</TableCell>
-                    <TableCell>
-                      <Badge className={estadoColor(nov.estado)} variant="outline">
-                        {nov.estado}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-gray-600">{nov.observaciones || "—"}</TableCell>
+                     <TableCell className="font-medium">{emp ? `${emp.nombre} ${emp.apellidos}` : "?"}</TableCell>
+                     <TableCell>{formatDate(nov.fecha)}</TableCell>
+                     <TableCell className="text-right font-mono">{nov.cantidad}h</TableCell>
+                     <TableCell>
+                       <Badge variant="outline" className={
+                         nov.tipo_hora_extra === "diurna" ? "bg-amber-100 text-amber-800" :
+                         nov.tipo_hora_extra === "nocturna" ? "bg-purple-100 text-purple-800" :
+                         "bg-red-100 text-red-800"
+                       }>
+                         {nov.tipo_hora_extra === "diurna" ? "Diurna" : nov.tipo_hora_extra === "nocturna" ? "Nocturna" : "Feriado"}
+                       </Badge>
+                     </TableCell>
+                     <TableCell>
+                       <Badge className={estadoColor(nov.estado)} variant="outline">
+                         {nov.estado}
+                       </Badge>
+                     </TableCell>
+                     <TableCell className="text-sm text-gray-600">{nov.observaciones || "—"}</TableCell>
                     <TableCell className="text-right space-x-1">
                       <Button
                         size="icon"
@@ -291,15 +302,30 @@ export default function HorasExtras() {
                 </div>
               )}
             </div>
-            <div>
-              <Label>Cantidad de Horas *</Label>
-              <Input
-                type="number"
-                step="0.5"
-                placeholder="ej: 2, 4.5"
-                value={form.cantidad}
-                onChange={(e) => setForm({ ...form, cantidad: e.target.value })}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Cantidad de Horas *</Label>
+                <Input
+                  type="number"
+                  step="0.5"
+                  placeholder="ej: 2, 4.5"
+                  value={form.cantidad}
+                  onChange={(e) => setForm({ ...form, cantidad: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Tipo de Hora Extra *</Label>
+                <Select value={form.tipo_hora_extra} onValueChange={(v) => setForm({ ...form, tipo_hora_extra: v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="diurna">Diurna (25%)</SelectItem>
+                    <SelectItem value="nocturna">Nocturna (35%)</SelectItem>
+                    <SelectItem value="feriado">Feriado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div>
               <Label>Observaciones</Label>
