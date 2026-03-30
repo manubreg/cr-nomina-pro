@@ -196,10 +196,22 @@ export default function HorasExtras() {
                       >
                         <CheckCircle2 className="w-4 h-4" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => handleEdit(nov)}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleEdit(nov)}
+                        disabled={nov.estado === "aprobada"}
+                        className={nov.estado === "aprobada" ? "opacity-50 cursor-not-allowed" : ""}
+                      >
                         <Edit2 className="w-4 h-4 text-blue-600" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(nov.id)}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => deleteMutation.mutate(nov.id)}
+                        disabled={nov.estado === "aprobada"}
+                        className={nov.estado === "aprobada" ? "opacity-50 cursor-not-allowed" : ""}
+                      >
                         <Trash2 className="w-4 h-4 text-red-600" />
                       </Button>
                     </TableCell>
