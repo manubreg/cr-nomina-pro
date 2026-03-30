@@ -157,9 +157,26 @@ Deno.serve(async (req) => {
 
   console.log('[calcularPlanilla] empleados para calcular:', empleados.length);
 
-  // ── FASE 4: Calcular (pura CPU, sin I/O) ─────────────────────────────────
+  // ── FASE 4: Obtener días feriados ───────────────────────────────────────
+  let diasFeriados = [];
+  try {
+    const diasFeriadosResp = await base44.functions.invoke('obtenerDiasFeriados', {});
+    diasFeriados = diasFeriadosResp?.data?.dias_feriados || [];
+    console.log('[calcularPlanilla] días feriados cargados:', diasFeriados.length);
+  } catch (err) {
+    console.warn('[calcularPlanilla] advertencia: no se pudieron obtener días feriados', err.message);
+  }
+
+  // ── FASE 5: Calcular (pura CPU, sin I/O) ─────────────────────────────────
   const detallesData = [];
   const movimientosTemp = [];
+
+  // Función auxiliar para detectar si una fecha es feriado
+  const esFeriado = (fecha) => {
+    if (!fecha) return null;
+    const [año, mes, día] = fecha.split('-').map(Number);
+    return diasFeriados.find(f => f.mes === mes && f.dia === día) || null;
+  };
 
   // Obtener salario vigente considerando histórico de aumentos
   const getSalarioVigente = (emp, fechaReferencia) => {
@@ -235,23 +252,41 @@ Deno.serve(async (req) => {
     let totalRebajos = 0;
 
     for (const nov of todasNovedades.filter(n => n.empleado_id === emp.id && n.fecha >= fechaInicioPeriodo && n.fecha <= fechaFinPeriodo)) {
-      let monto = 0, desc = '', tipo_mov = 'ingreso', orden = 10;
-      switch (nov.tipo_novedad) {
-        case 'horas_extra': {
-          const f = emp.tipo_jornada === 'nocturna' ? 1.75 : (emp.tipo_jornada === 'mixta' ? 1.625 : 1.5);
-          monto = Math.round((salarioMensual / 240) * f * (nov.cantidad || 0));
-          desc = `Horas extra (${nov.cantidad}h)`; break;
-        }
-        case 'bono':     monto = Number(nov.monto) || 0; desc = 'Bono'; break;
-        case 'comision': monto = Number(nov.monto) || 0; desc = 'Comisión'; break;
-        case 'ausencia':
-        case 'permiso_sin_goce':
-          monto = Math.round((salarioMensual / 30) * (nov.cantidad || 0));
-          desc = `Rebajo ${nov.tipo_novedad === 'ausencia' ? 'ausencia' : 'permiso sin goce'} (${nov.cantidad}d)`;
-          tipo_mov = 'deduccion'; orden = 5; break;
-        case 'feriado_trabajado':
-          monto = Math.round((salarioMensual / 30) * 2 * (nov.cantidad || 1));
-          desc = 'Feriado trabajado'; break;
+       let monto = 0, desc = '', tipo_mov = 'ingreso', orden = 10;
+       switch (nov.tipo_novedad) {
+         case 'horas_extra': {
+           // Detectar si es feriado y aplicar recargo automático
+           const feriado = esFeriado(nov.fecha);
+           let f = emp.tipo_jornada === 'nocturna' ? 1.75 : (emp.tipo_jornada === 'mixta' ? 1.625 : 1.5);
+           if (feriado) {
+             f = feriado.recargo_porcentaje / 100 + 1; // Convertir porcentaje a factor
+             desc = `Horas extra en ${feriado.nombre} (${nov.cantidad}h)`;
+           } else {
+             desc = `Horas extra (${nov.cantidad}h)`;
+           }
+           monto = Math.round((salarioMensual / 240) * f * (nov.cantidad || 0));
+           break;
+         }
+         case 'bono':     monto = Number(nov.monto) || 0; desc = 'Bono'; break;
+         case 'comision': monto = Number(nov.monto) || 0; desc = 'Comisión'; break;
+         case 'ausencia':
+         case 'permiso_sin_goce':
+           monto = Math.round((salarioMensual / 30) * (nov.cantidad || 0));
+           desc = `Rebajo ${nov.tipo_novedad === 'ausencia' ? 'ausencia' : 'permiso sin goce'} (${nov.cantidad}d)`;
+           tipo_mov = 'deduccion'; orden = 5; break;
+         case 'feriado_trabajado': {
+           // Detectar si es feriado y aplicar recargo automático
+           const feriado = esFeriado(nov.fecha);
+           let factor = 2; // Default 100% recargo
+           if (feriado) {
+             factor = feriado.recargo_porcentaje / 100 + 1;
+             desc = `${feriado.nombre} trabajado`;
+           } else {
+             desc = 'Feriado trabajado';
+           }
+           monto = Math.round((salarioMensual / 30) * factor * (nov.cantidad || 1));
+           break;
+         }
         case 'ajuste_manual':
           monto = Math.abs(nov.monto || 0); desc = 'Ajuste manual';
           if ((nov.monto || 0) < 0) { tipo_mov = 'deduccion'; orden = 5; } break;
@@ -300,12 +335,12 @@ Deno.serve(async (req) => {
     movimientosTemp.push({ empleado_id: emp.id, movs });
   }
 
-  // ── FASE 5: Guardar detalles ──────────────────────────────────────────────
+  // ── FASE 6: Guardar detalles ──────────────────────────────────────────────
   console.log('[calcularPlanilla] guardando', detallesData.length, 'detalles...');
   const detallesCreados = await base44.asServiceRole.entities.PlanillaDetalle.bulkCreate(detallesData);
   console.log('[calcularPlanilla] detalles guardados:', detallesCreados?.length);
 
-  // ── FASE 6: Guardar movimientos ───────────────────────────────────────────
+  // ── FASE 7: Guardar movimientos ───────────────────────────────────────────
   const empToDetalle = {};
   for (const det of detallesCreados) empToDetalle[det.empleado_id] = det.id;
 
@@ -337,7 +372,7 @@ Deno.serve(async (req) => {
     console.log('[calcularPlanilla] movimientos guardados');
   }
 
-  // ── FASE 7: Actualizar totales planilla ───────────────────────────────────
+  // ── FASE 8: Actualizar totales planilla ───────────────────────────────────
   const totalIngresosFinal    = detallesData.reduce((s, d) => s + d.ingresos_totales, 0);
   const totalDeduccionesFinal = detallesData.reduce((s, d) => s + d.deducciones_totales, 0);
   await base44.asServiceRole.entities.Planilla.update(planilla_id, {

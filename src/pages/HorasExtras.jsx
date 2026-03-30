@@ -22,6 +22,8 @@ export default function HorasExtras() {
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
   const [form, setForm] = useState({ empleado_id: "", fecha: "", cantidad: "", observaciones: "" });
+  const [feriadoInfo, setFeriadoInfo] = useState(null);
+  const [loadingFeriado, setLoadingFeriado] = useState(false);
 
   const { data: empleados = [] } = useQuery({
     queryKey: ["empleados", empresaId],
@@ -96,7 +98,28 @@ export default function HorasExtras() {
   const handleNew = () => {
     setForm({ empleado_id: "", fecha: "", cantidad: "", observaciones: "" });
     setEditingId(null);
+    setFeriadoInfo(null);
     setOpen(true);
+  };
+
+  const verificarFeriado = async (fecha) => {
+    if (!fecha) {
+      setFeriadoInfo(null);
+      return;
+    }
+    setLoadingFeriado(true);
+    try {
+      const response = await base44.functions.invoke('obtenerDiasFeriados', {});
+      const diasFeriados = response?.data?.dias_feriados || [];
+      const [anio, mes, dia] = fecha.split('-').map(Number);
+      const feriado = diasFeriados.find(f => f.mes === mes && f.dia === dia);
+      setFeriadoInfo(feriado || null);
+    } catch (err) {
+      console.error('Error verificando feriado:', err);
+      setFeriadoInfo(null);
+    } finally {
+      setLoadingFeriado(false);
+    }
   };
 
   const filteredNovedades = novedades.filter(n => {
@@ -249,8 +272,24 @@ export default function HorasExtras() {
               <Input
                 type="date"
                 value={form.fecha}
-                onChange={(e) => setForm({ ...form, fecha: e.target.value })}
+                onChange={(e) => {
+                  setForm({ ...form, fecha: e.target.value });
+                  verificarFeriado(e.target.value);
+                }}
               />
+              {loadingFeriado && <span className="text-xs text-gray-500 mt-1">Verificando feriados...</span>}
+              {feriadoInfo && (
+                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                  <p className="font-semibold text-blue-900">{feriadoInfo.nombre}</p>
+                  <p className="text-blue-800">Recargo: {feriadoInfo.recargo_porcentaje}% adicional</p>
+                  {feriadoInfo.pago_obligatorio && (
+                    <p className="text-green-700 font-semibold">✓ Pago obligatorio</p>
+                  )}
+                  {feriadoInfo.observaciones && (
+                    <p className="text-blue-700 text-xs mt-1">{feriadoInfo.observaciones}</p>
+                  )}
+                </div>
+              )}
             </div>
             <div>
               <Label>Cantidad de Horas *</Label>
