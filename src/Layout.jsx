@@ -204,13 +204,6 @@ export default function Layout() {
     <div className="flex h-screen bg-gray-50 font-sans">
       {/* Desktop Sidebar */}
       <aside className={`hidden lg:flex flex-col bg-blue-900 transition-all duration-300 shrink-0 ${collapsed ? "w-16" : "w-60"}`}>
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-4 left-52 z-50 bg-blue-800 text-white rounded-full p-1 shadow-md hidden lg:flex items-center justify-center transition-all duration-300"
-          style={{ left: collapsed ? "52px" : "228px" }}
-        >
-          {collapsed ? <ChevronRight className="w-3 h-3" /> : <X className="w-3 h-3" />}
-        </button>
         {sidebarContent}
       </aside>
 
@@ -229,7 +222,12 @@ export default function Layout() {
         {/* Top Bar */}
         <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-4">
+            {/* Mobile menu */}
             <button className="lg:hidden text-gray-500 hover:text-gray-700" onClick={() => setMobileOpen(true)}>
+              <Menu className="w-5 h-5" />
+            </button>
+            {/* Desktop toggle */}
+            <button className="hidden lg:flex text-gray-500 hover:text-gray-700" onClick={() => setCollapsed(!collapsed)}>
               <Menu className="w-5 h-5" />
             </button>
             {/* Selector de empresa — solo para super admin */}
