@@ -9,12 +9,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Edit2, Search } from "lucide-react";
+import { Plus, Trash2, Edit2, Search, Upload } from "lucide-react";
+import ImportarHorasExtrasModal from "@/components/horasExtras/ImportarHorasExtrasModal";
 
 export default function HorasExtras() {
   const { empresaId } = useEmpresaContext();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
   const [form, setForm] = useState({ empleado_id: "", fecha: "", cantidad: "", observaciones: "" });
@@ -103,9 +105,14 @@ export default function HorasExtras() {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Horas Extras</h1>
-        <Button onClick={handleNew} className="bg-blue-700 hover:bg-blue-800 gap-2">
-          <Plus className="w-4 h-4" /> Nueva Novedad
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
+            <Upload className="w-4 h-4" /> Importar Excel
+          </Button>
+          <Button onClick={handleNew} className="bg-blue-700 hover:bg-blue-800 gap-2">
+            <Plus className="w-4 h-4" /> Nueva Novedad
+          </Button>
+        </div>
       </div>
 
       <div className="relative">
@@ -225,6 +232,14 @@ export default function HorasExtras() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ImportarHorasExtrasModal
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        empresaId={empresaId}
+        empleados={empleados}
+        onSuccess={() => qc.invalidateQueries(["novedades"])}
+      />
     </div>
   );
 }
