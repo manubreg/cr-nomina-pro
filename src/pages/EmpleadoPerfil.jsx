@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { ArrowLeft, User, Briefcase, CreditCard, FileText, Activity, Calendar, ChevronRight, TrendingUp } from "lucide-react";
+import { ArrowLeft, User, Briefcase, CreditCard, FileText, Activity, Calendar, ChevronRight, TrendingUp, Pencil } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -23,6 +27,10 @@ export default function EmpleadoPerfil() {
   const [novedades, setNovedades] = useState([]);
   const [aumentos, setAumentos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editContacto, setEditContacto] = useState(false);
+  const [contactoNombre, setContactoNombre] = useState("");
+  const [contactoTel, setContactoTel] = useState("");
+  const [savingContacto, setSavingContacto] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -33,7 +41,10 @@ export default function EmpleadoPerfil() {
       base44.entities.Novedad.filter({ empleado_id: id }),
       base44.entities.HistorialSalario.filter({ empleado_id: id }),
     ]).then(([emps, contratos, docs, novedades, aumentos]) => {
-      setEmp(emps[0]);
+      const e = emps[0];
+      setEmp(e);
+      setContactoNombre(e?.contacto_emergencia_nombre || "");
+      setContactoTel(e?.contacto_emergencia_tel || "");
       setContratos(contratos);
       setDocumentos(docs);
       setNovedades(novedades);
@@ -76,8 +87,52 @@ export default function EmpleadoPerfil() {
             <InfoRow label="Correo" value={emp.correo} />
             <InfoRow label="Teléfono" value={emp.telefono} />
             <InfoRow label="Dirección" value={emp.direccion} />
-            <InfoRow label="Contacto Emergencia" value={emp.contacto_emergencia_nombre} />
+            <div className="flex justify-between py-2 border-b border-gray-100 items-center">
+              <span className="text-sm text-gray-500">Contacto Emergencia</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-800">
+                  {emp.contacto_emergencia_nombre ? (
+                    <span>{emp.contacto_emergencia_nombre}{emp.contacto_emergencia_tel ? ` · ${emp.contacto_emergencia_tel}` : ""}</span>
+                  ) : "—"}
+                </span>
+                <button onClick={() => setEditContacto(true)} className="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50">
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
           </div>
+
+          {/* Modal Editar Contacto Emergencia */}
+          <Dialog open={editContacto} onOpenChange={setEditContacto}>
+            <DialogContent className="max-w-sm">
+              <DialogHeader><DialogTitle>Contacto de Emergencia</DialogTitle></DialogHeader>
+              <div className="grid gap-4 mt-2">
+                <div className="space-y-1">
+                  <Label>Nombre del Contacto</Label>
+                  <Input value={contactoNombre} onChange={e => setContactoNombre(e.target.value)} placeholder="Nombre completo" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Teléfono del Contacto</Label>
+                  <Input value={contactoTel} onChange={e => setContactoTel(e.target.value)} placeholder="Ej: 8888-1234" />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={() => setEditContacto(false)}>Cancelar</Button>
+                <Button className="bg-blue-700 hover:bg-blue-800" disabled={savingContacto} onClick={async () => {
+                  setSavingContacto(true);
+                  await base44.entities.Empleado.update(emp.id, {
+                    contacto_emergencia_nombre: contactoNombre,
+                    contacto_emergencia_tel: contactoTel,
+                  });
+                  setEmp({ ...emp, contacto_emergencia_nombre: contactoNombre, contacto_emergencia_tel: contactoTel });
+                  setSavingContacto(false);
+                  setEditContacto(false);
+                }}>
+                  {savingContacto ? "Guardando..." : "Guardar"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="laboral" className="mt-4">
