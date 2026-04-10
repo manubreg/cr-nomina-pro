@@ -165,6 +165,15 @@ export default function EmpleadoForm({ open, onClose, editId, empresas = [], dep
               <Label>Dirección</Label>
               <Input value={form.direccion} onChange={e => set("direccion", e.target.value)} />
             </div>
+            <div className="col-span-2"><hr className="border-gray-200" /><p className="text-xs font-semibold text-gray-500 uppercase mt-2">Contacto de Emergencia</p></div>
+            <div className="space-y-1">
+              <Label>Nombre del Contacto</Label>
+              <Input value={form.contacto_emergencia_nombre || ""} onChange={e => set("contacto_emergencia_nombre", e.target.value)} placeholder="Nombre completo" />
+            </div>
+            <div className="space-y-1">
+              <Label>Teléfono del Contacto</Label>
+              <Input value={form.contacto_emergencia_tel || ""} onChange={e => set("contacto_emergencia_tel", e.target.value)} placeholder="8888-8888" />
+            </div>
           </TabsContent>
 
           {/* Laboral */}
