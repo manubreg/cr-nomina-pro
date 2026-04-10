@@ -78,7 +78,10 @@ export default function Usuarios() {
   };
 
   // Filtrar empleados por empresa seleccionada en el edit
-  const empleadosFiltrados = empresaId ? empleados.filter(e => e.empresa_id === empresaId) : empleados;
+  // Incluir también empleados sin empresa_id asignada para que no queden ocultos
+  const empleadosFiltrados = empresaId
+    ? empleados.filter(e => !e.empresa_id || e.empresa_id === empresaId)
+    : empleados;
 
   return (
     <div className="p-6 space-y-5">
