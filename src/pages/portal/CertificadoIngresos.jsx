@@ -113,7 +113,7 @@ export default function CertificadoIngresos() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900">
             <p className="font-semibold mb-2">CERTIFICACIÓN</p>
             <p>
-              Se certifica que <strong>{emp?.nombre} {emp?.apellidos}}</strong>, con cédula de identidad <strong>{emp?.identificacion}</strong>, 
+              Se certifica que <strong>{emp?.nombre} {emp?.apellidos}</strong>, con cédula de identidad <strong>{emp?.identificacion}</strong>, 
               labora en esta empresa como <strong>{emp?.puesto || "empleado"}</strong>, percibiendo ingresos mensuales promedio de 
               <strong> ₡{detalles.length > 0 ? ((totalIngresos - totalDeducciones) / detalles.length / 1000).toLocaleString() : "0"}K</strong>.
             </p>
