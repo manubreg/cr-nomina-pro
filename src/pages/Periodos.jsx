@@ -516,8 +516,8 @@ Devuelve únicamente JSON con la estructura indicada.`,
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      {/* Modificar — disponible si no está pagado/anulado */}
-                      {!['pagado', 'anulado'].includes(p.estado) && (
+                      {/* Modificar — disponible si no está anulado */}
+                      {p.estado !== 'anulado' && (
                         <button onClick={() => handleOpenEdit(p)} title="Modificar periodo" className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
                           <Pencil className="w-4 h-4" />
                         </button>
