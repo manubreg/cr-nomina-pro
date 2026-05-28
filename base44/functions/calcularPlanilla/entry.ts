@@ -146,10 +146,10 @@ Deno.serve(async (req) => {
   if (tipoPeriodo !== 'aguinaldo' && tipoPeriodo !== 'liquidacion') {
     const frecuenciasAceptadas = {
       'mensual':    ['mensual'],
-      'quincenal':  ['quincenal'],
-      'bisemanal':  ['quincenal', 'bisemanal'],
-      'semanal':    ['semanal'],
-      'diario':     ['semanal', 'diario'],
+      'quincenal':  ['quincenal', 'mensual'],
+      'bisemanal':  ['quincenal', 'bisemanal', 'mensual'],
+      'semanal':    ['semanal', 'mensual'],
+      'diario':     ['semanal', 'diario', 'mensual'],
     };
     const aceptadas = frecuenciasAceptadas[tipoPeriodo] || ['mensual'];
     empleados = empleados.filter(e => aceptadas.includes(e.frecuencia_pago || 'mensual'));
