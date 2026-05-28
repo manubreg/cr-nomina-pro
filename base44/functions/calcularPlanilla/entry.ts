@@ -234,6 +234,9 @@ Deno.serve(async (req) => {
       if (desdeFecha !== inicio || hastaFecha !== fin) {
         const diasTrabajados = Math.round((new Date(hastaFecha) - new Date(desdeFecha)) / msDay) + 1;
         factorEmp = diasTrabajados / 30;
+        emp._diasProrateo = diasTrabajados;
+        emp._desdeFecha = desdeFecha;
+        emp._hastaFecha = hastaFecha;
         console.log(`[pro-rateo] ${emp.nombre} ${emp.apellidos}: desde=${desdeFecha}, hasta=${hastaFecha}, días=${diasTrabajados}/30, factor=${factorEmp.toFixed(4)}`);
       }
     }
@@ -244,7 +247,9 @@ Deno.serve(async (req) => {
     const esSalidaParcial = emp.estado === 'liquidado' && emp.fecha_salida;
     const descSalario = esSalidaParcial
       ? `Salario proporcional (salida ${emp.fecha_salida.substring(0, 10)})`
-      : 'Salario base';
+      : emp._diasProrateo
+        ? `Salario proporcional (${emp._diasProrateo} días: ${emp._desdeFecha} → ${emp._hastaFecha})`
+        : 'Salario base';
     movs.push({ tipo_movimiento: 'ingreso', descripcion: descSalario, monto: salarioPeriodo,
       cantidad: 1, tarifa: salarioPeriodo, porcentaje: 0, base_calculo: salarioPeriodo, orden_calculo: 1, origen: 'automatico' });
 
