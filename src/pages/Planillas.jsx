@@ -499,7 +499,7 @@ export default function Planillas() {
                 <SelectTrigger><SelectValue placeholder="Seleccionar período" /></SelectTrigger>
                 <SelectContent>
                   {periodos
-                    .filter(p => !autoForm.empresa_id || p.empresa_id === autoForm.empresa_id)
+                    .filter(p => p.estado === "abierto" && (!autoForm.empresa_id || p.empresa_id === autoForm.empresa_id))
                     .map(p => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.tipo_periodo} · {formatFecha(p.fecha_inicio)} → {formatFecha(p.fecha_fin)}
