@@ -1,0 +1,56 @@
+{
+  "name": "VacacionSolicitud",
+  "type": "object",
+  "properties": {
+    "empleado_id": {
+      "type": "string"
+    },
+    "empresa_id": {
+      "type": "string"
+    },
+    "fecha_solicitud": {
+      "type": "string",
+      "format": "date"
+    },
+    "fecha_inicio": {
+      "type": "string",
+      "format": "date"
+    },
+    "fecha_fin": {
+      "type": "string",
+      "format": "date"
+    },
+    "dias_solicitados": {
+      "type": "number"
+    },
+    "motivo": {
+      "type": "string"
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "pendiente",
+        "aprobada",
+        "rechazada",
+        "aplicada"
+      ],
+      "default": "pendiente"
+    },
+    "aprobador_id": {
+      "type": "string"
+    },
+    "fecha_aprobacion": {
+      "type": "string",
+      "format": "date"
+    },
+    "comentario": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "empleado_id",
+    "fecha_inicio",
+    "fecha_fin",
+    "dias_solicitados"
+  ]
+}

@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { Plus, Search, Upload, Eye, Pencil, Users } from "lucide-react";
+import { Plus, Search, Upload, Eye, Pencil, Users, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -83,6 +84,35 @@ export default function Empleados() {
   const openNew = () => { setEditId(null); setFormOpen(true); };
   const openEdit = (id) => { setEditId(id); setFormOpen(true); };
 
+  const exportarExcel = () => {
+    const rows = filtered.map(emp => ({
+      "Código": emp.codigo_empleado || "",
+      "Nombre": emp.nombre,
+      "Apellidos": emp.apellidos,
+      "Identificación": emp.identificacion,
+      "Tipo ID": emp.tipo_identificacion || "",
+      "Puesto": emp.puesto || "",
+      "Correo": emp.correo || "",
+      "Teléfono": emp.telefono || "",
+      "Empresa": empresaMap[emp.empresa_id] || "",
+      "Fecha Ingreso": emp.fecha_ingreso || "",
+      "Fecha Salida": emp.fecha_salida || "",
+      "Salario Vigente": getSalarioVigente(emp),
+      "Tipo Salario": emp.tipo_salario || "",
+      "Frecuencia Pago": emp.frecuencia_pago || "",
+      "Moneda": emp.moneda || "CRC",
+      "Estado": emp.estado || "",
+      "Tipo Contrato": emp.tipo_contrato || "",
+      "Jornada": emp.tipo_jornada || "",
+      "Banco": emp.banco || "",
+      "Cuenta IBAN": emp.cuenta_iban || "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Empleados");
+    XLSX.writeFile(wb, `empleados_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   return (
     <div className="p-6 space-y-5">
       <div className="flex items-center justify-between">
@@ -91,6 +121,9 @@ export default function Empleados() {
           <p className="text-gray-500 text-sm mt-1">{filtered.length} empleados encontrados</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={exportarExcel} className="gap-2">
+            <Download className="w-4 h-4" /> Exportar Excel
+          </Button>
           <Button variant="outline" onClick={() => setImportarOpen(true)} className="gap-2">
             <Upload className="w-4 h-4" /> Importar CSV/Excel
           </Button>

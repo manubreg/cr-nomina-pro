@@ -21,5 +21,10 @@
       "type": "string",
       "description": "ID del RolPersonalizado asignado (para usuarios admin_rrhh con accesos restringidos)"
     }
-  }
+  },
+  "required": [
+    "empresa_id",
+    "empleado_id",
+    "rol_personalizado_id"
+  ]
 }
