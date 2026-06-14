@@ -77,14 +77,15 @@ export default function Novedades() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Empleado</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Tipo</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Fecha</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Cantidad</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Estado</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Acciones</th>
-                </tr>
+               <tr>
+                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Empleado</th>
+                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Tipo</th>
+                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Fecha</th>
+                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Cantidad</th>
+                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Comentario</th>
+                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Estado</th>
+                 <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+               </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filtered.map(n => (
@@ -93,6 +94,7 @@ export default function Novedades() {
                     <td className="px-4 py-3 text-gray-600 capitalize">{n.tipo_novedad?.replace(/_/g," ")}</td>
                     <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{n.fecha}</td>
                     <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{n.cantidad} {n.unidad}</td>
+                    <td className="px-4 py-3 text-gray-600 hidden lg:table-cell text-xs">{n.comentario || "—"}</td>
                     <td className="px-4 py-3"><Badge className={estadoColor[n.estado]}>{n.estado}</Badge></td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
