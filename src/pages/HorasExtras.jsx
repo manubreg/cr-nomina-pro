@@ -27,8 +27,11 @@ export default function HorasExtras() {
 
   const { data: empleados = [] } = useQuery({
     queryKey: ["empleados", empresaId],
-    queryFn: () => base44.entities.Empleado.filter({ empresa_id: empresaId }),
-    enabled: !!empresaId,
+    queryFn: async () => {
+      const todosEmpleados = await base44.entities.Empleado.list();
+      return empresaId ? todosEmpleados.filter(e => e.empresa_id === empresaId) : todosEmpleados;
+    },
+    enabled: true,
   });
 
   const { data: novedades = [] } = useQuery({
