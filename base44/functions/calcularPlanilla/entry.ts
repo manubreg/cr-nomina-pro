@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
      base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'activo' }, '-fecha_ingreso', 300),
      base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'liquidado' }, '-fecha_salida', 100),
      periodo_id
-       ? base44.asServiceRole.entities.Novedad.filter({ empresa_id }, '-created_date', 300).catch(() => [])
+       ? base44.asServiceRole.entities.Novedad.filter({ empresa_id, estado: 'aprobada' }, '-created_date', 300).catch(() => [])
        : Promise.resolve([]),
      periodo_id
        ? base44.asServiceRole.entities.PeriodoPlanilla.filter({ id: periodo_id }, '-fecha_inicio', 1)
@@ -256,7 +256,7 @@ Deno.serve(async (req) => {
     let totalIngresos = salarioPeriodo;
     let totalRebajos = 0;
 
-    for (const nov of todasNovedades.filter(n => n.empleado_id === emp.id && n.estado === 'aprobada' && n.fecha >= fechaInicioPeriodo && n.fecha <= fechaFinPeriodo)) {
+    for (const nov of todasNovedades.filter(n => n.empleado_id === emp.id && n.fecha >= fechaInicioPeriodo && n.fecha <= fechaFinPeriodo)) {
        let monto = 0, desc = '', tipo_mov = 'ingreso', orden = 10;
        switch (nov.tipo_novedad) {
          case 'horas_extra': {
