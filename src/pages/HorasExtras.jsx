@@ -21,15 +21,21 @@ export default function HorasExtras() {
   const [importOpen, setImportOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
-  const [form, setForm] = useState({ empleado_id: "", fecha: "", cantidad: "", tipo_hora_extra: "diurna", observaciones: "" });
+  const [form, setForm] = useState({ empresa_id: empresaId || "", empleado_id: "", fecha: "", cantidad: "", tipo_hora_extra: "diurna", observaciones: "" });
   const [feriadoInfo, setFeriadoInfo] = useState(null);
   const [loadingFeriado, setLoadingFeriado] = useState(false);
 
+  const { data: empresas = [] } = useQuery({
+    queryKey: ["empresas"],
+    queryFn: () => base44.entities.Empresa.list(),
+    enabled: true,
+  });
+
   const { data: empleados = [] } = useQuery({
-    queryKey: ["empleados", empresaId],
+    queryKey: ["empleados", form.empresa_id],
     queryFn: async () => {
       const todosEmpleados = await base44.entities.Empleado.list();
-      return empresaId ? todosEmpleados.filter(e => e.empresa_id === empresaId) : todosEmpleados;
+      return form.empresa_id ? todosEmpleados.filter(e => e.empresa_id === form.empresa_id) : todosEmpleados;
     },
     enabled: true,
   });
@@ -55,7 +61,7 @@ export default function HorasExtras() {
     onSuccess: () => {
       qc.invalidateQueries(["novedades"]);
       setOpen(false);
-      setForm({ empleado_id: "", fecha: "", cantidad: "", tipo_hora_extra: "diurna", observaciones: "" });
+      setForm({ empresa_id: empresaId || "", empleado_id: "", fecha: "", cantidad: "", tipo_hora_extra: "diurna", observaciones: "" });
     },
   });
 
@@ -65,7 +71,7 @@ export default function HorasExtras() {
       qc.invalidateQueries(["novedades"]);
       setOpen(false);
       setEditingId(null);
-      setForm({ empleado_id: "", fecha: "", cantidad: "", tipo_hora_extra: "diurna", observaciones: "" });
+      setForm({ empresa_id: empresaId || "", empleado_id: "", fecha: "", cantidad: "", tipo_hora_extra: "diurna", observaciones: "" });
     },
   });
 
@@ -85,6 +91,7 @@ export default function HorasExtras() {
 
   const handleEdit = (novedad) => {
     setForm({
+      empresa_id: novedad.empresa_id,
       empleado_id: novedad.empleado_id,
       fecha: novedad.fecha,
       cantidad: String(novedad.cantidad),
@@ -103,7 +110,7 @@ export default function HorasExtras() {
   };
 
   const handleNew = () => {
-    setForm({ empleado_id: "", fecha: "", cantidad: "", tipo_hora_extra: "diurna", observaciones: "" });
+    setForm({ empresa_id: empresaId || "", empleado_id: "", fecha: "", cantidad: "", tipo_hora_extra: "diurna", observaciones: "" });
     setEditingId(null);
     setFeriadoInfo(null);
     setOpen(true);
@@ -269,9 +276,24 @@ export default function HorasExtras() {
             <DialogTitle>{editingId ? "Editar Horas Extras" : "Nueva Novedad - Horas Extras"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-4">
-            <div>
-              <Label>Empleado *</Label>
-              <Select value={form.empleado_id} onValueChange={(v) => setForm({ ...form, empleado_id: v })}>
+             <div>
+               <Label>Empresa *</Label>
+               <Select value={form.empresa_id} onValueChange={(v) => setForm({ ...form, empresa_id: v, empleado_id: "" })}>
+                 <SelectTrigger>
+                   <SelectValue placeholder="Seleccionar empresa" />
+                 </SelectTrigger>
+                 <SelectContent className="max-h-96">
+                   {empresas.map((emp) => (
+                     <SelectItem key={emp.id} value={emp.id}>
+                       {emp.nombre_comercial || emp.nombre_legal}
+                     </SelectItem>
+                   ))}
+                 </SelectContent>
+               </Select>
+             </div>
+             <div>
+               <Label>Empleado *</Label>
+               <Select value={form.empleado_id} onValueChange={(v) => setForm({ ...form, empleado_id: v })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar empleado" />
                 </SelectTrigger>
