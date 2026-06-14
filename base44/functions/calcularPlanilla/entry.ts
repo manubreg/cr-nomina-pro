@@ -256,7 +256,7 @@ Deno.serve(async (req) => {
     let totalIngresos = salarioPeriodo;
     let totalRebajos = 0;
 
-    for (const nov of todasNovedades.filter(n => n.empleado_id === emp.id && n.fecha >= fechaInicioPeriodo && n.fecha <= fechaFinPeriodo)) {
+    for (const nov of todasNovedades.filter(n => n.empleado_id === emp.id && n.fecha && n.fecha >= fechaInicioPeriodo && n.fecha <= fechaFinPeriodo)) {
        let monto = 0, desc = '', tipo_mov = 'ingreso', orden = 10;
        switch (nov.tipo_novedad) {
          case 'horas_extra': {
