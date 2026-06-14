@@ -33,8 +33,11 @@ export default function HorasExtras() {
 
   const { data: novedades = [] } = useQuery({
     queryKey: ["novedades", empresaId],
-    queryFn: () => base44.entities.Novedad.filter({ empresa_id: empresaId, tipo_novedad: "horas_extra" }),
-    enabled: !!empresaId,
+    queryFn: async () => {
+      const todasNovedades = await base44.entities.Novedad.filter({ tipo_novedad: "horas_extra" });
+      return empresaId ? todasNovedades.filter(n => n.empresa_id === empresaId) : todasNovedades;
+    },
+    enabled: true,
   });
 
   const createMutation = useMutation({
