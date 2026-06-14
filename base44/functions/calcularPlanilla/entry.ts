@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
      base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'activo' }, '-fecha_ingreso', 300),
      base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'liquidado' }, '-fecha_salida', 100),
      periodo_id
-       ? base44.asServiceRole.entities.Novedad.filter({ empresa_id, estado: 'aprobada' }, '-created_date', 300).catch(() => [])
+       ? base44.asServiceRole.entities.Novedad.filter({ empresa_id, estado: 'aprobada' }, '-created_date', 500).catch(() => [])
        : Promise.resolve([]),
      periodo_id
        ? base44.asServiceRole.entities.PeriodoPlanilla.filter({ id: periodo_id }, '-fecha_inicio', 1)
@@ -156,6 +156,9 @@ Deno.serve(async (req) => {
   }
 
   console.log('[calcularPlanilla] empleados para calcular:', empleados.length);
+  console.log('[calcularPlanilla] novedades cargadas:', todasNovedades.length, '| rango período:', fechaInicioPeriodo, 'a', fechaFinPeriodo);
+  const novedadesAprobadas = todasNovedades.filter(n => n.estado === 'aprobada');
+  console.log('[calcularPlanilla] novedades aprobadas:', novedadesAprobadas.length);
 
   // ── FASE 4: Obtener días feriados ───────────────────────────────────────
   let diasFeriados = [];
@@ -202,6 +205,9 @@ Deno.serve(async (req) => {
   };
 
   for (const emp of empleados) {
+    const novedadesEmp = todasNovedades.filter(n => n.empleado_id === emp.id && n.fecha && n.fecha >= fechaInicioPeriodo && n.fecha <= fechaFinPeriodo);
+    if (novedadesEmp.length > 0) console.log(`[calcularPlanilla] ${emp.nombre} tiene ${novedadesEmp.length} novedades aprobadas en período`);
+
     // Obtener salario vigente al final del período
     const fechaRef = fechaFinPeriodo || fechaInicioPeriodo || new Date().toISOString().split('T')[0];
     const salarioBaseVigente = getSalarioVigente(emp, fechaRef);
