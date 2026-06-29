@@ -13,20 +13,29 @@ export default function Configuracion() {
   const [form, setForm] = useState({ nombre: "", codigo: "", descripcion: "", pais: "" });
   const [depSeleccionado, setDepSeleccionado] = useState("");
 
-  // Fetch data
+  // Fetch data — traer todos y filtrar por empresa en cliente
   const { data: departamentos = [] } = useQuery({
     queryKey: ["departamentos", empresaId],
-    queryFn: () => empresaId ? base44.entities.Departamento.filter({ empresa_id: empresaId }) : Promise.resolve([]),
+    queryFn: async () => {
+      const all = await base44.entities.Departamento.list();
+      return empresaId ? all.filter(d => d.empresa_id === empresaId) : all;
+    },
   });
 
   const { data: centrosCosto = [] } = useQuery({
     queryKey: ["centrosCosto", empresaId],
-    queryFn: () => empresaId ? base44.entities.CentroCosto.filter({ empresa_id: empresaId }) : Promise.resolve([]),
+    queryFn: async () => {
+      const all = await base44.entities.CentroCosto.list();
+      return empresaId ? all.filter(c => c.empresa_id === empresaId) : all;
+    },
   });
 
   const { data: puestos = [] } = useQuery({
     queryKey: ["puestos", empresaId],
-    queryFn: () => empresaId ? base44.entities.Puesto?.filter?.({ empresa_id: empresaId }) : Promise.resolve([]),
+    queryFn: async () => {
+      const all = await base44.entities.Puesto.list();
+      return empresaId ? all.filter(p => p.empresa_id === empresaId) : all;
+    },
   });
 
   // Mutations
