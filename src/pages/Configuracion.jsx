@@ -52,8 +52,8 @@ export default function Configuracion() {
     },
     onSuccess: () => {
       const keys = ["departamentos", "centrosCosto", "puestos"];
-      qc.invalidateQueries({ queryKey: [keys[tab], empresaId] });
-      setForm({ nombre: "", codigo: "", descripcion: "" });
+      qc.invalidateQueries({ queryKey: [keys[tab]] });
+      setForm({ nombre: "", codigo: "", descripcion: "", pais: "" });
       setEditId(null);
     },
   });
@@ -65,7 +65,7 @@ export default function Configuracion() {
     },
     onSuccess: () => {
       const keys = ["departamentos", "centrosCosto", "puestos"];
-      qc.invalidateQueries({ queryKey: [keys[tab], empresaId] });
+      qc.invalidateQueries({ queryKey: [keys[tab]] });
     },
   });
 
