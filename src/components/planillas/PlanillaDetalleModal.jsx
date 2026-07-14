@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { X, RefreshCw, Download, Loader2 } from "lucide-react";
+import { X, RefreshCw, Download, Loader2, Palmtree } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BoletaPagoGenerator, { generarBoletaPDF } from "./BoletaPagoGenerator";
 
@@ -15,6 +15,8 @@ export default function PlanillaDetalleModal({ planilla, onClose }) {
   const [loading, setLoading]         = useState(true);
   const [selectedDetalle, setSelectedDetalle] = useState(null);
   const [generandoTodas, setGenerandoTodas]   = useState(false);
+  const [vacaciones, setVacaciones]           = useState([]);
+  const [saldosVacaciones, setSaldosVacaciones] = useState([]);
 
   useEffect(() => {
     Promise.all([
@@ -23,12 +25,17 @@ export default function PlanillaDetalleModal({ planilla, onClose }) {
       base44.entities.Empleado.list(),
       base44.entities.Empresa.list(),
       base44.entities.PeriodoPlanilla.list(),
-    ]).then(([dets, movs, emps, emps2, periodos]) => {
+      base44.entities.VacacionSolicitud.list(),
+      base44.entities.VacacionSaldo.list(),
+    ]).then(([dets, movs, emps, emps2, periodos, vacs, saldos]) => {
+      const empIds = dets.filter(d => d.planilla_id === planilla.id).map(d => d.empleado_id);
       setDetalles(dets.filter(d => d.planilla_id === planilla.id));
       setMovimientos(movs.filter(m => m.planilla_id === planilla.id));
       setEmpleados(emps);
       setEmpresa(emps2.find(e => e.id === planilla.empresa_id) || null);
       setPeriodo(periodos.find(p => p.id === planilla.periodo_id) || null);
+      setVacaciones(vacs.filter(v => empIds.includes(v.empleado_id)));
+      setSaldosVacaciones(saldos.filter(s => empIds.includes(s.empleado_id)));
       setLoading(false);
     });
   }, [planilla.id]);
@@ -48,6 +55,12 @@ export default function PlanillaDetalleModal({ planilla, onClose }) {
   };
 
   const selectedEmp = selectedDetalle ? empleados.find(e => e.id === selectedDetalle.empleado_id) : null;
+
+  const vacsEmp = selectedDetalle ? vacaciones.filter(v =>
+    v.empleado_id === selectedDetalle.empleado_id &&
+    ['aprobada', 'aplicada'].includes(v.estado)
+  ) : [];
+  const saldoEmp = selectedDetalle ? saldosVacaciones.find(s => s.empleado_id === selectedDetalle.empleado_id) : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -167,6 +180,43 @@ export default function PlanillaDetalleModal({ planilla, onClose }) {
                     />
                   </div>
                 </div>
+
+                {/* Vacaciones */}
+                {vacsEmp.length > 0 && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Palmtree className="w-4 h-4 text-amber-600" />
+                      <h4 className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Vacaciones en el período</h4>
+                    </div>
+                    <div className="space-y-1">
+                      {vacsEmp.map(v => (
+                        <div key={v.id} className="flex justify-between items-center text-xs py-1.5 px-2 bg-white/60 rounded">
+                          <span className="text-gray-700">
+                            {v.fecha_inicio}{v.fecha_fin !== v.fecha_inicio ? ` → ${v.fecha_fin}` : ''} · {v.dias_solicitados}d
+                            <span className={`ml-2 px-1.5 py-0.5 rounded font-medium ${v.tipo_vacacion === 'sin_goce' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                              {v.tipo_vacacion === 'sin_goce' ? 'Sin goce' : 'Con goce'}
+                            </span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    {saldoEmp && (
+                      <div className="mt-2 pt-2 border-t border-amber-200 flex justify-between items-center text-xs">
+                        <span className="text-amber-700 font-medium">Saldo de vacaciones disponible</span>
+                        <span className="font-bold text-amber-700">{saldoEmp.saldo_actual} días</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Saldo de vacaciones cuando no hay vacaciones en el período pero existe saldo */}
+                {vacsEmp.length === 0 && saldoEmp && (
+                  <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-3 flex items-center gap-2">
+                    <Palmtree className="w-4 h-4 text-blue-500 shrink-0" />
+                    <span className="text-xs text-blue-700 font-medium">Saldo de vacaciones disponible:</span>
+                    <span className="text-xs font-bold text-blue-700">{saldoEmp.saldo_actual} días</span>
+                  </div>
+                )}
 
                 {/* Ingresos */}
                 <div>
