@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   console.log('[calcularPlanilla] empresa_id =', empresa_id, '| periodo_id =', periodo_id);
 
   // ── FASE 1: Cargar datos en paralelo ──────────────────────────────────────
-   const [todosParams, empleadosActivos, empleadosLiquidados, todasNovedades, periodoArr, historialSalario] = await Promise.all([
+   const [todosParams, empleadosActivos, empleadosLiquidados, todasNovedades, periodoArr, historialSalario, vacacionesSolicitudes] = await Promise.all([
      base44.asServiceRole.entities.ParametroLegal.filter({ empresa_id, estado: 'vigente' }, '-created_date', 50),
      base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'activo' }, '-fecha_ingreso', 300),
      base44.asServiceRole.entities.Empleado.filter({ empresa_id, estado: 'liquidado' }, '-fecha_salida', 100),
@@ -28,6 +28,7 @@ Deno.serve(async (req) => {
        ? base44.asServiceRole.entities.PeriodoPlanilla.filter({ id: periodo_id }, '-fecha_inicio', 1)
        : Promise.resolve([]),
      base44.asServiceRole.entities.HistorialSalario.filter({ empresa_id }, '-fecha_efectiva', 500).catch(() => []),
+     base44.asServiceRole.entities.VacacionSolicitud.filter({ empresa_id }, '-fecha_inicio', 500).catch(() => []),
    ]);
   const planilla = { id: planilla_id, empresa_id, periodo_id };
 
@@ -160,6 +161,15 @@ Deno.serve(async (req) => {
   const novedadesAprobadas = todasNovedades.filter(n => n.estado === 'aprobada');
   console.log('[calcularPlanilla] novedades aprobadas:', novedadesAprobadas.length);
 
+  // ── Vacaciones sin goce salarial aprobadas/aplicadas que se solapan con el período ──
+  const vacacionesSinGoce = vacacionesSolicitudes.filter(v =>
+    v.tipo_vacacion === 'sin_goce' &&
+    ['aprobada', 'aplicada'].includes(v.estado) &&
+    v.fecha_inicio && v.fecha_fin &&
+    v.fecha_inicio <= fechaFinPeriodo && v.fecha_fin >= fechaInicioPeriodo
+  );
+  console.log('[calcularPlanilla] vacaciones sin goce que afectan el período:', vacacionesSinGoce.length);
+
   // ── FASE 4: Obtener días feriados ───────────────────────────────────────
   let diasFeriados = [];
   try {
@@ -249,6 +259,28 @@ Deno.serve(async (req) => {
 
     const salarioPeriodo = Math.round(salarioMensual * factorEmp);
     const movs = [];
+
+    // ── Descuento por vacaciones sin goce salarial aprobadas ──
+    const vacSinGoceEmp = vacacionesSinGoce.filter(v => v.empleado_id === emp.id);
+    let diasSinGoce = 0;
+    for (const vac of vacSinGoceEmp) {
+      const vInicio = vac.fecha_inicio.substring(0, 10);
+      const vFin = vac.fecha_fin.substring(0, 10);
+      // Calcular solapamiento con el período
+      const solapInicio = vInicio > fechaInicioPeriodo ? vInicio : fechaInicioPeriodo;
+      const solapFin = vFin < fechaFinPeriodo ? vFin : fechaFinPeriodo;
+      if (solapInicio <= solapFin) {
+        const msDay = 1000 * 60 * 60 * 24;
+        const diasSolap = Math.round((new Date(solapFin) - new Date(solapInicio)) / msDay) + 1;
+        diasSinGoce += diasSolap;
+        console.log(`[sin goce] ${emp.nombre} ${emp.apellidos}: vacaciones ${vInicio}→${vFin}, días sin goce en período: ${diasSolap}`);
+      }
+    }
+    if (diasSinGoce > 0) {
+      const montoDescuento = Math.round((salarioMensual / 30) * diasSinGoce);
+      movs.push({ tipo_movimiento: 'deduccion', descripcion: `Vacaciones sin goce salarial (${diasSinGoce}d)`, monto: montoDescuento,
+        cantidad: diasSinGoce, tarifa: Math.round(salarioMensual / 30), porcentaje: 0, base_calculo: salarioPeriodo, orden_calculo: 2, origen: 'automatico' });
+    }
 
     const esSalidaParcial = emp.estado === 'liquidado' && emp.fecha_salida;
     const descSalario = esSalidaParcial
