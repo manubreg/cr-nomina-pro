@@ -48,7 +48,9 @@ export default function PlanillaDetalleModal({ planilla, onClose }) {
     for (const det of detalles) {
       const emp  = empleados.find(e => e.id === det.empleado_id);
       const movs = movsDe(det.id);
-      await generarBoletaPDF(empresa, emp, periodo, det, movs);
+      const vacs = vacaciones.filter(v => v.empleado_id === det.empleado_id && ['aprobada', 'aplicada'].includes(v.estado));
+      const saldo = saldosVacaciones.find(s => s.empleado_id === det.empleado_id) || null;
+      await generarBoletaPDF(empresa, emp, periodo, det, movs, null, vacs, saldo);
       await new Promise(r => setTimeout(r, 300)); // pequeño delay entre descargas
     }
     setGenerandoTodas(false);
@@ -177,6 +179,8 @@ export default function PlanillaDetalleModal({ planilla, onClose }) {
                       periodo={periodo}
                       detalle={selectedDetalle}
                       movimientos={movsDe(selectedDetalle.id)}
+                      vacaciones={vacsEmp}
+                      saldoVacaciones={saldoEmp}
                     />
                   </div>
                 </div>

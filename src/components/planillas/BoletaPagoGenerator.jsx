@@ -147,7 +147,7 @@ function drawDeduccionesHeader(doc, y) {
 }
 
 // ─── Generador principal PDF ──────────────────────────────────────────────────
-export async function generarBoletaPDF(empresa, empleado, periodo, detalle, movimientos, tramosISR) {
+export async function generarBoletaPDF(empresa, empleado, periodo, detalle, movimientos, tramosISR, vacaciones = [], saldoVacaciones = null) {
   const { jsPDF } = await import("jspdf");
 
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -276,12 +276,47 @@ export async function generarBoletaPDF(empresa, empleado, periodo, detalle, movi
   doc.text("Firma Patrono", 60, y + 4, { align: "center" });
   doc.text("Firma Empleado", 150, y + 4, { align: "center" });
 
+  // ── Vacaciones ──
+  y += 2;
+  doc.setFillColor(255, 200, 50);
+  doc.rect(10, y, 190, 6, "F");
+  doc.setTextColor(40, 40, 40);
+  doc.setFontSize(7.5);
+  doc.setFont("helvetica", "bold");
+  doc.text("VACACIONES", 14, y + 4.3);
+  doc.text("DÍAS", 198, y + 4.3, { align: "right" });
+  y += 6;
+
+  if (vacaciones.length > 0) {
+    vacaciones.forEach((v, i) => {
+      if (i % 2 === 0) { doc.setFillColor(252, 248, 235); doc.rect(10, y, 190, 5, "F"); }
+      doc.setTextColor(40, 40, 40);
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+      const rango = v.fecha_fin !== v.fecha_inicio ? `${v.fecha_inicio} → ${v.fecha_fin}` : v.fecha_inicio;
+      const tipo = v.tipo_vacacion === 'sin_goce' ? 'Sin goce' : 'Con goce';
+      doc.text(`Vacación ${tipo} (${rango})`, 14, y + 3.7);
+      doc.text(String(v.dias_solicitados || 0), 198, y + 3.7, { align: "right" });
+      y += 5;
+    });
+  } else {
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "italic");
+    doc.text("Sin vacaciones en el período", 14, y + 3.7);
+    y += 5;
+  }
+
+  if (saldoVacaciones) {
+    y = drawTotal(doc, "SALDO DE VACACIONES DISPONIBLE", `${saldoVacaciones.saldo_actual || 0} días`, y, 255, 200, 50, [40, 40, 40]);
+  }
+
   const nombre = `${empleado?.nombre || "Empleado"}_${empleado?.apellidos || ""}`.replace(/\s+/g, "_");
   doc.save(`Boleta_${nombre}_${periodo?.fecha_inicio || "periodo"}.pdf`);
 }
 
 // ─── Generador Excel (CSV) ────────────────────────────────────────────────────
-function generarExcelBoleta(empresa, empleado, periodo, detalle, movimientos) {
+function generarExcelBoleta(empresa, empleado, periodo, detalle, movimientos, vacaciones = [], saldoVacaciones = null) {
   const rows = [];
 
   rows.push(["BOLETA DE PAGO"]);
@@ -313,6 +348,22 @@ function generarExcelBoleta(empresa, empleado, periodo, detalle, movimientos) {
   rows.push(["TOTAL A DEDUCIR", "", "", detalle.deducciones_totales]);
   rows.push(["LÍQUIDO A PERCIBIR", "", "", detalle.neto_pagar]);
 
+  // Vacaciones
+  rows.push([]);
+  rows.push(["VACACIONES", "", "", "DÍAS"]);
+  if (vacaciones.length > 0) {
+    vacaciones.forEach(v => {
+      const rango = v.fecha_fin !== v.fecha_inicio ? `${v.fecha_inicio} → ${v.fecha_fin}` : v.fecha_inicio;
+      const tipo = v.tipo_vacacion === 'sin_goce' ? 'Sin goce' : 'Con goce';
+      rows.push([`Vacación ${tipo} (${rango})`, "", "", v.dias_solicitados || 0]);
+    });
+  } else {
+    rows.push(["Sin vacaciones en el período", "", "", ""]);
+  }
+  if (saldoVacaciones) {
+    rows.push(["SALDO DE VACACIONES DISPONIBLE", "", "", `${saldoVacaciones.saldo_actual || 0} días`]);
+  }
+
   const csv = rows.map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
   const bom = "\uFEFF";
   const blob = new Blob([bom + csv], { type: "text/csv;charset=utf-8;" });
@@ -326,17 +377,17 @@ function generarExcelBoleta(empresa, empleado, periodo, detalle, movimientos) {
 }
 
 // ─── Componente ───────────────────────────────────────────────────────────────
-export default function BoletaPagoGenerator({ empresa, empleado, periodo, detalle, movimientos }) {
+export default function BoletaPagoGenerator({ empresa, empleado, periodo, detalle, movimientos, vacaciones = [], saldoVacaciones = null }) {
   const [loadingPDF, setLoadingPDF] = useState(false);
 
   const handlePDF = async () => {
     setLoadingPDF(true);
-    await generarBoletaPDF(empresa, empleado, periodo, detalle, movimientos, TRAMOS_ISR);
+    await generarBoletaPDF(empresa, empleado, periodo, detalle, movimientos, TRAMOS_ISR, vacaciones, saldoVacaciones);
     setLoadingPDF(false);
   };
 
   const handleExcel = () => {
-    generarExcelBoleta(empresa, empleado, periodo, detalle, movimientos);
+    generarExcelBoleta(empresa, empleado, periodo, detalle, movimientos, vacaciones, saldoVacaciones);
   };
 
   return (
