@@ -178,7 +178,8 @@ export async function generarBoletaPDF(empresa, empleado, periodo, detalle, movi
   const horasM     = extraIngresos.find(m => m.descripcion?.toLowerCase().includes("mixta") || m.descripcion?.toLowerCase().includes("mix"));
   const bonoLinea  = extraIngresos.find(m => m.descripcion?.toLowerCase().includes("bono"));
 
-  y = drawFila(doc, "Vacaciones", "", "", vacLinea ? C(vacLinea.monto) : "-", y, true);
+  const diasVacaciones = vacaciones.reduce((s, v) => s + (Number(v.dias_solicitados) || 0), 0);
+  y = drawFila(doc, "Vacaciones", diasVacaciones > 0 ? diasVacaciones : "", "", vacLinea ? C(vacLinea.monto) : "-", y, true);
   y = drawFila(doc, "Horas extraordinarias diurnas", horasD ? horasD.cantidad : "", "", horasD ? C(horasD.monto) : "-", y, false);
   y = drawFila(doc, "Horas extraordinarias nocturnas", horasN ? horasN.cantidad : "", "", horasN ? C(horasN.monto) : "-", y, true);
   y = drawFila(doc, "Horas extraordinarias mixtas", horasM ? horasM.cantidad : "", "", horasM ? C(horasM.monto) : "-", y, false);
