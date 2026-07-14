@@ -23,6 +23,15 @@
     "dias_solicitados": {
       "type": "number"
     },
+    "tipo_vacacion": {
+      "type": "string",
+      "enum": [
+        "con_goce",
+        "sin_goce"
+      ],
+      "default": "con_goce",
+      "description": "Con goce salarial o sin goce salarial"
+    },
     "motivo": {
       "type": "string"
     },

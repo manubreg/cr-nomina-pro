@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CalendarioAusencias from "@/components/vacaciones/CalendarioAusencias";
 
 const estadoColor = { pendiente: "bg-amber-100 text-amber-700", aprobada: "bg-emerald-100 text-emerald-700", rechazada: "bg-red-100 text-red-600", aplicada: "bg-purple-100 text-purple-700" };
-const emptySolicitud = { empleado_id: "", empresa_id: "", fecha_solicitud: new Date().toISOString().split("T")[0], fecha_inicio: "", fecha_fin: "", dias_solicitados: 0, motivo: "", estado: "pendiente" };
+const emptySolicitud = { empleado_id: "", empresa_id: "", fecha_solicitud: new Date().toISOString().split("T")[0], fecha_inicio: "", fecha_fin: "", dias_solicitados: 0, tipo_vacacion: "con_goce", motivo: "", estado: "pendiente" };
 
 export default function Vacaciones() {
   const qc = useQueryClient();
@@ -226,6 +226,7 @@ export default function Vacaciones() {
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Inicio</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Fin</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Días</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Tipo</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Estado</th>
                       <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Acciones</th>
                     </tr>
@@ -237,6 +238,11 @@ export default function Vacaciones() {
                         <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{s.fecha_inicio}</td>
                         <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{s.fecha_fin}</td>
                         <td className="px-4 py-3 text-gray-800 font-medium">{s.dias_solicitados}</td>
+                        <td className="px-4 py-3 hidden md:table-cell">
+                          <Badge variant="outline" className={s.tipo_vacacion === "sin_goce" ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-emerald-100 text-emerald-700 border-emerald-200"}>
+                            {s.tipo_vacacion === "sin_goce" ? "Sin goce" : "Con goce"}
+                          </Badge>
+                        </td>
                         <td className="px-4 py-3"><Badge className={estadoColor[s.estado]}>{s.estado}</Badge></td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-1">
@@ -509,6 +515,16 @@ export default function Vacaciones() {
               <Label>Días Solicitados *</Label>
               <Input type="number" value={form.dias_solicitados} readOnly className="bg-gray-50" />
               <p className="text-xs text-gray-500">Se calcula automáticamente (sin sábados, domingos ni feriados)</p>
+            </div>
+            <div className="col-span-2 space-y-1">
+              <Label>Tipo de Vacación *</Label>
+              <Select value={form.tipo_vacacion || "con_goce"} onValueChange={v => set("tipo_vacacion", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="con_goce">Con goce salarial</SelectItem>
+                  <SelectItem value="sin_goce">Sin goce salarial</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="col-span-2 space-y-1">
               <Label>Motivo</Label>
