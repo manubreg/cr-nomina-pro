@@ -257,7 +257,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const salarioPeriodo = Math.round(salarioMensual * factorEmp);
+    let salarioPeriodo = Math.round(salarioMensual * factorEmp);
     const movs = [];
 
     // ── Descuento por vacaciones sin goce salarial aprobadas ──
@@ -276,18 +276,20 @@ Deno.serve(async (req) => {
         console.log(`[sin goce] ${emp.nombre} ${emp.apellidos}: vacaciones ${vInicio}→${vFin}, días sin goce en período: ${diasSolap}`);
       }
     }
+    let descSinGoce = '';
     if (diasSinGoce > 0) {
       const montoDescuento = Math.round((salarioMensual / 30) * diasSinGoce);
-      movs.push({ tipo_movimiento: 'deduccion', descripcion: `Vacaciones sin goce salarial (${diasSinGoce}d)`, monto: montoDescuento,
-        cantidad: diasSinGoce, tarifa: Math.round(salarioMensual / 30), porcentaje: 0, base_calculo: salarioPeriodo, orden_calculo: 2, origen: 'automatico' });
+      salarioPeriodo = Math.max(0, salarioPeriodo - montoDescuento);
+      descSinGoce = ` - ${diasSinGoce}d sin goce`;
+      console.log(`[sin goce] ${emp.nombre} ${emp.apellidos}: descuento=${montoDescuento}, salario final=${salarioPeriodo}`);
     }
 
     const esSalidaParcial = emp.estado === 'liquidado' && emp.fecha_salida;
     const descSalario = esSalidaParcial
-      ? `Salario proporcional (salida ${emp.fecha_salida.substring(0, 10)})`
+      ? `Salario proporcional (salida ${emp.fecha_salida.substring(0, 10)})${descSinGoce}`
       : emp._diasProrateo
-        ? `Salario proporcional (${emp._diasProrateo} días: ${emp._desdeFecha} → ${emp._hastaFecha})`
-        : 'Salario base';
+        ? `Salario proporcional (${emp._diasProrateo} días: ${emp._desdeFecha} → ${emp._hastaFecha})${descSinGoce}`
+        : `Salario base${descSinGoce}`;
     movs.push({ tipo_movimiento: 'ingreso', descripcion: descSalario, monto: salarioPeriodo,
       cantidad: 1, tarifa: salarioPeriodo, porcentaje: 0, base_calculo: salarioPeriodo, orden_calculo: 1, origen: 'automatico' });
 
