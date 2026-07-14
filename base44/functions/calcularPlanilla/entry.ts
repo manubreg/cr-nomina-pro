@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
        ? base44.asServiceRole.entities.PeriodoPlanilla.filter({ id: periodo_id }, '-fecha_inicio', 1)
        : Promise.resolve([]),
      base44.asServiceRole.entities.HistorialSalario.filter({ empresa_id }, '-fecha_efectiva', 500).catch(() => []),
-     base44.asServiceRole.entities.VacacionSolicitud.filter({ empresa_id }, '-fecha_inicio', 500).catch(() => []),
+     base44.asServiceRole.entities.VacacionSolicitud.list('-fecha_inicio', 500).catch(() => []),
    ]);
   const planilla = { id: planilla_id, empresa_id, periodo_id };
 
