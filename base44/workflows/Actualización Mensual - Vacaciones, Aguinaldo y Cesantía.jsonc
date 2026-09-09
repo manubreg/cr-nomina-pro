@@ -1,0 +1,44 @@
+{
+  "name": "Actualizaci\u00f3n Mensual - Vacaciones, Aguinaldo y Cesant\u00eda",
+  "description": "Ejecuta autom\u00e1ticamente el 1 de cada mes para actualizar vacaciones (2.5 d\u00edas), calcular aguinaldo acumulado (8.33%), y generar estimaciones de preaviso y cesant\u00eda para todos los empleados activos.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 6 1 * *",
+      "one_time_date": null,
+      "timezone": "UTC",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "actualizaci_n_mensual_vacaciones_aguinaldo_y_cesant_a",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "actualizarMensual",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "actualizarMensual"
+  }
+}
