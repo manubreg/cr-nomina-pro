@@ -158,7 +158,11 @@ export default function Liquidaciones() {
                   <p>Vacaciones: <strong>{detalleCalculo.dias_vacaciones_devengados} días devengados</strong> − {detalleCalculo.dias_vacaciones_tomados} días tomados = <strong>{detalleCalculo.dias_vacaciones_devengados - detalleCalculo.dias_vacaciones_tomados} días pendientes</strong></p>
                 )}
                 {detalleCalculo.dias_salario_pendiente != null && (
-                  <p>Salario pendiente: <strong>{detalleCalculo.dias_salario_pendiente} días</strong> del período en curso</p>
+                  <p>Salario pendiente: <strong>{detalleCalculo.dias_salario_pendiente} días</strong>
+                    {detalleCalculo.ultimo_periodo_pagado
+                      ? ` desde el último período pagado (${detalleCalculo.ultimo_periodo_pagado})`
+                      : " (estimado por frecuencia de pago)"}
+                  </p>
                 )}
               </div>
             )}

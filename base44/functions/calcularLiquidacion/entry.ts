@@ -161,18 +161,42 @@ Deno.serve(async (req) => {
     const aguinaldo_proporcional = (mesesEnPeriodo / 12) * salarioPromedio;
 
     // ---- SALARIO PENDIENTE ----
-    // Días del período en curso aún no pagados, según la frecuencia de pago
-    const diaDelMes = fechaSalidaDate.getDate();
-    let diasSalarioPendiente;
-    if (emp.frecuencia_pago === 'quincenal') {
-      // 1ra quincena pagada el 15 → pendiente solo una quincena
-      diasSalarioPendiente = diaDelMes <= 15 ? diaDelMes : diaDelMes - 15;
-    } else if (emp.frecuencia_pago === 'semanal') {
-      // Días de la semana en curso (semana lunes a domingo)
-      diasSalarioPendiente = ((fechaSalidaDate.getDay() + 6) % 7) + 1;
-    } else {
-      // mensual: días del mes en curso hasta la fecha de salida
-      diasSalarioPendiente = diaDelMes;
+    // Días desde el fin del último período PAGADO hasta la fecha de salida.
+    // Si la planilla que cubre la fecha de salida ya está pagada → 0 días.
+    let diasSalarioPendiente = null;
+    let ultimoPeriodoPagadoFin = null;
+    try {
+      const planillas = await base44.asServiceRole.entities.Planilla
+        .filter({ empresa_id: empresa_id || emp.empresa_id }, '-fecha_calculo', 200);
+      const planillasPagadas = planillas.filter(p => ['pagado', 'aprobado'].includes(p.estado));
+      if (planillasPagadas.length > 0) {
+        const periodoIds = [...new Set(planillasPagadas.map(p => p.periodo_id).filter(Boolean))];
+        const periodos = (await Promise.all(
+          periodoIds.map(pdid => base44.asServiceRole.entities.PeriodoPlanilla.get(pdid).catch(() => null))
+        )).filter(Boolean);
+        // Períodos pagados que cerraron en o antes de la fecha de salida
+        const finesValidos = periodos
+          .map(p => p.fecha_fin)
+          .filter(f => f && new Date(f) <= fechaSalidaDate)
+          .sort();
+        if (finesValidos.length > 0) {
+          ultimoPeriodoPagadoFin = finesValidos[finesValidos.length - 1];
+          diasSalarioPendiente = Math.max(0, Math.round(
+            (fechaSalidaDate - new Date(ultimoPeriodoPagadoFin)) / (1000 * 60 * 60 * 24)
+          ));
+        }
+      }
+    } catch { /* sin planillas pagadas: estimar por frecuencia */ }
+    if (diasSalarioPendiente === null) {
+      // Sin planillas pagadas registradas: estimación por frecuencia de pago
+      const diaDelMes = fechaSalidaDate.getDate();
+      if (emp.frecuencia_pago === 'quincenal') {
+        diasSalarioPendiente = diaDelMes <= 15 ? diaDelMes : diaDelMes - 15;
+      } else if (emp.frecuencia_pago === 'semanal') {
+        diasSalarioPendiente = ((fechaSalidaDate.getDay() + 6) % 7) + 1;
+      } else {
+        diasSalarioPendiente = diaDelMes;
+      }
     }
     const salario_pendiente = salarioDiario * diasSalarioPendiente;
 
@@ -207,6 +231,7 @@ Deno.serve(async (req) => {
           dias_vacaciones_devengadas: Math.round(diasVacacionesDevengadas * 100) / 100,
           dias_vacaciones_tomados: diasTomados,
           dias_salario_pendiente: diasSalarioPendiente,
+          ultimo_periodo_pagado: ultimoPeriodoPagadoFin,
           periodos_promedio: periodosUsados,
           fuente_salario: periodosUsados > 0
             ? `promedio de ${periodosUsados} períodos de planilla (últimos 6 meses)`
