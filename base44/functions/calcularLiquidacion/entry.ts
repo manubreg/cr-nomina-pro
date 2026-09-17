@@ -53,10 +53,12 @@ Deno.serve(async (req) => {
     // Fallback: salario base del empleado cuando no hay planillas calculadas
     let salarioPromedio = salarioBase;
     let periodosUsados = 0;
+    let limite6M = new Date(fechaSalidaDate.getTime() - 183 * 24 * 60 * 60 * 1000);
     try {
       const detalles = await base44.asServiceRole.entities.PlanillaDetalle
         .filter({ empleado_id }, '-created_date', 300);
-      const limite = new Date(fechaSalidaDate.getTime() - 183 * 24 * 60 * 60 * 1000);
+      // Ventana máxima de 6 meses, pero nunca antes de la fecha de ingreso del empleado
+      const limite = limite6M > fechaIngreso ? limite6M : fechaIngreso;
       const recientes = detalles.filter(d => new Date(d.created_date) >= limite);
       if (recientes.length > 0) {
         const planillaIds = [...new Set(recientes.map(d => d.planilla_id).filter(Boolean))];
@@ -234,7 +236,7 @@ Deno.serve(async (req) => {
           ultimo_periodo_pagado: ultimoPeriodoPagadoFin,
           periodos_promedio: periodosUsados,
           fuente_salario: periodosUsados > 0
-            ? `promedio de ${periodosUsados} períodos de planilla (últimos 6 meses)`
+            ? `promedio de ${periodosUsados} períodos de planilla (${limite6M > fechaIngreso ? 'últimos 6 meses' : `desde su ingreso ${emp.fecha_ingreso}`})`
             : 'salario base del empleado (sin planillas previas)',
         }
       }
