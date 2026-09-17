@@ -92,11 +92,16 @@ Deno.serve(async (req) => {
       cesantia = salarioDiario * diasCesantia;
     }
 
-    // ---- VACACIONES PROPORCIONALES (Art. 153-162 CT) ----
-    // 2 semanas (15 días hábiles) por cada 50 semanas trabajadas
-    // Si no completó el año, proporcional: (diasTrabajadosEnAnioActual / 365) * 15 * salarioDiario
-    const diasEnAnioActual = diasServicio % 365;
-    const vacacionesDias = (diasEnAnioActual / 365) * 15;
+    // ---- VACACIONES PENDIENTES (Art. 153-162 CT) ----
+    // 15 días por cada 365 trabajados durante TODA la relación laboral,
+    // menos los días de vacaciones con goce ya disfrutados (solicitudes aprobadas/aplicadas)
+    const vacSolicitudes = await base44.asServiceRole.entities.VacacionSolicitud
+      .filter({ empleado_id }, '-fecha_inicio', 500).catch(() => []);
+    const diasTomados = vacSolicitudes
+      .filter(v => ['aprobada', 'aplicada'].includes(v.estado) && v.tipo_vacacion !== 'sin_goce')
+      .reduce((s, v) => s + (Number(v.dias_solicitados) || 0), 0);
+    const diasVacacionesDevengadas = (diasServicio / 365) * 15;
+    const vacacionesDias = Math.max(0, diasVacacionesDevengadas - diasTomados);
     const vacaciones_pendientes = vacacionesDias * salarioDiario;
 
     // ---- AGUINALDO PROPORCIONAL ----
@@ -115,9 +120,20 @@ Deno.serve(async (req) => {
     const aguinaldo_proporcional = (mesesEnPeriodo / 12) * salarioBase;
 
     // ---- SALARIO PENDIENTE ----
-    // Días del mes en curso que no han sido pagados (asumiendo pago mensual)
+    // Días del período en curso aún no pagados, según la frecuencia de pago
     const diaDelMes = fechaSalidaDate.getDate();
-    const salario_pendiente = salarioDiario * diaDelMes;
+    let diasSalarioPendiente;
+    if (emp.frecuencia_pago === 'quincenal') {
+      // 1ra quincena pagada el 15 → pendiente solo una quincena
+      diasSalarioPendiente = diaDelMes <= 15 ? diaDelMes : diaDelMes - 15;
+    } else if (emp.frecuencia_pago === 'semanal') {
+      // Días de la semana en curso (semana lunes a domingo)
+      diasSalarioPendiente = ((fechaSalidaDate.getDay() + 6) % 7) + 1;
+    } else {
+      // mensual: días del mes en curso hasta la fecha de salida
+      diasSalarioPendiente = diaDelMes;
+    }
+    const salario_pendiente = salarioDiario * diasSalarioPendiente;
 
     // ---- TOTALES ----
     const total_liquidacion = preaviso + cesantia + vacaciones_pendientes + aguinaldo_proporcional + salario_pendiente;
@@ -134,6 +150,7 @@ Deno.serve(async (req) => {
         preaviso: Math.round(preaviso),
         cesantia: Math.round(cesantia),
         vacaciones_pendientes: Math.round(vacaciones_pendientes),
+        dias_vacaciones_pendientes: Math.round(vacacionesDias * 100) / 100,
         aguinaldo_proporcional: Math.round(aguinaldo_proporcional),
         salario_pendiente: Math.round(salario_pendiente),
         deducciones_finales: 0,
@@ -146,6 +163,9 @@ Deno.serve(async (req) => {
           dias_servicio: diasServicio,
           salario_diario: Math.round(salarioDiario),
           meses_aguinaldo: Math.round(mesesEnPeriodo * 100) / 100,
+          dias_vacaciones_devengadas: Math.round(diasVacacionesDevengadas * 100) / 100,
+          dias_vacaciones_tomados: diasTomados,
+          dias_salario_pendiente: diasSalarioPendiente,
         }
       }
     });

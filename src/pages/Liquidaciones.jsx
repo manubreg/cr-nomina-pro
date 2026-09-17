@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 const estadoColor = { borrador: "bg-gray-100 text-gray-600", aprobada: "bg-emerald-100 text-emerald-700", pagada: "bg-purple-100 text-purple-700", anulada: "bg-red-100 text-red-600" };
 const motivos = ["renuncia","despido_sin_causa","despido_con_causa","mutuo_acuerdo","fin_contrato","fallecimiento","otro"];
-const emptyLiq = { empleado_id: "", empresa_id: "", fecha_salida: "", motivo_salida: "renuncia", salario_promedio: 0, preaviso: 0, cesantia: 0, vacaciones_pendientes: 0, aguinaldo_proporcional: 0, salario_pendiente: 0, deducciones_finales: 0, total_liquidacion: 0, neto_liquidar: 0, estado: "borrador", observaciones: "" };
+const emptyLiq = { empleado_id: "", empresa_id: "", fecha_salida: "", motivo_salida: "renuncia", salario_promedio: 0, preaviso: 0, cesantia: 0, vacaciones_pendientes: 0, dias_vacaciones_pendientes: 0, aguinaldo_proporcional: 0, salario_pendiente: 0, deducciones_finales: 0, total_liquidacion: 0, neto_liquidar: 0, estado: "borrador", observaciones: "" };
 
 export default function Liquidaciones() {
   const qc = useQueryClient();
@@ -151,6 +151,12 @@ export default function Liquidaciones() {
                 <p>Antigüedad: <strong>{detalleCalculo.anios_servicio} años</strong> ({detalleCalculo.dias_servicio} días)</p>
                 <p>Salario diario: <strong>₡ {Number(detalleCalculo.salario_diario).toLocaleString()}</strong></p>
                 <p>Meses aguinaldo: <strong>{detalleCalculo.meses_aguinaldo}</strong></p>
+                {detalleCalculo.dias_vacaciones_devengados != null && (
+                  <p>Vacaciones: <strong>{detalleCalculo.dias_vacaciones_devengados} días devengados</strong> − {detalleCalculo.dias_vacaciones_tomados} días tomados = <strong>{detalleCalculo.dias_vacaciones_devengados - detalleCalculo.dias_vacaciones_tomados} días pendientes</strong></p>
+                )}
+                {detalleCalculo.dias_salario_pendiente != null && (
+                  <p>Salario pendiente: <strong>{detalleCalculo.dias_salario_pendiente} días</strong> del período en curso</p>
+                )}
               </div>
             )}
             <div className="space-y-1">
@@ -166,7 +172,12 @@ export default function Liquidaciones() {
               <Input type="number" value={form.cesantia} onChange={e => setCalc("cesantia", Number(e.target.value))} />
             </div>
             <div className="space-y-1">
-              <Label>Vacaciones Pendientes (₡)</Label>
+              <Label>
+                Vacaciones Pendientes (₡)
+                {Number(form.dias_vacaciones_pendientes) > 0 && (
+                  <span className="text-blue-600 font-semibold"> · {Number(form.dias_vacaciones_pendientes).toLocaleString("es-CR", { maximumFractionDigits: 2 })} días</span>
+                )}
+              </Label>
               <Input type="number" value={form.vacaciones_pendientes} onChange={e => setCalc("vacaciones_pendientes", Number(e.target.value))} />
             </div>
             <div className="space-y-1">

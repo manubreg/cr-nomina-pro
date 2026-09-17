@@ -40,6 +40,11 @@
       "type": "number",
       "default": 0
     },
+    "dias_vacaciones_pendientes": {
+      "type": "number",
+      "default": 0,
+      "description": "D\u00edas de vacaciones pendientes al momento de la salida"
+    },
     "aguinaldo_proporcional": {
       "type": "number",
       "default": 0
