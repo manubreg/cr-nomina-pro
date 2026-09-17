@@ -1,4 +1,6 @@
 // ─── PDF de Liquidación Final (detalle de cálculos) ───────────────────────────
+import { base44 } from "@/api/base44Client";
+
 const fmt = (v) => Number(v || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
 const fmtI = (v) => Number(v || 0).toLocaleString("es-CR", { maximumFractionDigits: 2 });
 
@@ -112,35 +114,100 @@ export async function generarLiquidacionPDF(empresa, empleado, periodo, detalle,
   doc.setFontSize(7.5);
   doc.text("DATOS DE LA TERMINACIÓN", 14, 53.3);
 
+  const motivoTxt = MOTIVOS_LABEL[liquidacion?.motivo_salida] || liquidacion?.motivo_salida || "—";
   doc.setTextColor(40, 40, 40);
-  doc.setFont("helvetica", "bold");
   doc.setFontSize(7.5);
+  doc.setFont("helvetica", "bold");
   doc.text("Fecha de salida:", 14, 59);
   doc.text("Motivo:", 80, 59);
-  doc.text("Antigüedad:", 140, 59);
   doc.setFont("helvetica", "normal");
   doc.text(fechaSalida || "—", 42, 59);
-  doc.text(MOTIVOS_LABEL[liquidacion?.motivo_salida] || liquidacion?.motivo_salida || "—", 92, 59, { maxWidth: 45 });
-  doc.text(antiguedadTxt, 140, 63, { maxWidth: 58 });
+  doc.text(motivoTxt, 92, 59, { maxWidth: 105 });
+  doc.setFont("helvetica", "bold");
+  doc.text("Antigüedad:", 14, 64.5);
+  doc.setFont("helvetica", "normal");
+  doc.text(antiguedadTxt, 34, 64.5, { maxWidth: 164 });
 
-  // Parámetros de cálculo
-  let y = 68;
+  // Detalle del cálculo: guardado en la liquidación o recalculado al vuelo
+  let detalleCalc = null;
+  try { detalleCalc = JSON.parse(liquidacion?.detalle_calculo || "null"); } catch { detalleCalc = null; }
+  if (!detalleCalc?.salarios_mensuales?.length && empleado?.id && liquidacion?.fecha_salida) {
+    try {
+      const res = await base44.functions.invoke("calcularLiquidacion", {
+        empleado_id: empleado.id,
+        fecha_salida: liquidacion.fecha_salida,
+        motivo_salida: liquidacion.motivo_salida || "renuncia",
+        empresa_id: liquidacion.empresa_id,
+      });
+      if (res.data?.ok && res.data.resultado?._detalle) detalleCalc = res.data.resultado._detalle;
+    } catch { /* sin detalle disponible */ }
+  }
+
+  // Parámetros de cálculo — cada dato en su propia fila para evitar superposición
+  let y = 70;
   doc.setFillColor(...GRIS);
   doc.rect(10, y, 190, 6, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
+  doc.setFontSize(7.5);
   doc.text("PARÁMETROS DE CÁLCULO (Código de Trabajo)", 14, y + 4.3);
   y += 6;
-  doc.setFillColor(248, 248, 248);
-  doc.rect(10, y, 190, 8, "F");
-  doc.setTextColor(40, 40, 40);
-  doc.setFontSize(7.5);
-  doc.setFont("helvetica", "bold");
-  doc.text("Salario promedio mensual:", 14, y + 5.2);
-  doc.text(C(salarioPromedio), 95, y + 5.2);
-  doc.text("Salario diario (promedio / 30):", 110, y + 5.2);
-  doc.text(C(salarioDiario), 198, y + 5.2, { align: "right" });
-  y += 11;
+
+  const filaParam = (label, value, bold = false) => {
+    doc.setFillColor(248, 248, 248);
+    doc.rect(10, y, 190, 5.5, "F");
+    doc.setTextColor(40, 40, 40);
+    doc.setFontSize(7.5);
+    doc.setFont("helvetica", bold ? "bold" : "normal");
+    doc.text(label, 14, y + 4);
+    doc.text(value, 198, y + 4, { align: "right" });
+    y += 5.5;
+  };
+
+  filaParam("Salario promedio mensual:", C(salarioPromedio));
+  filaParam("Salario diario (promedio / 30):", C(salarioDiario));
+
+  if (detalleCalc?.fuente_salario) {
+    doc.setTextColor(110, 110, 110);
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(6.5);
+    doc.text(`Fuente del salario: ${detalleCalc.fuente_salario}`, 14, y + 3);
+    y += 4.5;
+  }
+
+  // Salarios por mes usados en el promedio (desglose mes a mes)
+  const meses = detalleCalc?.salarios_mensuales || [];
+  if (meses.length > 0) {
+    doc.setFillColor(240, 240, 240);
+    doc.rect(10, y, 190, 5, "F");
+    doc.setTextColor(60, 60, 60);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.text("SALARIOS POR MES (últimos 6 meses — solo los meses completos entran al promedio)", 14, y + 3.7);
+    y += 5;
+    const nombresMes = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+    const etiquetaMes = (s) => {
+      const [yy, mm] = s.mes.split("-");
+      return `${nombresMes[Number(mm) - 1]} ${yy}${s.completo ? "" : " (parcial — no entra al promedio)"}`;
+    };
+    for (let i = 0; i < meses.length; i += 2) {
+      doc.setFillColor(252, 252, 252);
+      doc.rect(10, y, 190, 5, "F");
+      doc.setTextColor(40, 40, 40);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.text(etiquetaMes(meses[i]), 14, y + 3.7);
+      doc.text(C(meses[i].salario), 100, y + 3.7, { align: "right" });
+      if (meses[i + 1]) {
+        doc.text(etiquetaMes(meses[i + 1]), 108, y + 3.7);
+        doc.text(C(meses[i + 1].salario), 198, y + 3.7, { align: "right" });
+      }
+      y += 5;
+    }
+    const nCompletos = detalleCalc?.meses_completos_promedio ?? meses.filter(m => m.completo).length;
+    filaParam(`Promedio de ${nCompletos} mes(es) completo(s)`, C(salarioPromedio), true);
+  }
+  y += 2;
 
   // ── Rubros de liquidación ──
   doc.setFillColor(...AZUL);
@@ -214,6 +281,9 @@ export async function generarLiquidacionPDF(empresa, empleado, periodo, detalle,
     y += 6;
   }
 
+  // Salto de página si no hay espacio para totales y deducciones
+  if (y > 260) { doc.addPage(); y = 20; }
+
   // Total indemnizaciones
   doc.setFillColor(...AZUL);
   doc.rect(10, y, 190, 6, "F");
@@ -260,6 +330,9 @@ export async function generarLiquidacionPDF(empresa, empleado, periodo, detalle,
   doc.text("NETO A LIQUIDAR", 14, y + 5.5);
   doc.text(C(detalle?.neto_pagar ?? liquidacion?.neto_liquidar ?? 0), 198, y + 5.5, { align: "right" });
   y += 14;
+
+  // Salto de página si no hay espacio para la nota y las firmas
+  if (y > 268) { doc.addPage(); y = 20; }
 
   // Nota legal
   doc.setTextColor(110, 110, 110);

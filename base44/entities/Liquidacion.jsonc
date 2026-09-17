@@ -65,6 +65,10 @@
       "type": "number",
       "default": 0
     },
+    "detalle_calculo": {
+      "type": "string",
+      "description": "JSON con el detalle del c\u00e1lculo (salarios por mes, fuente del salario, d\u00edas, etc.)"
+    },
     "estado": {
       "type": "string",
       "enum": [

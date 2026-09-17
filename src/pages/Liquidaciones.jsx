@@ -282,7 +282,7 @@ export default function Liquidaciones() {
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button className="bg-blue-700 hover:bg-blue-800" onClick={() => save.mutate(form)} disabled={save.isPending}>
+            <Button className="bg-blue-700 hover:bg-blue-800" onClick={() => save.mutate({ ...form, detalle_calculo: detalleCalculo ? JSON.stringify(detalleCalculo) : form.detalle_calculo })} disabled={save.isPending}>
               {save.isPending ? "Guardando..." : "Guardar"}
             </Button>
           </div>
