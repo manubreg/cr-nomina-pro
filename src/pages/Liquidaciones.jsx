@@ -178,8 +178,8 @@ export default function Liquidaciones() {
                 {detalleCalculo.dias_preaviso_pagados != null && (
                   <p>Preaviso: <strong>{detalleCalculo.dias_preaviso_pagados} días</strong> {detalleCalculo.preaviso_opcion === "trabajado" ? "(ejercido, sin pago)" : "a pagar"}</p>
                 )}
-                {detalleCalculo.dias_vacaciones_devengados != null && (
-                  <p>Vacaciones: <strong>{detalleCalculo.dias_vacaciones_devengados} días devengados</strong> − {detalleCalculo.dias_vacaciones_tomados} días tomados = <strong>{detalleCalculo.dias_vacaciones_devengados - detalleCalculo.dias_vacaciones_tomados} días pendientes</strong></p>
+                {detalleCalculo.dias_vacaciones_pendientes != null && (
+                  <p>Vacaciones: <strong>{detalleCalculo.dias_vacaciones_pendientes} días pendientes</strong> ({Math.floor(detalleCalculo.dias_vacaciones_devengados)} devengadas − {detalleCalculo.dias_vacaciones_tomados} tomadas)</p>
                 )}
                 {detalleCalculo.dias_salario_pendiente != null && (
                   <p>Salario pendiente: <strong>{detalleCalculo.dias_salario_pendiente} días</strong>

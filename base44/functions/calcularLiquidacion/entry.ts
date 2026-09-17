@@ -52,42 +52,52 @@ Deno.serve(async (req) => {
     // Promedio mensual = (Σ ingresos de planillas / Σ días de los períodos) * 30
     // Fallback: salario base del empleado cuando no hay planillas calculadas
     let salarioPromedio = salarioBase;
-    let periodosUsados = 0;
-    let limite6M = new Date(fechaSalidaDate.getTime() - 183 * 24 * 60 * 60 * 1000);
+    let mesesCompletos = 0;
+    const periodosEmpleado = []; // {ingresos, dias, inicio, fin} períodos ordinarios ya cerrados
     try {
       const detalles = await base44.asServiceRole.entities.PlanillaDetalle
         .filter({ empleado_id }, '-created_date', 300);
-      // Ventana máxima de 6 meses, pero nunca antes de la fecha de ingreso del empleado
-      const limite = limite6M > fechaIngreso ? limite6M : fechaIngreso;
-      const recientes = detalles.filter(d => new Date(d.created_date) >= limite);
-      if (recientes.length > 0) {
-        const planillaIds = [...new Set(recientes.map(d => d.planilla_id).filter(Boolean))];
-        const planillas = (await Promise.all(
-          planillaIds.map(pid => base44.asServiceRole.entities.Planilla.get(pid).catch(() => null))
-        )).filter(Boolean);
-        const periodoIds = [...new Set(planillas.map(p => p.periodo_id).filter(Boolean))];
-        const periodos = (await Promise.all(
-          periodoIds.map(pdid => base44.asServiceRole.entities.PeriodoPlanilla.get(pdid).catch(() => null))
-        )).filter(Boolean);
-        const periodoMap = Object.fromEntries(periodos.map(p => [p.id, p]));
-        const planillaMap = Object.fromEntries(planillas.map(p => [p.id, p]));
-        let sumaIngresos = 0, sumaDias = 0;
-        for (const d of recientes) {
-          const planilla = planillaMap[d.planilla_id];
-          const periodo = planilla ? periodoMap[planilla.periodo_id] : null;
-          if (!periodo) continue;
-          // Excluir aguinaldos/liquidaciones: no son salario ordinario
-          if (['aguinaldo', 'liquidacion'].includes(periodo.tipo_periodo)) continue;
-          const inicio = new Date(periodo.fecha_inicio);
-          const fin = new Date(periodo.fecha_fin);
-          const dias = Math.round((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
-          // Solo períodos ya cerrados a la fecha de salida (los abiertos los cubre el salario pendiente)
-          if (dias <= 0 || fin > fechaSalidaDate) continue;
-          sumaIngresos += Number(d.ingresos_totales) || 0;
-          sumaDias += dias;
-          periodosUsados++;
+      const planillaIds = [...new Set(detalles.map(d => d.planilla_id).filter(Boolean))];
+      const planillas = (await Promise.all(
+        planillaIds.map(pid => base44.asServiceRole.entities.Planilla.get(pid).catch(() => null))
+      )).filter(Boolean);
+      const periodoIds = [...new Set(planillas.map(p => p.periodo_id).filter(Boolean))];
+      const periodos = (await Promise.all(
+        periodoIds.map(pdid => base44.asServiceRole.entities.PeriodoPlanilla.get(pdid).catch(() => null))
+      )).filter(Boolean);
+      const periodoMap = Object.fromEntries(periodos.map(p => [p.id, p]));
+      const planillaMap = Object.fromEntries(planillas.map(p => [p.id, p]));
+      for (const d of detalles) {
+        const planilla = planillaMap[d.planilla_id];
+        const periodo = planilla ? periodoMap[planilla.periodo_id] : null;
+        if (!periodo || ['aguinaldo', 'liquidacion'].includes(periodo.tipo_periodo)) continue;
+        const inicio = new Date(periodo.fecha_inicio);
+        const fin = new Date(periodo.fecha_fin);
+        const dias = Math.round((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
+        if (dias <= 0 || fin > fechaSalidaDate) continue;
+        periodosEmpleado.push({ ingresos: Number(d.ingresos_totales) || 0, dias, inicio, fin });
+      }
+      // Promedio MTSS: salario de cada mes COMPLETO trabajado de los últimos 6 meses
+      // (se excluyen meses parciales, p.ej. el mes de ingreso o de salida)
+      const salariosMensuales = [];
+      for (let i = 0; i < 6; i++) {
+        const inicioMes = new Date(Date.UTC(fechaSalidaDate.getFullYear(), fechaSalidaDate.getMonth() - i, 1));
+        const finMes = new Date(Date.UTC(fechaSalidaDate.getFullYear(), fechaSalidaDate.getMonth() - i + 1, 0));
+        if (fechaIngreso > inicioMes || finMes > fechaSalidaDate) continue;
+        let suma = 0, diasCubiertos = 0;
+        for (const p of periodosEmpleado) {
+          const ini = p.inicio > inicioMes ? p.inicio : inicioMes;
+          const f = p.fin < finMes ? p.fin : finMes;
+          if (ini > f) continue;
+          const diasSolap = Math.round((f - ini) / (1000 * 60 * 60 * 24)) + 1;
+          suma += p.ingresos * diasSolap / p.dias;
+          diasCubiertos += diasSolap;
         }
-        if (sumaDias > 0) salarioPromedio = Math.round((sumaIngresos / sumaDias) * 30);
+        if (diasCubiertos >= finMes.getUTCDate()) salariosMensuales.push(suma);
+      }
+      if (salariosMensuales.length > 0) {
+        salarioPromedio = Math.round(salariosMensuales.reduce((s, x) => s + x, 0) / salariosMensuales.length);
+        mesesCompletos = salariosMensuales.length;
       }
     } catch { /* sin histórico: usa salario base */ }
 
@@ -99,11 +109,12 @@ Deno.serve(async (req) => {
     let preaviso = 0;
     const motivosConPreaviso = ['renuncia', 'despido_sin_causa', 'mutuo_acuerdo', 'fin_contrato'];
     if (motivosConPreaviso.includes(motivo_salida)) {
+      // Art. 28 CT: < 3 meses no corresponde; 3-6 meses: 1 semana;
+      // 6-12 meses: 15 días; > 1 año: 1 mes
       let diasPreaviso = 0;
-      if (aniosServicio < 0.25) diasPreaviso = 7;         // < 3 meses: 1 semana
-      else if (aniosServicio < 0.5) diasPreaviso = 14;    // 3-6 meses: 2 semanas
-      else if (aniosServicio < 1) diasPreaviso = 21;      // 6-12 meses: 3 semanas
-      else diasPreaviso = 30;                              // > 1 año: 1 mes
+      if (aniosServicio >= 1) diasPreaviso = 30;
+      else if (aniosServicio >= 0.5) diasPreaviso = 15;
+      else if (aniosServicio >= 0.25) diasPreaviso = 7;
       // ¿Se ejerció el preaviso?
       // - 'trabajado': el empleado trabajó todo el preaviso → no se paga
       // - 'dias_pendientes': se pagan solo los días indicados que no se trabajaron
@@ -124,22 +135,27 @@ Deno.serve(async (req) => {
       // Escala según Art. 29:
       // 1er año: 7 días / 2do año: 14 días / 3er-4to: 19.5 días / 5to-6to: 20 días / 7mo: 21 días / 8vo+: 22 días
       // Tope: 8 años de cesantía
-      const aniosParaCesantia = Math.min(Math.floor(aniosServicio), 8);
       let diasCesantia = 0;
-      for (let a = 1; a <= aniosParaCesantia; a++) {
-        if (a === 1) diasCesantia += 7;
-        else if (a === 2) diasCesantia += 14;
-        else if (a <= 4) diasCesantia += 19.5;
-        else if (a <= 6) diasCesantia += 20;
-        else if (a === 7) diasCesantia += 21;
-        else diasCesantia += 22;
-      }
-      // Fracción del año en curso (proporcional)
-      const fraccionAnio = aniosServicio - Math.floor(aniosServicio);
-      if (fraccionAnio > 0 && aniosParaCesantia < 8) {
-        const diasPorAnioActual = aniosParaCesantia < 2 ? 7 : aniosParaCesantia < 4 ? 19.5 : aniosParaCesantia < 6 ? 20 : aniosParaCesantia < 7 ? 21 : 22;
-        diasCesantia += diasPorAnioActual * fraccionAnio;
-      }
+      if (aniosServicio >= 1) {
+        const aniosParaCesantia = Math.min(Math.floor(aniosServicio), 8);
+        for (let a = 1; a <= aniosParaCesantia; a++) {
+          if (a === 1) diasCesantia += 7;
+          else if (a === 2) diasCesantia += 14;
+          else if (a <= 4) diasCesantia += 19.5;
+          else if (a <= 6) diasCesantia += 20;
+          else if (a === 7) diasCesantia += 21;
+          else diasCesantia += 22;
+        }
+        // Fracción del año en curso, proporcional a la tasa de ese año
+        const fraccionAnio = aniosServicio - Math.floor(aniosServicio);
+        if (fraccionAnio > 0 && aniosParaCesantia < 8) {
+          const anioEnCurso = aniosParaCesantia + 1;
+          const tasa = anioEnCurso === 2 ? 14 : anioEnCurso <= 4 ? 19.5 : anioEnCurso <= 6 ? 20 : anioEnCurso === 7 ? 21 : 22;
+          diasCesantia += tasa * fraccionAnio;
+        }
+      } else if (aniosServicio >= 0.5) diasCesantia = 14; // Art. 29.b: 6-12 meses
+      else if (aniosServicio >= 0.25) diasCesantia = 7;   // Art. 29.a: 3-6 meses
+      // < 3 meses: no corresponde cesantía
       cesantia = salarioDiario * diasCesantia;
     }
 
@@ -152,23 +168,32 @@ Deno.serve(async (req) => {
       .filter(v => ['aprobada', 'aplicada'].includes(v.estado) && v.tipo_vacacion !== 'sin_goce')
       .reduce((s, v) => s + (Number(v.dias_solicitados) || 0), 0);
     const diasVacacionesDevengadas = (diasServicio / 365) * 15;
-    const vacacionesDias = Math.max(0, diasVacacionesDevengadas - diasTomados);
+    // Saldo en días completos (criterio MTSS)
+    const vacacionesDias = Math.max(0, Math.floor(diasVacacionesDevengadas) - diasTomados);
     const vacaciones_pendientes = vacacionesDias * salarioDiario;
 
-    // ---- AGUINALDO PROPORCIONAL ----
-    // Período aguinaldo: 1 dic año anterior - 30 nov año en curso
-    // Proporcional según meses en el período
+    // ---- AGUINALDO PROPORCIONAL (regla MTSS) ----
+    // Suma de los salarios devengados dentro del período de aguinaldo
+    // (1 dic año anterior - 30 nov, o desde el ingreso si es posterior), dividida entre 12.
     const anioSalida = fechaSalidaDate.getFullYear();
     const mesSalida = fechaSalidaDate.getMonth(); // 0=ene, 11=dic
-    let inicioAguinaldo;
-    if (mesSalida >= 11) { // diciembre: período dic año actual - nov año siguiente (pero mide lo acumulado)
-      inicioAguinaldo = new Date(anioSalida, 11, 1);
-    } else {
-      inicioAguinaldo = new Date(anioSalida - 1, 11, 1); // 1 dic del año anterior
+    const inicioAguinaldo = mesSalida >= 11
+      ? new Date(anioSalida, 11, 1)
+      : new Date(anioSalida - 1, 11, 1); // 1 dic del año anterior
+    const inicioAguinaldoEfectivo = fechaIngreso > inicioAguinaldo ? fechaIngreso : inicioAguinaldo;
+    const mesesEnPeriodo = Math.max(0, Math.min(12,
+      (fechaSalidaDate - inicioAguinaldoEfectivo) / (1000 * 60 * 60 * 24 * 30.44)));
+    let sumaSalariosAguinaldo = 0;
+    for (const p of periodosEmpleado) {
+      const ini = p.inicio > inicioAguinaldoEfectivo ? p.inicio : inicioAguinaldoEfectivo;
+      const f = p.fin < fechaSalidaDate ? p.fin : fechaSalidaDate;
+      if (ini > f) continue;
+      const diasSolap = Math.round((f - ini) / (1000 * 60 * 60 * 24)) + 1;
+      sumaSalariosAguinaldo += p.ingresos * diasSolap / p.dias;
     }
-    const msEnPeriodo = Math.max(0, fechaSalidaDate - inicioAguinaldo);
-    const mesesEnPeriodo = Math.min(12, msEnPeriodo / (1000 * 60 * 60 * 24 * 30.44));
-    const aguinaldo_proporcional = (mesesEnPeriodo / 12) * salarioPromedio;
+    const aguinaldo_proporcional = periodosEmpleado.length > 0
+      ? sumaSalariosAguinaldo / 12
+      : (mesesEnPeriodo / 12) * salarioPromedio; // sin planillas: estimación proporcional
 
     // ---- SALARIO PENDIENTE ----
     // Días desde el fin del último período PAGADO hasta la fecha de salida.
@@ -244,9 +269,10 @@ Deno.serve(async (req) => {
           dias_vacaciones_tomados: diasTomados,
           dias_salario_pendiente: diasSalarioPendiente,
           ultimo_periodo_pagado: ultimoPeriodoPagadoFin,
-          periodos_promedio: periodosUsados,
-          fuente_salario: periodosUsados > 0
-            ? `promedio de ${periodosUsados} períodos de planilla (${limite6M > fechaIngreso ? 'últimos 6 meses' : `desde su ingreso ${emp.fecha_ingreso}`})`
+          meses_completos_promedio: mesesCompletos,
+          salarios_aguinaldo: Math.round(sumaSalariosAguinaldo),
+          fuente_salario: mesesCompletos > 0
+            ? `promedio de ${mesesCompletos} mes(es) completo(s) de planilla (últimos 6 meses)`
             : 'salario base del empleado (sin planillas previas)',
         }
       }
