@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { X, RefreshCw, Download, Loader2, Palmtree } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BoletaPagoGenerator, { generarBoletaPDF } from "./BoletaPagoGenerator";
+import { generarLiquidacionPDF } from "./LiquidacionPDF";
 
 const formatCRC = (v) => `₡${Number(v || 0).toLocaleString("es-CR")}`;
 
@@ -17,6 +18,7 @@ export default function PlanillaDetalleModal({ planilla, onClose }) {
   const [generandoTodas, setGenerandoTodas]   = useState(false);
   const [vacaciones, setVacaciones]           = useState([]);
   const [saldosVacaciones, setSaldosVacaciones] = useState([]);
+  const [liquidacion, setLiquidacion] = useState(null);
 
   useEffect(() => {
     Promise.all([
@@ -27,7 +29,8 @@ export default function PlanillaDetalleModal({ planilla, onClose }) {
       base44.entities.PeriodoPlanilla.list(),
       base44.entities.VacacionSolicitud.list(),
       base44.entities.VacacionSaldo.list(),
-    ]).then(([dets, movs, emps, emps2, periodos, vacs, saldos]) => {
+      base44.entities.Liquidacion.list(),
+    ]).then(([dets, movs, emps, emps2, periodos, vacs, saldos, liqs]) => {
       const empIds = dets.filter(d => d.planilla_id === planilla.id).map(d => d.empleado_id);
       setDetalles(dets.filter(d => d.planilla_id === planilla.id));
       setMovimientos(movs.filter(m => m.planilla_id === planilla.id));
@@ -36,6 +39,11 @@ export default function PlanillaDetalleModal({ planilla, onClose }) {
       setPeriodo(periodos.find(p => p.id === planilla.periodo_id) || null);
       setVacaciones(vacs.filter(v => empIds.includes(v.empleado_id)));
       setSaldosVacaciones(saldos.filter(s => empIds.includes(s.empleado_id)));
+      setLiquidacion(
+        planilla.tipo_planilla === "liquidacion" && planilla.liquidacion_id
+          ? liqs.find(l => l.id === planilla.liquidacion_id) || null
+          : null
+      );
       setLoading(false);
     });
   }, [planilla.id]);
@@ -50,7 +58,11 @@ export default function PlanillaDetalleModal({ planilla, onClose }) {
       const movs = movsDe(det.id);
       const vacs = vacaciones.filter(v => v.empleado_id === det.empleado_id && ['aprobada', 'aplicada'].includes(v.estado));
       const saldo = saldosVacaciones.find(s => s.empleado_id === det.empleado_id) || null;
-      await generarBoletaPDF(empresa, emp, periodo, det, movs, null, vacs, saldo);
+      if (liquidacion) {
+        await generarLiquidacionPDF(empresa, emp, periodo, det, movs, liquidacion);
+      } else {
+        await generarBoletaPDF(empresa, emp, periodo, det, movs, null, vacs, saldo);
+      }
       await new Promise(r => setTimeout(r, 300)); // pequeño delay entre descargas
     }
     setGenerandoTodas(false);
@@ -181,6 +193,7 @@ export default function PlanillaDetalleModal({ planilla, onClose }) {
                       movimientos={movsDe(selectedDetalle.id)}
                       vacaciones={vacsEmp}
                       saldoVacaciones={saldoEmp}
+                      liquidacion={liquidacion}
                     />
                   </div>
                 </div>

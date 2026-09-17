@@ -11,6 +11,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { useEmpresaContext } from "@/components/EmpresaContext";
 import PlanillaDetalleModal from "@/components/planillas/PlanillaDetalleModal";
 import { generarBoletaPDF } from "@/components/planillas/BoletaPagoGenerator";
+import { generarLiquidacionPDF } from "@/components/planillas/LiquidacionPDF";
 import { useToast } from "@/components/ui/use-toast";
 
 const estadoColor = {
@@ -178,13 +179,22 @@ export default function Planillas() {
 
     const detalles = await base44.entities.PlanillaDetalle.list();
     const movimientos = await base44.entities.MovimientoPlanilla.list();
+    let liquidacion = null;
+    if (planilla.tipo_planilla === "liquidacion" && planilla.liquidacion_id) {
+      const liqs = await base44.entities.Liquidacion.filter({ id: planilla.liquidacion_id });
+      liquidacion = liqs[0] || null;
+    }
 
     const detallesPlanilla = detalles.filter(d => d.planilla_id === planilla.id);
 
     for (const detalle of detallesPlanilla) {
       const empleado = empleadosAll.find(e => e.id === detalle.empleado_id);
       const movs = movimientos.filter(m => m.planilla_id === planilla.id && m.empleado_id === detalle.empleado_id);
-      await generarBoletaPDF(empresa, empleado, periodo, detalle, movs, []);
+      if (liquidacion) {
+        await generarLiquidacionPDF(empresa, empleado, periodo, detalle, movs, liquidacion);
+      } else {
+        await generarBoletaPDF(empresa, empleado, periodo, detalle, movs, []);
+      }
     }
 
     setDescargando(null);

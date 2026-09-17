@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useEmpresaContext } from "@/components/EmpresaContext";
 import { generarBoletaPDF } from "@/components/planillas/BoletaPagoGenerator";
+import { generarLiquidacionPDF } from "@/components/planillas/LiquidacionPDF";
 import { FileText, Search, Download, Loader2, ChevronDown, ChevronRight, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +66,14 @@ export default function HistorialBoletas() {
     queryKey: ["planillaDetalles"],
     queryFn: () => base44.entities.PlanillaDetalle.list("-created_date", 500),
   });
+  const { data: liquidaciones = [] } = useQuery({
+    queryKey: ["liquidaciones"],
+    queryFn: () => base44.entities.Liquidacion.list(),
+  });
+  const liquidacionDe = (planilla) =>
+    planilla.tipo_planilla === "liquidacion" && planilla.liquidacion_id
+      ? liquidaciones.find(l => l.id === planilla.liquidacion_id) || null
+      : null;
 
   const periodoMap = Object.fromEntries(periodos.map(p => [p.id, p]));
   const empresaMap = Object.fromEntries(empresas.map(e => [e.id, e]));
@@ -118,7 +127,12 @@ export default function HistorialBoletas() {
       planilla_id: planilla.id,
       empleado_id: detalle.empleado_id,
     });
-    await generarBoletaPDF(empresa, empleado, periodo, detalle, movimientos, []);
+    const liquidacion = liquidacionDe(planilla);
+    if (liquidacion) {
+      await generarLiquidacionPDF(empresa, empleado, periodo, detalle, movimientos, liquidacion);
+    } else {
+      await generarBoletaPDF(empresa, empleado, periodo, detalle, movimientos, []);
+    }
     setDescargando(null);
   };
 
@@ -133,7 +147,12 @@ export default function HistorialBoletas() {
         planilla_id: planilla.id,
         empleado_id: det.empleado_id,
       });
-      await generarBoletaPDF(empresa, empleado, periodo, det, movimientos, []);
+      const liquidacion = liquidacionDe(planilla);
+      if (liquidacion) {
+        await generarLiquidacionPDF(empresa, empleado, periodo, det, movimientos, liquidacion);
+      } else {
+        await generarBoletaPDF(empresa, empleado, periodo, det, movimientos, []);
+      }
     }
     setDescargando(null);
   };

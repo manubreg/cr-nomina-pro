@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FileText, FileSpreadsheet, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
+import { generarLiquidacionPDF } from "./LiquidacionPDF";
 
 const fmt = (v) => Number(v || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
 const fmtC = (v, moneda = "CRC") => `${moneda} ${fmt(v)}`;
@@ -378,12 +379,16 @@ function generarExcelBoleta(empresa, empleado, periodo, detalle, movimientos, va
 }
 
 // ─── Componente ───────────────────────────────────────────────────────────────
-export default function BoletaPagoGenerator({ empresa, empleado, periodo, detalle, movimientos, vacaciones = [], saldoVacaciones = null }) {
+export default function BoletaPagoGenerator({ empresa, empleado, periodo, detalle, movimientos, vacaciones = [], saldoVacaciones = null, liquidacion = null }) {
   const [loadingPDF, setLoadingPDF] = useState(false);
 
   const handlePDF = async () => {
     setLoadingPDF(true);
-    await generarBoletaPDF(empresa, empleado, periodo, detalle, movimientos, TRAMOS_ISR, vacaciones, saldoVacaciones);
+    if (liquidacion) {
+      await generarLiquidacionPDF(empresa, empleado, periodo, detalle, movimientos, liquidacion);
+    } else {
+      await generarBoletaPDF(empresa, empleado, periodo, detalle, movimientos, TRAMOS_ISR, vacaciones, saldoVacaciones);
+    }
     setLoadingPDF(false);
   };
 
