@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
-    const { empleado_id, fecha_salida, motivo_salida, empresa_id } = await req.json();
+    const { empleado_id, fecha_salida, motivo_salida, empresa_id, preaviso_opcion, preaviso_dias } = await req.json();
     if (!empleado_id || !fecha_salida || !motivo_salida) {
       return Response.json({ error: 'Faltan parámetros requeridos: empleado_id, fecha_salida, motivo_salida' }, { status: 400 });
     }
@@ -104,6 +104,14 @@ Deno.serve(async (req) => {
       else if (aniosServicio < 0.5) diasPreaviso = 14;    // 3-6 meses: 2 semanas
       else if (aniosServicio < 1) diasPreaviso = 21;      // 6-12 meses: 3 semanas
       else diasPreaviso = 30;                              // > 1 año: 1 mes
+      // ¿Se ejerció el preaviso?
+      // - 'trabajado': el empleado trabajó todo el preaviso → no se paga
+      // - 'dias_pendientes': se pagan solo los días indicados que no se trabajaron
+      // - 'pagar' (default): se paga completo
+      if (preaviso_opcion === 'trabajado') diasPreaviso = 0;
+      else if (preaviso_opcion === 'dias_pendientes') {
+        diasPreaviso = Math.max(0, Math.min(Number(preaviso_dias) || 0, diasPreaviso));
+      }
       preaviso = salarioDiario * diasPreaviso;
     }
 
@@ -228,6 +236,8 @@ Deno.serve(async (req) => {
         _detalle: {
           anios_servicio: Math.round(aniosServicio * 100) / 100,
           dias_servicio: diasServicio,
+          preaviso_opcion: preaviso_opcion || 'pagar',
+          dias_preaviso_pagados: Math.round(preaviso / salarioDiario),
           salario_diario: Math.round(salarioDiario),
           meses_aguinaldo: Math.round(mesesEnPeriodo * 100) / 100,
           dias_vacaciones_devengadas: Math.round(diasVacacionesDevengadas * 100) / 100,

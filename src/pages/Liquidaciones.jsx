@@ -44,6 +44,8 @@ export default function Liquidaciones() {
   const [importOpen, setImportOpen] = useState(false);
   const [calculando, setCalculando] = useState(false);
   const [detalleCalculo, setDetalleCalculo] = useState(null);
+  const [preavisoOpcion, setPreavisoOpcion] = useState("pagar");
+  const [preavisoDias, setPreavisoDias] = useState("");
 
   const calcularAuto = async () => {
     if (!form.empleado_id || !form.fecha_salida || !form.motivo_salida) return;
@@ -54,6 +56,8 @@ export default function Liquidaciones() {
       fecha_salida: form.fecha_salida,
       motivo_salida: form.motivo_salida,
       empresa_id: form.empresa_id || empresaId,
+      preaviso_opcion: preavisoOpcion,
+      preaviso_dias: preavisoOpcion === "dias_pendientes" ? Number(preavisoDias) || 0 : undefined,
     });
     if (res.data?.ok) {
       const r = res.data.resultado;
@@ -63,8 +67,8 @@ export default function Liquidaciones() {
     setCalculando(false);
   };
 
-  const openNew = () => { setForm({ ...emptyLiq, empresa_id: empresaId || "" }); setEditing(null); setDetalleCalculo(null); setOpen(true); };
-  const openEdit = (l) => { setForm(l); setEditing(l.id); setDetalleCalculo(null); setOpen(true); };
+  const openNew = () => { setForm({ ...emptyLiq, empresa_id: empresaId || "" }); setEditing(null); setDetalleCalculo(null); setPreavisoOpcion("pagar"); setPreavisoDias(""); setOpen(true); };
+  const openEdit = (l) => { setForm(l); setEditing(l.id); setDetalleCalculo(null); setPreavisoOpcion("pagar"); setPreavisoDias(""); setOpen(true); };
 
   return (
     <div className="p-6 space-y-5">
@@ -138,6 +142,23 @@ export default function Liquidaciones() {
                 <SelectContent>{motivos.map(m => <SelectItem key={m} value={m}>{m.replace(/_/g," ")}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+            <div className="space-y-1">
+              <Label>Se ha ejercido el preaviso</Label>
+              <Select value={preavisoOpcion} onValueChange={setPreavisoOpcion}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="trabajado">Preaviso trabajado total</SelectItem>
+                  <SelectItem value="pagar">Preaviso a pagar total</SelectItem>
+                  <SelectItem value="dias_pendientes">Días pendientes de preaviso</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {preavisoOpcion === "dias_pendientes" && (
+              <div className="space-y-1">
+                <Label>Días pendientes de preaviso</Label>
+                <Input type="number" min="0" value={preavisoDias} onChange={e => setPreavisoDias(e.target.value)} placeholder="Días que no se trabajaron" />
+              </div>
+            )}
             {/* Botón calcular automático */}
             <div className="col-span-2">
               <Button type="button" variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
@@ -154,6 +175,9 @@ export default function Liquidaciones() {
                   <p>Salario promedio: <strong>{detalleCalculo.fuente_salario}</strong></p>
                 )}
                 <p>Meses aguinaldo: <strong>{detalleCalculo.meses_aguinaldo}</strong></p>
+                {detalleCalculo.dias_preaviso_pagados != null && (
+                  <p>Preaviso: <strong>{detalleCalculo.dias_preaviso_pagados} días</strong> {detalleCalculo.preaviso_opcion === "trabajado" ? "(ejercido, sin pago)" : "a pagar"}</p>
+                )}
                 {detalleCalculo.dias_vacaciones_devengados != null && (
                   <p>Vacaciones: <strong>{detalleCalculo.dias_vacaciones_devengados} días devengados</strong> − {detalleCalculo.dias_vacaciones_tomados} días tomados = <strong>{detalleCalculo.dias_vacaciones_devengados - detalleCalculo.dias_vacaciones_tomados} días pendientes</strong></p>
                 )}
