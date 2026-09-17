@@ -150,6 +150,9 @@ export default function Liquidaciones() {
                 <p className="font-semibold flex items-center gap-1"><Info className="w-3 h-3" /> Detalle del cálculo</p>
                 <p>Antigüedad: <strong>{detalleCalculo.anios_servicio} años</strong> ({detalleCalculo.dias_servicio} días)</p>
                 <p>Salario diario: <strong>₡ {Number(detalleCalculo.salario_diario).toLocaleString()}</strong></p>
+                {detalleCalculo.fuente_salario && (
+                  <p>Salario promedio: <strong>{detalleCalculo.fuente_salario}</strong></p>
+                )}
                 <p>Meses aguinaldo: <strong>{detalleCalculo.meses_aguinaldo}</strong></p>
                 {detalleCalculo.dias_vacaciones_devengados != null && (
                   <p>Vacaciones: <strong>{detalleCalculo.dias_vacaciones_devengados} días devengados</strong> − {detalleCalculo.dias_vacaciones_tomados} días tomados = <strong>{detalleCalculo.dias_vacaciones_devengados - detalleCalculo.dias_vacaciones_tomados} días pendientes</strong></p>

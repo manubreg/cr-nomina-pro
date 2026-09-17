@@ -48,8 +48,49 @@ Deno.serve(async (req) => {
     }
     const salarioBase = emp.moneda === "USD" ? Math.round(salarioBaseOrig * tipoCambioVenta) : salarioBaseOrig;
 
+    // ---- SALARIO PROMEDIO (histórico de planillas, últimos 6 meses) ----
+    // Promedio mensual = (Σ ingresos de planillas / Σ días de los períodos) * 30
+    // Fallback: salario base del empleado cuando no hay planillas calculadas
+    let salarioPromedio = salarioBase;
+    let periodosUsados = 0;
+    try {
+      const detalles = await base44.asServiceRole.entities.PlanillaDetalle
+        .filter({ empleado_id }, '-created_date', 300);
+      const limite = new Date(fechaSalidaDate.getTime() - 183 * 24 * 60 * 60 * 1000);
+      const recientes = detalles.filter(d => new Date(d.created_date) >= limite);
+      if (recientes.length > 0) {
+        const planillaIds = [...new Set(recientes.map(d => d.planilla_id).filter(Boolean))];
+        const planillas = (await Promise.all(
+          planillaIds.map(pid => base44.asServiceRole.entities.Planilla.get(pid).catch(() => null))
+        )).filter(Boolean);
+        const periodoIds = [...new Set(planillas.map(p => p.periodo_id).filter(Boolean))];
+        const periodos = (await Promise.all(
+          periodoIds.map(pdid => base44.asServiceRole.entities.PeriodoPlanilla.get(pdid).catch(() => null))
+        )).filter(Boolean);
+        const periodoMap = Object.fromEntries(periodos.map(p => [p.id, p]));
+        const planillaMap = Object.fromEntries(planillas.map(p => [p.id, p]));
+        let sumaIngresos = 0, sumaDias = 0;
+        for (const d of recientes) {
+          const planilla = planillaMap[d.planilla_id];
+          const periodo = planilla ? periodoMap[planilla.periodo_id] : null;
+          if (!periodo) continue;
+          // Excluir aguinaldos/liquidaciones: no son salario ordinario
+          if (['aguinaldo', 'liquidacion'].includes(periodo.tipo_periodo)) continue;
+          const inicio = new Date(periodo.fecha_inicio);
+          const fin = new Date(periodo.fecha_fin);
+          const dias = Math.round((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
+          // Solo períodos ya cerrados a la fecha de salida (los abiertos los cubre el salario pendiente)
+          if (dias <= 0 || fin > fechaSalidaDate) continue;
+          sumaIngresos += Number(d.ingresos_totales) || 0;
+          sumaDias += dias;
+          periodosUsados++;
+        }
+        if (sumaDias > 0) salarioPromedio = Math.round((sumaIngresos / sumaDias) * 30);
+      }
+    } catch { /* sin histórico: usa salario base */ }
+
     // ---- SALARIO DIARIO ----
-    const salarioDiario = salarioBase / 30;
+    const salarioDiario = salarioPromedio / 30;
 
     // ---- PREAVISO (Art. 28-29 CT) ----
     // Aplica cuando: renuncia, despido_sin_causa, mutuo_acuerdo
@@ -117,7 +158,7 @@ Deno.serve(async (req) => {
     }
     const msEnPeriodo = Math.max(0, fechaSalidaDate - inicioAguinaldo);
     const mesesEnPeriodo = Math.min(12, msEnPeriodo / (1000 * 60 * 60 * 24 * 30.44));
-    const aguinaldo_proporcional = (mesesEnPeriodo / 12) * salarioBase;
+    const aguinaldo_proporcional = (mesesEnPeriodo / 12) * salarioPromedio;
 
     // ---- SALARIO PENDIENTE ----
     // Días del período en curso aún no pagados, según la frecuencia de pago
@@ -146,7 +187,7 @@ Deno.serve(async (req) => {
         empresa_id: empresa_id || emp.empresa_id,
         fecha_salida,
         motivo_salida,
-        salario_promedio: salarioBase,
+        salario_promedio: salarioPromedio,
         preaviso: Math.round(preaviso),
         cesantia: Math.round(cesantia),
         vacaciones_pendientes: Math.round(vacaciones_pendientes),
@@ -166,6 +207,10 @@ Deno.serve(async (req) => {
           dias_vacaciones_devengadas: Math.round(diasVacacionesDevengadas * 100) / 100,
           dias_vacaciones_tomados: diasTomados,
           dias_salario_pendiente: diasSalarioPendiente,
+          periodos_promedio: periodosUsados,
+          fuente_salario: periodosUsados > 0
+            ? `promedio de ${periodosUsados} períodos de planilla (últimos 6 meses)`
+            : 'salario base del empleado (sin planillas previas)',
         }
       }
     });
