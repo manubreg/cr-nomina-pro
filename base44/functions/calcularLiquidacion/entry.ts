@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
     let salarioPromedio = salarioBase;
     let mesesCompletos = 0;
     const periodosEmpleado = []; // {ingresos, dias, inicio, fin} períodos ordinarios ya cerrados
+    const salariosPorMesDetalle = []; // lista mes a mes para validación (como la calculadora MTSS)
     try {
       const detalles = await base44.asServiceRole.entities.PlanillaDetalle
         .filter({ empleado_id }, '-created_date', 300);
@@ -83,7 +84,7 @@ Deno.serve(async (req) => {
       for (let i = 0; i < 6; i++) {
         const inicioMes = new Date(Date.UTC(fechaSalidaDate.getFullYear(), fechaSalidaDate.getMonth() - i, 1));
         const finMes = new Date(Date.UTC(fechaSalidaDate.getFullYear(), fechaSalidaDate.getMonth() - i + 1, 0));
-        if (fechaIngreso > inicioMes || finMes > fechaSalidaDate) continue;
+        if (fechaIngreso > finMes) continue; // mes anterior al ingreso
         let suma = 0, diasCubiertos = 0;
         for (const p of periodosEmpleado) {
           const ini = p.inicio > inicioMes ? p.inicio : inicioMes;
@@ -93,7 +94,14 @@ Deno.serve(async (req) => {
           suma += p.ingresos * diasSolap / p.dias;
           diasCubiertos += diasSolap;
         }
-        if (diasCubiertos >= finMes.getUTCDate()) salariosMensuales.push(suma);
+        if (diasCubiertos === 0) continue;
+        const completo = fechaIngreso <= inicioMes && finMes <= fechaSalidaDate && diasCubiertos >= finMes.getUTCDate();
+        salariosPorMesDetalle.push({
+          mes: `${inicioMes.getUTCFullYear()}-${String(inicioMes.getUTCMonth() + 1).padStart(2, '0')}`,
+          salario: Math.round(suma),
+          completo,
+        });
+        if (completo) salariosMensuales.push(suma);
       }
       if (salariosMensuales.length > 0) {
         salarioPromedio = Math.round(salariosMensuales.reduce((s, x) => s + x, 0) / salariosMensuales.length);
@@ -183,13 +191,17 @@ Deno.serve(async (req) => {
     const inicioAguinaldoEfectivo = fechaIngreso > inicioAguinaldo ? fechaIngreso : inicioAguinaldo;
     const mesesEnPeriodo = Math.max(0, Math.min(12,
       (fechaSalidaDate - inicioAguinaldoEfectivo) / (1000 * 60 * 60 * 24 * 30.44)));
+    // Los ingresos de cada planilla ya vienen prorrateados a los días trabajados,
+    // por eso se cuentan completos salvo que el período atraviese el 1 de diciembre.
     let sumaSalariosAguinaldo = 0;
     for (const p of periodosEmpleado) {
-      const ini = p.inicio > inicioAguinaldoEfectivo ? p.inicio : inicioAguinaldoEfectivo;
-      const f = p.fin < fechaSalidaDate ? p.fin : fechaSalidaDate;
-      if (ini > f) continue;
-      const diasSolap = Math.round((f - ini) / (1000 * 60 * 60 * 24)) + 1;
-      sumaSalariosAguinaldo += p.ingresos * diasSolap / p.dias;
+      if (p.fin < inicioAguinaldo) continue; // período de aguinaldo anterior (ya pagado)
+      if (p.inicio >= inicioAguinaldo) {
+        sumaSalariosAguinaldo += p.ingresos;
+      } else {
+        const diasDentro = Math.round((p.fin - inicioAguinaldo) / (1000 * 60 * 60 * 24)) + 1;
+        sumaSalariosAguinaldo += p.ingresos * diasDentro / p.dias;
+      }
     }
     const aguinaldo_proporcional = periodosEmpleado.length > 0
       ? sumaSalariosAguinaldo / 12
@@ -270,6 +282,7 @@ Deno.serve(async (req) => {
           dias_salario_pendiente: diasSalarioPendiente,
           ultimo_periodo_pagado: ultimoPeriodoPagadoFin,
           meses_completos_promedio: mesesCompletos,
+          salarios_mensuales: salariosPorMesDetalle,
           salarios_aguinaldo: Math.round(sumaSalariosAguinaldo),
           fuente_salario: mesesCompletos > 0
             ? `promedio de ${mesesCompletos} mes(es) completo(s) de planilla (últimos 6 meses)`

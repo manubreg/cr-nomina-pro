@@ -174,6 +174,21 @@ export default function Liquidaciones() {
                 {detalleCalculo.fuente_salario && (
                   <p>Salario promedio: <strong>{detalleCalculo.fuente_salario}</strong></p>
                 )}
+                {detalleCalculo.salarios_mensuales?.length > 0 && (
+                  <div className="mt-1 border-t border-emerald-200 pt-1">
+                    <p className="font-semibold">Salarios por mes (solo meses completos entran al promedio)</p>
+                    {detalleCalculo.salarios_mensuales.map(s => {
+                      const [y, m] = s.mes.split("-");
+                      const nombresMes = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+                      return (
+                        <p key={s.mes} className="flex justify-between pr-1">
+                          <span>{nombresMes[Number(m) - 1]} {y}{s.completo ? "" : " (parcial, no entra al promedio)"}</span>
+                          <span>₡ {Number(s.salario).toLocaleString()}</span>
+                        </p>
+                      );
+                    })}
+                  </div>
+                )}
                 <p>Meses aguinaldo: <strong>{detalleCalculo.meses_aguinaldo}</strong></p>
                 {detalleCalculo.dias_preaviso_pagados != null && (
                   <p>Preaviso: <strong>{detalleCalculo.dias_preaviso_pagados} días</strong> {detalleCalculo.preaviso_opcion === "trabajado" ? "(ejercido, sin pago)" : "a pagar"}</p>
