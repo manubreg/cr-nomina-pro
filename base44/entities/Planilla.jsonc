@@ -8,6 +8,10 @@
     "empresa_id": {
       "type": "string"
     },
+    "liquidacion_id": {
+      "type": "string",
+      "description": "Liquidaci\u00f3n que origin\u00f3 esta planilla (solo tipo_planilla = liquidacion)"
+    },
     "codigo_planilla": {
       "type": "string"
     },

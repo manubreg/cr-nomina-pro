@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Receipt, Eye, Calculator, Loader2, Zap, Download, FileText, Edit2, Trash2, CheckCircle } from "lucide-react";
+import { Receipt, Eye, Calculator, Loader2, Zap, Download, FileText, Edit2, Trash2, CheckCircle, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -373,6 +373,33 @@ export default function Planillas() {
                            className="text-gray-400 hover:text-emerald-600 p-1.5 rounded hover:bg-emerald-50 transition-colors"
                          >
                            <CheckCircle className="w-4 h-4" />
+                         </button>
+                       )}
+                       {/* Marcar pagada — solo planillas de liquidación aprobadas (sincroniza liquidación y cierra empleado) */}
+                       {p.tipo_planilla === 'liquidacion' && p.estado === 'aprobado' && (
+                         <button
+                           onClick={() => setConfirmDialog({
+                             title: "Marcar Planilla Pagada",
+                             description: `¿Confirmar el pago de "${p.codigo_planilla}"? La liquidación se marcará como pagada y el empleado quedará cerrado (estado: liquidado).`,
+                             confirmLabel: "Marcar Pagada",
+                             btnType: "success",
+                             onConfirm: async () => {
+                               setConfirmDialog(null);
+                               await base44.entities.Planilla.update(p.id, {
+                                 estado: 'pagado',
+                                 fecha_pago: new Date().toISOString().split("T")[0],
+                               });
+                               const res = await base44.functions.invoke('aplicarPagoLiquidacion', { planilla_id: p.id });
+                               qc.invalidateQueries(["planillas"]);
+                               qc.invalidateQueries(["liquidaciones"]);
+                               qc.invalidateQueries(["empleados"]);
+                               toast({ title: "Planilla pagada", description: res.data?.ok ? res.data.mensaje : (res.data?.error || "Sin liquidación vinculada que sincronizar") });
+                             }
+                           })}
+                           title="Marcar pagada (sincroniza liquidación y cierra empleado)"
+                           className="text-gray-400 hover:text-purple-600 p-1.5 rounded hover:bg-purple-50 transition-colors"
+                         >
+                           <Banknote className="w-4 h-4" />
                          </button>
                        )}
                        {/* Visualizar */}

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/use-toast";
 
 const estadoColor = { borrador: "bg-gray-100 text-gray-600", aprobada: "bg-emerald-100 text-emerald-700", pagada: "bg-purple-100 text-purple-700", anulada: "bg-red-100 text-red-600" };
 const motivos = ["renuncia","despido_sin_causa","despido_con_causa","mutuo_acuerdo","fin_contrato","fallecimiento","otro"];
@@ -18,6 +19,7 @@ const emptyLiq = { empleado_id: "", empresa_id: "", fecha_salida: "", motivo_sal
 export default function Liquidaciones() {
   const qc = useQueryClient();
   const { empresaId, filterByEmpresa } = useEmpresaContext();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyLiq);
   const [editing, setEditing] = useState(null);
@@ -37,8 +39,21 @@ export default function Liquidaciones() {
   const empleadosActivos = empleados.filter(e => e.estado !== 'liquidado');
 
   const save = useMutation({
-    mutationFn: (data) => editing ? base44.entities.Liquidacion.update(editing, data) : base44.entities.Liquidacion.create(data),
-    onSuccess: () => { qc.invalidateQueries(["liquidaciones"]); setOpen(false); },
+    mutationFn: async (data) => {
+      const liq = editing ? await base44.entities.Liquidacion.update(editing, data) : await base44.entities.Liquidacion.create(data);
+      let sync = null;
+      if (data.estado === "aprobada") {
+        const res = await base44.functions.invoke('generarPlanillaLiquidacion', { liquidacion_id: liq.id });
+        sync = res.data;
+      }
+      return { liq, sync };
+    },
+    onSuccess: ({ sync }) => {
+      qc.invalidateQueries(["liquidaciones"]);
+      qc.invalidateQueries(["planillas"]);
+      setOpen(false);
+      if (sync?.ok) toast({ title: "Planilla de liquidación generada", description: sync.mensaje });
+    },
   });
 
   const [importOpen, setImportOpen] = useState(false);
