@@ -195,6 +195,7 @@ export default function HorasExtras() {
           <TableHeader className="bg-gray-50">
             <TableRow>
               <TableHead>Empleado</TableHead>
+              <TableHead>Fecha de creación</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead className="text-right">Horas</TableHead>
               <TableHead>Tipo</TableHead>
@@ -206,7 +207,7 @@ export default function HorasExtras() {
           <TableBody>
             {filteredNovedades.length === 0 ? (
               <TableRow>
-                <TableCell colSpan="7" className="text-center py-8 text-gray-500">
+                <TableCell colSpan="8" className="text-center py-8 text-gray-500">
                     No hay horas extras registradas
                   </TableCell>
               </TableRow>
@@ -216,6 +217,7 @@ export default function HorasExtras() {
                 return (
                   <TableRow key={nov.id}>
                      <TableCell className="font-medium">{emp ? `${emp.nombre} ${emp.apellidos}` : "?"}</TableCell>
+                     <TableCell className="whitespace-nowrap">{nov.created_date ? new Date(nov.created_date).toLocaleDateString("es-CR", { timeZone: "America/Costa_Rica", day: "2-digit", month: "2-digit", year: "numeric" }) : "—"}</TableCell>
                      <TableCell>{formatDate(nov.fecha)}</TableCell>
                      <TableCell className="text-right font-mono">{nov.cantidad}h</TableCell>
                      <TableCell>

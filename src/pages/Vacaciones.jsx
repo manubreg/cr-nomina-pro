@@ -223,6 +223,7 @@ export default function Vacaciones() {
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Empleado</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Fecha de solicitud</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Inicio</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Fin</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Días</th>
@@ -235,6 +236,7 @@ export default function Vacaciones() {
                     {solicitudes.map(s => (
                       <tr key={s.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3 font-medium text-gray-800">{empleadoMap[s.empleado_id] || "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{s.fecha_solicitud ? s.fecha_solicitud.split("-").reverse().join("/") : s.created_date ? new Date(s.created_date).toLocaleDateString("es-CR", { timeZone: "America/Costa_Rica", day: "2-digit", month: "2-digit", year: "numeric" }) : "—"}</td>
                         <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{s.fecha_inicio}</td>
                         <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{s.fecha_fin}</td>
                         <td className="px-4 py-3 text-gray-800 font-medium">{s.dias_solicitados}</td>
