@@ -29,7 +29,11 @@ export default function AguinaldoPage() {
   const empleadoMap = Object.fromEntries(empleados.map(e => [e.id, `${e.nombre} ${e.apellidos}`]));
 
   const save = useMutation({
-    mutationFn: (data) => editing ? base44.entities.Aguinaldo.update(editing, data) : base44.entities.Aguinaldo.create(data),
+    mutationFn: async (data) => {
+      const empleado = await base44.entities.Empleado.get(data.empleado_id);
+      if (empleado.estado === "liquidado") throw new Error("No se puede registrar un aguinaldo para una persona liquidada. Su aguinaldo proporcional corresponde a la liquidación.");
+      return editing ? base44.entities.Aguinaldo.update(editing, data) : base44.entities.Aguinaldo.create(data);
+    },
     onSuccess: () => { qc.invalidateQueries(["aguinaldos"]); setOpen(false); },
   });
 
@@ -115,7 +119,14 @@ export default function AguinaldoPage() {
     });
   }, [aguinaldos, busqueda, filtroAnio, filtroEstado, empleadoMap]);
 
-  const totalFiltrado = aguinaldosFiltrados.reduce((s, a) => s + Number(a.monto_aguinaldo || 0), 0);
+  const { data: totalFiltrado = 0 } = useQuery({
+    queryKey: ["totalAguinaldos", aguinaldosFiltrados.map(a => [a.id, a.monto_aguinaldo, a.estado])],
+    queryFn: async () => {
+      if (!aguinaldosFiltrados.length) return 0;
+      const resumen = await base44.entities.Aguinaldo.aggregate({ query: { id: { $in: aguinaldosFiltrados.map(a => a.id) }, estado: { $ne: "anulado" } }, sum: ["monto_aguinaldo"] });
+      return resumen.rows[0]?.sum_monto_aguinaldo || 0;
+    },
+  });
   const hayFiltros = busqueda || filtroAnio !== "todos" || filtroEstado !== "todos";
 
   return (
@@ -193,7 +204,7 @@ export default function AguinaldoPage() {
                     <td className="px-4 py-3"><Badge className={estadoColor[a.estado]}>{a.estado}</Badge></td>
                     <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
                        <button onClick={() => setVisualizando(a)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline"><Eye className="h-3.5 w-3.5" />Visualizar</button>
-                       <button onClick={() => openEdit(a)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                       {empleados.find(e => e.id === a.empleado_id)?.estado !== "liquidado" && <button onClick={() => openEdit(a)} className="text-xs text-blue-600 hover:underline">Editar</button>}
                        <button onClick={() => { if (confirm("¿Eliminar este aguinaldo?")) eliminar.mutate(a.id); }} className="text-red-400 hover:text-red-600 transition-colors"><Trash2 className="w-4 h-4" /></button>
                      </td>
                   </tr>
@@ -241,7 +252,7 @@ export default function AguinaldoPage() {
               <Label>Empleado *</Label>
               <Select value={form.empleado_id} onValueChange={v => set("empleado_id", v)}>
                 <SelectTrigger><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
-                <SelectContent>{empleados.map(e => <SelectItem key={e.id} value={e.id}>{e.nombre} {e.apellidos}</SelectItem>)}</SelectContent>
+                <SelectContent>{empleados.filter(e => e.estado !== "liquidado").map(e => <SelectItem key={e.id} value={e.id}>{e.nombre} {e.apellidos}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
@@ -288,7 +299,8 @@ export default function AguinaldoPage() {
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button className="bg-blue-700 hover:bg-blue-800" onClick={() => save.mutate(form)} disabled={save.isPending}>
+            {save.error && <p role="alert" className="text-sm text-destructive">{save.error.message}</p>}
+            <Button className="bg-blue-700 hover:bg-blue-800" onClick={() => save.mutate(form)} disabled={save.isPending || !form.empleado_id}>
               {save.isPending ? "Guardando..." : "Guardar"}
             </Button>
           </div>

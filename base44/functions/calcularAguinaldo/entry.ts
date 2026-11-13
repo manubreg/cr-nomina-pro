@@ -27,6 +27,9 @@ export default async function(req) {
     // Cargar empleado
     const emp = await base44.entities.Empleado.get(empleado_id);
     if (!emp) return Response.json({ error: 'Empleado no encontrado' }, { status: 404 });
+    if (emp.estado === 'liquidado' && !visualizar) {
+      return Response.json({ error: 'No se puede calcular un aguinaldo para una persona liquidada. El aguinaldo proporcional se gestiona en su liquidación.' }, { status: 400 });
+    }
 
     // Convertir salario a CRC si está en USD, usando TC de hoy (o viernes anterior si fin de semana)
     const salarioBaseOrig = Number(emp.salario_base) || 0;
