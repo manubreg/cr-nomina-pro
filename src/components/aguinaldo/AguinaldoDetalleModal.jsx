@@ -14,6 +14,7 @@ export default function AguinaldoDetalleModal({ registro, empleado, onClose }) {
         empleado_id: registro.empleado_id,
         empresa_id: registro.empresa_id,
         anio: registro.anio,
+        visualizar: true,
       });
       if (!response.data?.ok) throw new Error(response.data?.error || "No se pudo obtener el detalle.");
       return response.data.resultado;

@@ -1,4 +1,5 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
+import { resumenMensualAguinaldo } from '../../shared/resumenMensualAguinaldo.ts';
 
 /**
  * Cálculo automático de Aguinaldo según Ley N° 1584 Costa Rica
@@ -18,7 +19,7 @@ export default async function(req) {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
-    const { empleado_id, anio, empresa_id } = await req.json();
+    const { empleado_id, anio, empresa_id, visualizar = false } = await req.json();
     if (!empleado_id || !anio) {
       return Response.json({ error: 'Faltan parámetros: empleado_id, anio' }, { status: 400 });
     }
@@ -74,6 +75,7 @@ export default async function(req) {
     // Aguinaldo = total salarios computables / 12
     const monto_aguinaldo = total_salarios_computables / 12;
     const mesesReales = Math.round(mesesEnPeriodo * 100) / 100;
+    const salariosMensuales = visualizar ? await resumenMensualAguinaldo(base44, planillasDetalle || []) : [];
 
     return Response.json({
       ok: true,
@@ -89,6 +91,7 @@ export default async function(req) {
           periodo_inicio: inicioPeriodo.toISOString().split('T')[0],
           periodo_fin: finPeriodo.toISOString().split('T')[0],
           meses_en_periodo: mesesReales,
+          salarios_mensuales: salariosMensuales,
           salario_base: salarioBase,
           inicio_efectivo: inicioEfectivo.toISOString().split('T')[0],
           fin_efectivo: fechaRealFin.toISOString().split('T')[0],

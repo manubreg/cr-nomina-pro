@@ -1,4 +1,5 @@
 import { AlertTriangle } from "lucide-react";
+import AguinaldoSalariosMensuales from "@/components/aguinaldo/AguinaldoSalariosMensuales";
 
 const moneda = value => `₡ ${Number(value || 0).toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -17,10 +18,7 @@ export default function AguinaldoCalculoDetalle({ registro, resultado }) {
       </dl>
       <p className="flex items-start gap-2 rounded-lg border p-3"><AlertTriangle className="h-5 w-5 shrink-0" />{detalle.advertencia}</p>
       {detalle.fuente === "planillas" ? (
-        <div className="overflow-x-auto rounded-lg border"><table className="w-full text-left text-xs">
-          <thead className="bg-muted"><tr><th className="p-3">Planilla (referencia)</th><th className="p-3 text-right">Salario base del período</th><th className="p-3 text-right">Ingresos sumados</th></tr></thead>
-          <tbody>{detalle.planillas_incluidas.map(fila => <tr key={fila.id} className="border-t"><td className="p-3 break-all">{fila.planilla_id || "Sin referencia"}</td><td className="p-3 text-right whitespace-nowrap">{moneda(fila.salario_base_periodo)}</td><td className="p-3 text-right whitespace-nowrap">{moneda(fila.ingresos_totales)}</td></tr>)}</tbody>
-        </table></div>
+        <AguinaldoSalariosMensuales meses={detalle.salarios_mensuales} />
       ) : (
         <div className="rounded-lg border p-4 space-y-1"><p>Desde {detalle.inicio_efectivo} hasta {detalle.fin_efectivo}</p><p>Salario base: {moneda(detalle.salario_base)}</p><p>Meses proporcionales: {detalle.meses_en_periodo} (se usa la precisión completa para calcular).</p><p>Salarios estimados = salario base × meses proporcionales.</p></div>
       )}
