@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Plus, Gift, Calculator, Loader2, Info, Users, Trash2, Search, X } from "lucide-react";
+import { Plus, Gift, Calculator, Loader2, Info, Users, Trash2, Search, X, Eye } from "lucide-react";
+import AguinaldoDetalleModal from "@/components/aguinaldo/AguinaldoDetalleModal";
 import { useEmpresaContext } from "@/components/EmpresaContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ export default function AguinaldoPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyAg);
   const [editing, setEditing] = useState(null);
+  const [visualizando, setVisualizando] = useState(null);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const { data: aguinaldosRaw = [], isLoading } = useQuery({ queryKey: ["aguinaldos", empresaId], queryFn: () => base44.entities.Aguinaldo.list("-anio") });
@@ -190,6 +192,7 @@ export default function AguinaldoPage() {
                     <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">{a.fecha_calculo}</td>
                     <td className="px-4 py-3"><Badge className={estadoColor[a.estado]}>{a.estado}</Badge></td>
                     <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
+                       <button onClick={() => setVisualizando(a)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline"><Eye className="h-3.5 w-3.5" />Visualizar</button>
                        <button onClick={() => openEdit(a)} className="text-xs text-blue-600 hover:underline">Editar</button>
                        <button onClick={() => { if (confirm("¿Eliminar este aguinaldo?")) eliminar.mutate(a.id); }} className="text-red-400 hover:text-red-600 transition-colors"><Trash2 className="w-4 h-4" /></button>
                      </td>
@@ -200,6 +203,8 @@ export default function AguinaldoPage() {
           </div>
         )}
       </div>
+
+      {visualizando && <AguinaldoDetalleModal registro={visualizando} empleado={empleadoMap[visualizando.empleado_id]} onClose={() => setVisualizando(null)} />}
 
       {/* Modal cálculo masivo */}
       <Dialog open={masivo} onOpenChange={setMasivo}>

@@ -1,0 +1,34 @@
+import { AlertTriangle } from "lucide-react";
+
+const moneda = value => `₡ ${Number(value || 0).toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+export default function AguinaldoCalculoDetalle({ registro, resultado }) {
+  const detalle = resultado._detalle;
+  const diferencia = Number(registro.monto_aguinaldo || 0) - Number(resultado.monto_aguinaldo || 0);
+  const coincide = Math.abs(diferencia) < 0.01 && Math.abs(Number(registro.total_salarios_computables || 0) - resultado.total_salarios_computables) < 0.01;
+  return (
+    <div className="space-y-4 text-sm">
+      <p className="text-muted-foreground">Reconstrucción con los datos actuales, sin modificar el aguinaldo guardado. No es una copia histórica del cálculo original.</p>
+      <dl className="grid grid-cols-2 gap-3 rounded-lg border p-4">
+        <div><dt className="text-muted-foreground">Período de referencia</dt><dd>{detalle.periodo_inicio} al {detalle.periodo_fin}</dd></div>
+        <div><dt className="text-muted-foreground">Fuente utilizada</dt><dd>{detalle.fuente === "planillas" ? "Ingresos de planillas" : "Estimación con salario base"}</dd></div>
+        <div><dt className="text-muted-foreground">Salarios guardados</dt><dd>{moneda(registro.total_salarios_computables)}</dd></div>
+        <div><dt className="text-muted-foreground">Aguinaldo guardado</dt><dd className="font-semibold">{moneda(registro.monto_aguinaldo)}</dd></div>
+      </dl>
+      <p className="flex items-start gap-2 rounded-lg border p-3"><AlertTriangle className="h-5 w-5 shrink-0" />{detalle.advertencia}</p>
+      {detalle.fuente === "planillas" ? (
+        <div className="overflow-x-auto rounded-lg border"><table className="w-full text-left text-xs">
+          <thead className="bg-muted"><tr><th className="p-3">Planilla (referencia)</th><th className="p-3 text-right">Salario base del período</th><th className="p-3 text-right">Ingresos sumados</th></tr></thead>
+          <tbody>{detalle.planillas_incluidas.map(fila => <tr key={fila.id} className="border-t"><td className="p-3 break-all">{fila.planilla_id || "Sin referencia"}</td><td className="p-3 text-right whitespace-nowrap">{moneda(fila.salario_base_periodo)}</td><td className="p-3 text-right whitespace-nowrap">{moneda(fila.ingresos_totales)}</td></tr>)}</tbody>
+        </table></div>
+      ) : (
+        <div className="rounded-lg border p-4 space-y-1"><p>Desde {detalle.inicio_efectivo} hasta {detalle.fin_efectivo}</p><p>Salario base: {moneda(detalle.salario_base)}</p><p>Meses proporcionales: {detalle.meses_en_periodo} (se usa la precisión completa para calcular).</p><p>Salarios estimados = salario base × meses proporcionales.</p></div>
+      )}
+      <div className="rounded-lg bg-muted p-4 space-y-2">
+        <p>Fórmula: suma de salarios computables ÷ 12.</p>
+        <p>{moneda(resultado.total_salarios_computables)} ÷ 12 = <strong>{moneda(resultado.monto_aguinaldo)}</strong> (resultado redondeado).</p>
+        <p>{coincide ? "El monto y los salarios guardados coinciden con el cálculo actual; esto no certifica la validez de los datos incluidos." : `Hay diferencias con el registro guardado. Diferencia en aguinaldo (guardado − actual): ${moneda(diferencia)}.`}</p>
+      </div>
+    </div>
+  );
+}

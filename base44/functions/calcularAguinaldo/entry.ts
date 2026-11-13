@@ -12,7 +12,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  * - El aguinaldo está exento de CCSS e impuesto de renta
  */
 
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
@@ -90,6 +90,15 @@ Deno.serve(async (req) => {
           periodo_fin: finPeriodo.toISOString().split('T')[0],
           meses_en_periodo: mesesReales,
           salario_base: salarioBase,
+          inicio_efectivo: inicioEfectivo.toISOString().split('T')[0],
+          fin_efectivo: fechaRealFin.toISOString().split('T')[0],
+          planillas_incluidas: (planillasDetalle || []).map(det => ({
+            id: det.id,
+            planilla_id: det.planilla_id,
+            salario_base_periodo: Number(det.salario_base_periodo) || 0,
+            ingresos_totales: Number(det.ingresos_totales) || 0,
+          })),
+          advertencia: planillasDetalle?.length ? 'El cálculo actual suma todos los detalles de planilla del empleado, sin filtrar por período, estado de pago ni conceptos computables. Revise estos registros antes de aprobar el monto.' : 'Estimación con el salario base actual y meses proporcionales transcurridos; no corresponde a un historial de salarios pagados.',
           fuente: planillasDetalle && planillasDetalle.length > 0 ? 'planillas' : 'salario_base',
         }
       }
@@ -97,4 +106,4 @@ Deno.serve(async (req) => {
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}
