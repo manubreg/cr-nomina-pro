@@ -385,12 +385,14 @@ export default function Planillas() {
                            <CheckCircle className="w-4 h-4" />
                          </button>
                        )}
-                       {/* Marcar pagada — solo planillas de liquidación aprobadas (sincroniza liquidación y cierra empleado) */}
-                       {p.tipo_planilla === 'liquidacion' && p.estado === 'aprobado' && (
+                       {/* Confirmar pago de planillas ordinarias o de liquidación aprobadas */}
+                       {['ordinaria', 'liquidacion'].includes(p.tipo_planilla) && p.estado === 'aprobado' && (
                          <button
                            onClick={() => setConfirmDialog({
                              title: "Marcar Planilla Pagada",
-                             description: `¿Confirmar el pago de "${p.codigo_planilla}"? La liquidación se marcará como pagada y el empleado quedará cerrado (estado: liquidado).`,
+                             description: p.tipo_planilla === 'liquidacion'
+                               ? `¿Confirmar el pago de "${p.codigo_planilla}"? La liquidación se marcará como pagada y el empleado quedará cerrado (estado: liquidado).`
+                               : `¿Confirmar que ya se realizó el pago de "${p.codigo_planilla}"? Se registrará como pagada con la fecha de hoy. Esta acción no realiza transferencias bancarias.`,
                              confirmLabel: "Marcar Pagada",
                              btnType: "success",
                              onConfirm: async () => {
@@ -399,14 +401,22 @@ export default function Planillas() {
                                  estado: 'pagado',
                                  fecha_pago: new Date().toISOString().split("T")[0],
                                });
-                               const res = await base44.functions.invoke('aplicarPagoLiquidacion', { planilla_id: p.id });
+                               if (p.tipo_planilla === 'liquidacion') {
+                                 const res = await base44.functions.invoke('aplicarPagoLiquidacion', { planilla_id: p.id });
+                                 qc.invalidateQueries(["liquidaciones"]);
+                                 qc.invalidateQueries(["empleados"]);
+                                 toast({ title: "Planilla pagada", description: res.data?.ok ? res.data.mensaje : (res.data?.error || "Sin liquidación vinculada que sincronizar") });
+                               } else {
+                                 if (p.periodo_id) {
+                                   await base44.entities.PeriodoPlanilla.update(p.periodo_id, { estado: 'pagado' });
+                                   qc.invalidateQueries(["periodos"]);
+                                 }
+                                 toast({ title: "Planilla pagada", description: "Se registró la confirmación del pago con la fecha de hoy." });
+                               }
                                qc.invalidateQueries(["planillas"]);
-                               qc.invalidateQueries(["liquidaciones"]);
-                               qc.invalidateQueries(["empleados"]);
-                               toast({ title: "Planilla pagada", description: res.data?.ok ? res.data.mensaje : (res.data?.error || "Sin liquidación vinculada que sincronizar") });
                              }
                            })}
-                           title="Marcar pagada (sincroniza liquidación y cierra empleado)"
+                           title={p.tipo_planilla === 'liquidacion' ? "Marcar pagada (sincroniza liquidación y cierra empleado)" : "Marcar planilla como pagada"}
                            className="text-gray-400 hover:text-purple-600 p-1.5 rounded hover:bg-purple-50 transition-colors"
                          >
                            <Banknote className="w-4 h-4" />
