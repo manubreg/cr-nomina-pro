@@ -1,4 +1,4 @@
-const moneda = value => `₡ ${Number(value || 0).toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const moneda = value => `₡ ${Number(value || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 const fecha = value => value ? value.slice(0, 10).split("-").reverse().join("/") : "No registrada";
 const mesNombre = value => value === "sin_fecha" ? "Sin mes identificado" : new Date(`${value}-01T12:00:00`).toLocaleDateString("es-CR", { month: "long", year: "numeric" });
 

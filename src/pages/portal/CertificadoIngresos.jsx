@@ -90,20 +90,20 @@ export default function CertificadoIngresos() {
             <div className="space-y-3 text-sm border border-gray-200 rounded-lg p-4 bg-gray-50">
               <div className="flex justify-between">
                 <span className="text-gray-600">Salario Base Mensual:</span>
-                <span className="font-mono font-semibold">₡{(emp?.salario_base / 1000).toLocaleString()}K</span>
+                <span className="font-mono font-semibold">₡ {Number(emp?.salario_base || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Ingresos Brutos Acumulados:</span>
-                <span className="font-mono font-semibold">₡{(totalIngresos / 1000000).toFixed(2)}M</span>
+                <span className="font-mono font-semibold">₡ {(totalIngresos).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Deducciones Acumuladas:</span>
-                <span className="font-mono font-semibold">₡{(totalDeducciones / 1000000).toFixed(2)}M</span>
+                <span className="font-mono font-semibold">₡ {(totalDeducciones).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span>
               </div>
               <div className="border-t border-gray-200 pt-2 flex justify-between font-bold">
                 <span>Ingreso Neto Mensual Promedio:</span>
                 <span className="font-mono text-emerald-700">
-                  ₡{detalles.length > 0 ? ((totalIngresos - totalDeducciones) / detalles.length / 1000).toLocaleString() : "0"}K
+                  ₡ {detalles.length > 0 ? ((totalIngresos - totalDeducciones) / detalles.length).toLocaleString("en-US", { maximumFractionDigits: 0 }) : "0"}
                 </span>
               </div>
             </div>
@@ -115,7 +115,7 @@ export default function CertificadoIngresos() {
             <p>
               Se certifica que <strong>{emp?.nombre} {emp?.apellidos}</strong>, con cédula de identidad <strong>{emp?.identificacion}</strong>, 
               labora en esta empresa como <strong>{emp?.puesto || "empleado"}</strong>, percibiendo ingresos mensuales promedio de 
-              <strong> ₡{detalles.length > 0 ? ((totalIngresos - totalDeducciones) / detalles.length / 1000).toLocaleString() : "0"}K</strong>.
+              <strong> ₡ {detalles.length > 0 ? ((totalIngresos - totalDeducciones) / detalles.length).toLocaleString("en-US", { maximumFractionDigits: 0 }) : "0"}</strong>.
             </p>
           </div>
 

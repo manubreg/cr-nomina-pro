@@ -55,10 +55,10 @@ export default function ReporteCCSS() {
       {/* Resumen */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: "SEM (Enfermedad)", value: `₡${(totalSEM / 1000000).toFixed(2)}M`, color: "bg-blue-50 text-blue-700" },
-          { label: "IVM (Vejez/Invalidez)", value: `₡${(totalIVM / 1000000).toFixed(2)}M`, color: "bg-emerald-50 text-emerald-700" },
-          { label: "Banco Popular", value: `₡${(totalBP / 1000000).toFixed(2)}M`, color: "bg-amber-50 text-amber-700" },
-          { label: "Total CCSS", value: `₡${(totalCCSS / 1000000).toFixed(2)}M`, color: "bg-purple-50 text-purple-700" }
+          { label: "SEM (Enfermedad)", value: `₡ ${(totalSEM).toLocaleString("en-US", { maximumFractionDigits: 0 })}`, color: "bg-blue-50 text-blue-700" },
+          { label: "IVM (Vejez/Invalidez)", value: `₡ ${(totalIVM).toLocaleString("en-US", { maximumFractionDigits: 0 })}`, color: "bg-emerald-50 text-emerald-700" },
+          { label: "Banco Popular", value: `₡ ${(totalBP).toLocaleString("en-US", { maximumFractionDigits: 0 })}`, color: "bg-amber-50 text-amber-700" },
+          { label: "Total CCSS", value: `₡ ${(totalCCSS).toLocaleString("en-US", { maximumFractionDigits: 0 })}`, color: "bg-purple-50 text-purple-700" }
         ].map(({ label, value, color }) => (
           <div key={label} className={`rounded-lg p-4 ${color}`}>
             <div className="text-2xl font-bold">{value}</div>
@@ -81,19 +81,19 @@ export default function ReporteCCSS() {
             <div className="space-y-4">
               <div className="flex justify-between border-b border-gray-200 pb-2">
                 <span className="text-gray-700">Aporte SEM (Seguro de Enfermedad)</span>
-                <span className="font-mono font-semibold">₡{(totalSEM / 1000000).toFixed(2)}M</span>
+                <span className="font-mono font-semibold">₡ {(totalSEM).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span>
               </div>
               <div className="flex justify-between border-b border-gray-200 pb-2">
                 <span className="text-gray-700">Aporte IVM (Vejez, Invalidez y Muerte)</span>
-                <span className="font-mono font-semibold">₡{(totalIVM / 1000000).toFixed(2)}M</span>
+                <span className="font-mono font-semibold">₡ {(totalIVM).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span>
               </div>
               <div className="flex justify-between border-b border-gray-200 pb-2">
                 <span className="text-gray-700">Aporte Fondo Solidario (Banco Popular)</span>
-                <span className="font-mono font-semibold">₡{(totalBP / 1000000).toFixed(2)}M</span>
+                <span className="font-mono font-semibold">₡ {(totalBP).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span>
               </div>
               <div className="flex justify-between bg-blue-50 p-3 rounded-lg">
                 <span className="font-semibold text-blue-900">Total a Pagar a CCSS</span>
-                <span className="font-mono font-bold text-lg text-blue-700">₡{(totalCCSS / 1000000).toFixed(2)}M</span>
+                <span className="font-mono font-bold text-lg text-blue-700">₡ {(totalCCSS).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span>
               </div>
             </div>
           </div>

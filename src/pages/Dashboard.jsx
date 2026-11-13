@@ -12,7 +12,7 @@ import { ComposicionCostos, ProximosVencimientos, HistorialAumentosSalariales } 
 
 const COLORS = ["#1e40af", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe"];
 
-const formatCRC = (v) => `₡${Number(v || 0).toLocaleString("es-CR", { minimumFractionDigits: 0 })}`;
+const formatCRC = (v) => `₡ ${Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
 function StatCard({ title, value, subtitle, icon: Icon, color, trend, linkTo }) {
   const colorMap = {
@@ -264,7 +264,7 @@ export default function Dashboard() {
             <BarChart data={monthlyData} barGap={4}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
-              <YAxis tickFormatter={v => `₡${(v / 1000000).toFixed(1)}M`} tick={{ fontSize: 11 }} />
+              <YAxis tickFormatter={v => formatCRC(v)} tick={{ fontSize: 11 }} />
               <Tooltip formatter={(v) => formatCRC(v)} />
               <Bar dataKey="bruto" name="Bruto" fill="#bfdbfe" radius={[4, 4, 0, 0]} />
               <Bar dataKey="neto" name="Neto" fill="#1e40af" radius={[4, 4, 0, 0]} />

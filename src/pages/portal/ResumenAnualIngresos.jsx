@@ -114,15 +114,15 @@ export default function ResumenAnualIngresos() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between border-b border-gray-200 pb-2">
                 <span className="text-gray-700">Total Ingresos Brutos:</span>
-                <span className="font-mono font-bold">₡{(totalIngresos / 1000000).toFixed(2)}M</span>
+                <span className="font-mono font-bold">₡ {(totalIngresos).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span>
               </div>
               <div className="flex justify-between border-b border-gray-200 pb-2">
                 <span className="text-gray-700">Total Deducciones (CCSS, ISR, etc.):</span>
-                <span className="font-mono font-bold text-red-700">-₡{(totalDeducciones / 1000000).toFixed(2)}M</span>
+                <span className="font-mono font-bold text-red-700">-₡ {(totalDeducciones).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span>
               </div>
               <div className="flex justify-between bg-emerald-50 p-3 rounded-lg font-bold">
                 <span className="text-emerald-900">Total Ingresos Netos:</span>
-                <span className="font-mono text-emerald-700">₡{(totalNeto / 1000000).toFixed(2)}M</span>
+                <span className="font-mono text-emerald-700">₡ {(totalNeto).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span>
               </div>
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function ResumenAnualIngresos() {
                 {Object.entries(ingresos).map(([concepto, monto]) => (
                   <div key={concepto} className="flex justify-between">
                     <span className="text-gray-700">{concepto}</span>
-                    <span className="font-mono">₡{(monto / 1000000).toFixed(2)}M</span>
+                    <span className="font-mono">₡ {(monto).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span>
                   </div>
                 ))}
               </div>
@@ -149,7 +149,7 @@ export default function ResumenAnualIngresos() {
                 {Object.entries(deducciones).map(([concepto, monto]) => (
                   <div key={concepto} className="flex justify-between">
                     <span className="text-gray-700">{concepto}</span>
-                    <span className="font-mono">-₡{(monto / 1000000).toFixed(2)}M</span>
+                    <span className="font-mono">-₡ {(monto).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span>
                   </div>
                 ))}
               </div>

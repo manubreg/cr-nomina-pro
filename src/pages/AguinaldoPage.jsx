@@ -173,7 +173,7 @@ export default function AguinaldoPage() {
             <X className="w-3 h-3" /> Limpiar
           </button>
         )}
-        <span className="text-xs text-gray-400 ml-auto">{aguinaldosFiltrados.length} registro(s) · Total: <strong className="text-blue-700">₡ {totalFiltrado.toLocaleString()}</strong></span>
+        <span className="text-xs text-gray-400 ml-auto">{aguinaldosFiltrados.length} registro(s) · Total: <strong className="text-blue-700">₡ {totalFiltrado.toLocaleString("en-US", { maximumFractionDigits: 0 })}</strong></span>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -198,8 +198,8 @@ export default function AguinaldoPage() {
                   <tr key={a.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-800">{empleadoMap[a.empleado_id] || "—"}</td>
                     <td className="px-4 py-3 font-bold text-gray-700">{a.anio}</td>
-                    <td className="px-4 py-3 text-right text-gray-600 hidden md:table-cell font-mono text-xs">₡ {Number(a.total_salarios_computables).toLocaleString()}</td>
-                    <td className="px-4 py-3 text-right font-bold text-blue-700 font-mono">₡ {Number(a.monto_aguinaldo).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-right text-gray-600 hidden md:table-cell font-mono text-xs">₡ {Number(a.total_salarios_computables).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
+                    <td className="px-4 py-3 text-right font-bold text-blue-700 font-mono">₡ {Number(a.monto_aguinaldo).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">{a.fecha_calculo}</td>
                     <td className="px-4 py-3"><Badge className={estadoColor[a.estado]}>{a.estado}</Badge></td>
                     <td className="px-4 py-3 text-right flex items-center justify-end gap-2">

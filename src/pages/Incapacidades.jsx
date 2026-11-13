@@ -176,7 +176,7 @@ export default function Incapacidades() {
                 <p className="font-semibold flex items-center gap-1"><Info className="w-3 h-3" /> Detalle del subsidio</p>
                 <p>{detalleCalculo.descripcion}</p>
                 <p>Días con subsidio: <strong>{detalleCalculo.dias_con_subsidio}</strong> | Período espera: <strong>{detalleCalculo.dias_periodo_espera} día(s)</strong></p>
-                <p>Monto subsidio: <strong>₡ {Number(detalleCalculo.monto_subsidio).toLocaleString()}</strong> | Entidad: <strong>{detalleCalculo.entidad_responsable}</strong></p>
+                <p>Monto subsidio: <strong>₡ {Number(detalleCalculo.monto_subsidio).toLocaleString("en-US", { maximumFractionDigits: 0 })}</strong> | Entidad: <strong>{detalleCalculo.entidad_responsable}</strong></p>
               </div>
             )}
             <div className="col-span-2 space-y-1">

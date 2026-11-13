@@ -446,7 +446,7 @@ export default function Vacaciones() {
                   <p>Días trabajados: <strong>{detalleCalculo.dias_trabajados}</strong> ({detalleCalculo.anios_completos} años)</p>
                   <p>Días ganados: <strong>{saldoForm.dias_ganados}</strong> | Días usados: <strong>{saldoForm.dias_usados}</strong></p>
                   <p>Saldo actual: <strong>{saldoForm.saldo_actual} días</strong></p>
-                  <p>Valor en colones: <strong>₡ {Number(detalleCalculo.valor_saldo_total).toLocaleString()}</strong></p>
+                  <p>Valor en colones: <strong>₡ {Number(detalleCalculo.valor_saldo_total).toLocaleString("en-US", { maximumFractionDigits: 0 })}</strong></p>
                 </div>
               )}
             </div>

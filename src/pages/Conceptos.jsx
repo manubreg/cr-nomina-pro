@@ -88,7 +88,7 @@ export default function Conceptos() {
                     </td>
                     <td className="px-4 py-3 text-gray-600 hidden md:table-cell capitalize">{c.categoria}</td>
                     <td className="px-4 py-3 text-gray-500 hidden lg:table-cell text-xs">
-                      {c.calculo_tipo === "porcentaje" ? `${c.porcentaje}%` : c.calculo_tipo === "fijo" ? `₡${c.monto_fijo}` : c.calculo_tipo}
+                      {c.calculo_tipo === "porcentaje" ? `${c.porcentaje}%` : c.calculo_tipo === "fijo" ? `₡ ${Number(c.monto_fijo || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}` : c.calculo_tipo}
                     </td>
                     <td className="px-4 py-3">
                       <Badge className={c.estado === "activo" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}>{c.estado}</Badge>

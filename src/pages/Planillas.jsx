@@ -152,7 +152,7 @@ export default function Planillas() {
     if (res.data?.ok) {
       toast({
         title: "✅ Planilla creada y calculada",
-        description: `${res.data.empleados_procesados} empleados · Neto: ₡${Number(res.data.total_neto).toLocaleString()}`,
+        description: `${res.data.empleados_procesados} empleados · Neto: ₡ ${Number(res.data.total_neto).toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
       });
     } else {
       toast({ title: "Error al calcular", description: res.data?.error || "Error desconocido", variant: "destructive" });
@@ -165,7 +165,7 @@ export default function Planillas() {
     setCalculando(null);
     if (res.data?.ok) {
       qc.invalidateQueries(["planillas"]);
-      toast({ title: "Planilla calculada", description: `${res.data.empleados_procesados} empleados · Neto: ₡${Number(res.data.total_neto).toLocaleString()}` });
+      toast({ title: "Planilla calculada", description: `${res.data.empleados_procesados} empleados · Neto: ₡ ${Number(res.data.total_neto).toLocaleString("en-US", { maximumFractionDigits: 0 })}` });
     } else {
       toast({ title: "Error al calcular", description: res.data?.error || "Error desconocido", variant: "destructive" });
     }
@@ -330,7 +330,7 @@ export default function Planillas() {
                       {periodoMap[p.periodo_id] ? `${periodoMap[p.periodo_id].tipo_periodo} · ${formatFecha(periodoMap[p.periodo_id].fecha_inicio)} → ${formatFecha(periodoMap[p.periodo_id].fecha_fin)}` : "—"}
                     </td>
                     <td className="px-4 py-3 text-right hidden md:table-cell font-mono text-gray-800">
-                      {p.total_neto ? `₡ ${Number(p.total_neto).toLocaleString()}` : "—"}
+                      {p.total_neto ? `₡ ${Number(p.total_neto).toLocaleString("en-US", { maximumFractionDigits: 0 })}` : "—"}
                     </td>
                     <td className="px-4 py-3">
                       <Badge className={estadoColor[p.estado]}>{p.estado}</Badge>

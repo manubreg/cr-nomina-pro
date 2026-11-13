@@ -8,13 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Download, TrendingUp, User, ChevronDown } from "lucide-react";
 
-const fmt = (n) => `₡${Number(n || 0).toLocaleString("es-CR")}`;
-const fmtShort = (n) => {
-  const v = Number(n || 0);
-  if (v >= 1_000_000) return `₡${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `₡${(v / 1_000).toFixed(0)}K`;
-  return `₡${v}`;
-};
+const fmt = (n) => `₡ ${Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+const fmtShort = fmt;
 
 export default function ReporteHistorialSalarial() {
   const { empresaId, filterByEmpresa } = useEmpresaContext();

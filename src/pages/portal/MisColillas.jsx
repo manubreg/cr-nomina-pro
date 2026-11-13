@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { FileText, ChevronDown, ChevronUp, Download } from "lucide-react";
 import { jsPDF } from "jspdf";
 
-const formatCRC = (v) => `\u20a1${Number(v || 0).toLocaleString("es-CR")}`;
+const formatCRC = (v) => `₡ ${Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 const formatUSD = (v) => `$${Number(v || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const formatCurrency = (v, moneda) => moneda === "USD" ? formatUSD(v) : formatCRC(v);
 

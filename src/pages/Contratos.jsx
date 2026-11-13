@@ -71,7 +71,7 @@ export default function Contratos() {
                     <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{c.fecha_inicio}</td>
                     <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{c.fecha_fin || "Indefinido"}</td>
                     <td className="px-4 py-3 text-right text-gray-800 font-mono hidden lg:table-cell">
-                      {c.moneda} {Number(c.salario_pactado).toLocaleString()}
+                      {c.moneda === "USD" ? "$" : "₡"} {Number(c.salario_pactado).toLocaleString("en-US", { maximumFractionDigits: c.moneda === "USD" ? 2 : 0, minimumFractionDigits: c.moneda === "USD" ? 2 : 0 })}
                     </td>
                     <td className="px-4 py-3"><Badge className={estadoColor[c.estado]}>{c.estado}</Badge></td>
                     <td className="px-4 py-3 text-right"><button onClick={() => openEdit(c)} className="text-xs text-blue-600 hover:underline">Editar</button></td>

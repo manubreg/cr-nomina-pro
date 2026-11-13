@@ -83,7 +83,7 @@ export default function EmpleadoPerfil() {
         <TabsContent value="laboral" className="mt-4">
           <div className="bg-white rounded-xl border border-gray-200 p-5 max-w-lg">
             <InfoRow label="Fecha Ingreso" value={emp.fecha_ingreso} />
-            <InfoRow label="Salario Base" value={emp.salario_base ? `₡ ${Number(emp.salario_base).toLocaleString()}` : "—"} />
+            <InfoRow label="Salario Base" value={emp.salario_base ? `₡ ${Number(emp.salario_base).toLocaleString("en-US", { maximumFractionDigits: 0 })}` : "—"} />
             <InfoRow label="Tipo Salario" value={emp.tipo_salario} />
             <InfoRow label="Frecuencia Pago" value={emp.frecuencia_pago} />
             <InfoRow label="Jornada" value={`${emp.tipo_jornada} - ${emp.horas_jornada}h`} />
@@ -107,7 +107,7 @@ export default function EmpleadoPerfil() {
                   <div className="grid grid-cols-3 gap-3 text-sm text-gray-500">
                     <div><span className="text-xs block">Inicio</span>{c.fecha_inicio}</div>
                     <div><span className="text-xs block">Fin</span>{c.fecha_fin || "Indefinido"}</div>
-                    <div><span className="text-xs block">Salario</span>₡ {Number(c.salario_pactado).toLocaleString()}</div>
+                    <div><span className="text-xs block">Salario</span>₡ {Number(c.salario_pactado).toLocaleString("en-US", { maximumFractionDigits: 0 })}</div>
                   </div>
                 </div>
               ))}
@@ -170,8 +170,8 @@ export default function EmpleadoPerfil() {
                     <span className="text-xs text-gray-400">{a.fecha_efectiva}</span>
                   </div>
                   <div className="grid grid-cols-3 gap-3 text-sm text-gray-500">
-                    <div><span className="text-xs block text-gray-400">Anterior</span>₡ {Number(a.salario_anterior).toLocaleString()}</div>
-                    <div><span className="text-xs block text-gray-400">Nuevo</span><span className="text-emerald-700 font-semibold">₡ {Number(a.salario_nuevo).toLocaleString()}</span></div>
+                    <div><span className="text-xs block text-gray-400">Anterior</span>₡ {Number(a.salario_anterior).toLocaleString("en-US", { maximumFractionDigits: 0 })}</div>
+                    <div><span className="text-xs block text-gray-400">Nuevo</span><span className="text-emerald-700 font-semibold">₡ {Number(a.salario_nuevo).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span></div>
                     <div><span className="text-xs block text-gray-400">Motivo</span><span className="capitalize text-gray-700">{a.motivo?.replace(/_/g, " ")}</span></div>
                   </div>
                   {a.descripcion && <p className="text-xs text-gray-500 mt-2 italic">{a.descripcion}</p>}

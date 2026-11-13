@@ -191,7 +191,7 @@ export default function Empleados() {
                     </td>
                     <td className="px-4 py-3 text-gray-600 hidden md:table-cell font-mono text-xs">{emp.identificacion}</td>
                      <td className="px-4 py-3 text-gray-600 hidden lg:table-cell">{emp.puesto || "—"}</td>
-                     <td className="px-4 py-3 text-gray-600 hidden lg:table-cell font-mono text-sm">₡{Number(getSalarioVigente(emp)).toLocaleString()}</td>
+                     <td className="px-4 py-3 text-gray-600 hidden lg:table-cell font-mono text-sm">₡ {Number(getSalarioVigente(emp)).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                      <td className="px-4 py-3 text-gray-600 hidden lg:table-cell text-xs">{empresaMap[emp.empresa_id] || "—"}</td>
                      <td className="px-4 py-3 text-gray-600 hidden lg:table-cell text-xs">{formatFecha(emp.fecha_salida)}</td>
                     <td className="px-4 py-3">

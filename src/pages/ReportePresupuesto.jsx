@@ -66,8 +66,8 @@ export default function ReportePresupuesto() {
       {/* Resumen */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { label: "Presupuesto Anual", value: `₡${(costosProyectados.total / 1000000).toFixed(1)}M`, color: "bg-blue-50 text-blue-700" },
-          { label: "Gasto Ejecutado", value: `₡${(gastosReales.salarios / 1000000).toFixed(1)}M`, color: "bg-emerald-50 text-emerald-700" },
+          { label: "Presupuesto Anual", value: `₡ ${(costosProyectados.total).toLocaleString("en-US", { maximumFractionDigits: 0 })}`, color: "bg-blue-50 text-blue-700" },
+          { label: "Gasto Ejecutado", value: `₡ ${(gastosReales.salarios).toLocaleString("en-US", { maximumFractionDigits: 0 })}`, color: "bg-emerald-50 text-emerald-700" },
           { label: "Variación", value: `${Math.round(((gastosReales.salarios / costosProyectados.salarios) * 100 - 100) * 10) / 10}%`, color: "bg-purple-50 text-purple-700" }
         ].map(({ label, value, color }) => (
           <div key={label} className={`rounded-lg p-4 ${color}`}>
@@ -87,7 +87,7 @@ export default function ReportePresupuesto() {
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="concepto" />
             <YAxis />
-            <Tooltip formatter={(v) => `₡${(v / 1000000).toFixed(2)}M`} />
+            <Tooltip formatter={(v) => `₡ ${(v).toLocaleString("en-US", { maximumFractionDigits: 0 })}`} />
             <Legend />
             <Bar dataKey="presupuesto" fill="#3b82f6" radius={[4, 4, 0, 0]} />
             <Bar dataKey="real" fill="#10b981" radius={[4, 4, 0, 0]} />
@@ -114,10 +114,10 @@ export default function ReportePresupuesto() {
               return (
                 <tr key={i} className={variacion > 0 ? "bg-red-50" : "hover:bg-gray-50"}>
                   <td className="px-4 py-3 text-gray-800 font-medium">{row.concepto}</td>
-                  <td className="px-4 py-3 text-right font-mono">₡{(row.presupuesto / 1000000).toFixed(2)}M</td>
-                  <td className="px-4 py-3 text-right font-mono">{row.real > 0 ? `₡${(row.real / 1000000).toFixed(2)}M` : "—"}</td>
+                  <td className="px-4 py-3 text-right font-mono">₡ {(row.presupuesto).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
+                  <td className="px-4 py-3 text-right font-mono">{row.real > 0 ? `₡ ${(row.real).toLocaleString("en-US", { maximumFractionDigits: 0 })}` : "—"}</td>
                   <td className={`px-4 py-3 text-right font-mono ${variacion > 0 ? "text-red-700 font-semibold" : "text-emerald-700"}`}>
-                    {variacion > 0 ? "+" : ""}₡{(variacion / 1000000).toFixed(2)}M
+                    {variacion > 0 ? "+" : ""}₡ {(variacion).toLocaleString("en-US", { maximumFractionDigits: 0 })}
                   </td>
                   <td className={`px-4 py-3 text-right font-mono ${variacion > 0 ? "text-red-700 font-semibold" : "text-emerald-700"}`}>
                     {pct > 0 ? "+" : ""}{pct.toFixed(1)}%

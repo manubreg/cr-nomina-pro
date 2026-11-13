@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import BoletaPagoGenerator, { generarBoletaPDF } from "./BoletaPagoGenerator";
 import { generarLiquidacionPDF } from "./LiquidacionPDF";
 
-const formatCRC = (v) => `₡${Number(v || 0).toLocaleString("es-CR")}`;
+const formatCRC = (v) => `₡ ${Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
 export default function PlanillaDetalleModal({ planilla, onClose }) {
   const [detalles, setDetalles]       = useState([]);

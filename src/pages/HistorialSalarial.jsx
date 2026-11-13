@@ -131,10 +131,10 @@ export default function HistorialSalarial() {
                         <Badge className={motivoColor[h.motivo]}>{motivoLabel[h.motivo]}</Badge>
                       </td>
                       <td className="px-4 py-3 text-right font-mono text-gray-500">
-                        ₡{Number(h.salario_anterior).toLocaleString()}
+                        ₡ {Number(h.salario_anterior).toLocaleString("en-US", { maximumFractionDigits: 0 })}
                       </td>
                       <td className="px-4 py-3 text-right font-mono font-semibold text-gray-900">
-                        ₡{Number(h.salario_nuevo).toLocaleString()}
+                        ₡ {Number(h.salario_nuevo).toLocaleString("en-US", { maximumFractionDigits: 0 })}
                       </td>
                       <td className="px-4 py-3 text-right hidden md:table-cell">
                         <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold">

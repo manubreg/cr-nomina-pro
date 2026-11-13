@@ -124,7 +124,7 @@ export default function Liquidaciones() {
                     <td className="px-4 py-3 font-medium text-gray-800">{empleadoMap[l.empleado_id] || "—"}</td>
                     <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{l.fecha_salida}</td>
                     <td className="px-4 py-3 text-gray-600 hidden md:table-cell capitalize text-xs">{l.motivo_salida?.replace(/_/g," ")}</td>
-                    <td className="px-4 py-3 text-right font-bold text-blue-700 font-mono">₡ {Number(l.neto_liquidar).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-right font-bold text-blue-700 font-mono">₡ {Number(l.neto_liquidar).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                     <td className="px-4 py-3"><Badge className={estadoColor[l.estado]}>{l.estado}</Badge></td>
                     <td className="px-4 py-3 text-right"><button onClick={() => openEdit(l)} className="text-xs text-blue-600 hover:underline">Editar</button></td>
                   </tr>
@@ -185,7 +185,7 @@ export default function Liquidaciones() {
               <div className="col-span-2 bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-800 space-y-1">
                 <p className="font-semibold flex items-center gap-1"><Info className="w-3 h-3" /> Detalle del cálculo</p>
                 <p>Antigüedad: <strong>{detalleCalculo.anios_servicio} años</strong> ({detalleCalculo.dias_servicio} días)</p>
-                <p>Salario diario: <strong>₡ {Number(detalleCalculo.salario_diario).toLocaleString()}</strong></p>
+                <p>Salario diario: <strong>₡ {Number(detalleCalculo.salario_diario).toLocaleString("en-US", { maximumFractionDigits: 0 })}</strong></p>
                 {detalleCalculo.fuente_salario && (
                   <p>Salario promedio: <strong>{detalleCalculo.fuente_salario}</strong></p>
                 )}
@@ -198,7 +198,7 @@ export default function Liquidaciones() {
                       return (
                         <p key={s.mes} className="flex justify-between pr-1">
                           <span>{nombresMes[Number(m) - 1]} {y}{s.completo ? "" : " (parcial, no entra al promedio)"}</span>
-                          <span>₡ {Number(s.salario).toLocaleString()}</span>
+                          <span>₡ {Number(s.salario).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span>
                         </p>
                       );
                     })}
@@ -256,11 +256,11 @@ export default function Liquidaciones() {
             <div className="col-span-2 bg-blue-50 rounded-lg p-3 grid grid-cols-2 gap-2">
               <div>
                 <p className="text-xs text-gray-500">Total Liquidación</p>
-                <p className="font-bold text-gray-800 text-lg">₡ {Number(form.total_liquidacion).toLocaleString()}</p>
+                <p className="font-bold text-gray-800 text-lg">₡ {Number(form.total_liquidacion).toLocaleString("en-US", { maximumFractionDigits: 0 })}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">Neto a Liquidar</p>
-                <p className="font-bold text-blue-700 text-lg">₡ {Number(form.neto_liquidar).toLocaleString()}</p>
+                <p className="font-bold text-blue-700 text-lg">₡ {Number(form.neto_liquidar).toLocaleString("en-US", { maximumFractionDigits: 0 })}</p>
               </div>
             </div>
             <div className="space-y-1">

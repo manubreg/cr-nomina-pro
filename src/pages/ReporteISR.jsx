@@ -52,8 +52,8 @@ export default function ReporteISR() {
       {/* Resumen */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { label: "Total Ingresos", value: `₡${(totalIngresos / 1000000).toFixed(2)}M`, color: "bg-emerald-50 text-emerald-700" },
-          { label: "ISR Retenido", value: `₡${(totalISR / 1000000).toFixed(2)}M`, color: "bg-red-50 text-red-700" },
+          { label: "Total Ingresos", value: `₡ ${(totalIngresos).toLocaleString("en-US", { maximumFractionDigits: 0 })}`, color: "bg-emerald-50 text-emerald-700" },
+          { label: "ISR Retenido", value: `₡ ${(totalISR).toLocaleString("en-US", { maximumFractionDigits: 0 })}`, color: "bg-red-50 text-red-700" },
           { label: "Tasa Efectiva", value: `${((totalISR / totalIngresos) * 100).toFixed(2)}%`, color: "bg-blue-50 text-blue-700" }
         ].map(({ label, value, color }) => (
           <div key={label} className={`rounded-lg p-4 ${color}`}>
@@ -89,12 +89,12 @@ export default function ReporteISR() {
                 {monthNames.map((month, i) => (
                   <tr key={i} className="hover:bg-gray-50">
                     <td className="px-4 py-2 text-gray-700">{month}</td>
-                    <td className="px-4 py-2 text-right font-mono">₡{(isrPorMes[i + 1] / 1000000).toFixed(2)}M</td>
+                    <td className="px-4 py-2 text-right font-mono">₡ {(isrPorMes[i + 1]).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                   </tr>
                 ))}
                 <tr className="bg-red-50 font-semibold">
                   <td className="px-4 py-2 text-red-700">Total Anual</td>
-                  <td className="px-4 py-2 text-right font-mono text-red-700">₡{(totalISR / 1000000).toFixed(2)}M</td>
+                  <td className="px-4 py-2 text-right font-mono text-red-700">₡ {(totalISR).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                 </tr>
               </tbody>
             </table>

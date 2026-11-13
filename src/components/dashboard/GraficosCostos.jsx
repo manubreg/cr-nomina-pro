@@ -25,9 +25,9 @@ export function ComposicionCostos({ planillas, periodoMap }) {
       <ResponsiveContainer width="100%" height={240}>
         <BarChart data={data} layout="vertical">
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => `₡${(v / 1000000).toFixed(1)}M`} />
+          <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => `₡ ${Number(v).toLocaleString("en-US", { maximumFractionDigits: 0 })}`} />
           <YAxis dataKey="mes" type="category" tick={{ fontSize: 11 }} width={40} />
-          <Tooltip formatter={(v) => `₡${Number(v || 0).toLocaleString()}`} />
+          <Tooltip formatter={(v) => `₡ ${Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`} />
           <Legend wrapperStyle={{ fontSize: "12px" }} />
           <Bar dataKey="salarios" name="Salarios" stackId="a" fill="#1e40af" />
           <Bar dataKey="ccss" name="CCSS" stackId="a" fill="#3b82f6" />
@@ -116,9 +116,9 @@ export function HistorialAumentosSalariales({ historialSalario, empleados }) {
         <ComposedChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="fecha" tick={{ fontSize: 11 }} />
-          <YAxis yAxisId="izq" tickFormatter={v => `₡${(v / 1000).toFixed(0)}K`} tick={{ fontSize: 11 }} />
+          <YAxis yAxisId="izq" tickFormatter={v => `₡ ${Number(v).toLocaleString("en-US", { maximumFractionDigits: 0 })}`} tick={{ fontSize: 11 }} />
           <YAxis yAxisId="der" orientation="right" tickFormatter={v => `${v.toFixed(0)}%`} tick={{ fontSize: 11 }} />
-          <Tooltip formatter={(v, name) => name === "aumento" ? `${v.toFixed(1)}%` : `₡${Number(v).toLocaleString()}`} />
+          <Tooltip formatter={(v, name) => name === "aumento" ? `${v.toFixed(1)}%` : `₡ ${Number(v).toLocaleString("en-US", { maximumFractionDigits: 0 })}`} />
           <Legend wrapperStyle={{ fontSize: "12px" }} />
           <Bar yAxisId="izq" dataKey="anterior" name="Salario Anterior" fill="#93c5fd" />
           <Bar yAxisId="izq" dataKey="nuevo" name="Salario Nuevo" fill="#1e40af" />

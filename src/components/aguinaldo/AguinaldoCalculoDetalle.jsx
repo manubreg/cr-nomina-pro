@@ -1,7 +1,7 @@
 import { AlertTriangle } from "lucide-react";
 import AguinaldoSalariosMensuales from "@/components/aguinaldo/AguinaldoSalariosMensuales";
 
-const moneda = value => `₡ ${Number(value || 0).toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const moneda = value => `₡ ${Number(value || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
 export default function AguinaldoCalculoDetalle({ registro, resultado }) {
   const detalle = resultado._detalle;

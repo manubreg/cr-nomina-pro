@@ -10,7 +10,7 @@ export default function MoneyInput({ value, onChange, moneda = "CRC", placeholde
     if (isNaN(n)) return "";
     return moneda === "USD"
       ? `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-      : `₡${n.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      : `₡ ${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
   };
 
   const handleFocus = () => {

@@ -50,7 +50,7 @@ export default function ReporteCambiosSalariales() {
         {[
           { label: "Total Cambios", value: totalCambios, color: "bg-blue-50 text-blue-700" },
           { label: "Aumento Promedio", value: `${aumentoPromedio.toFixed(2)}%`, color: "bg-emerald-50 text-emerald-700" },
-          { label: "Costo Anual Adicional", value: `₡${(costosAdicionalesAnuales / 1000000).toFixed(2)}M`, color: "bg-purple-50 text-purple-700" }
+          { label: "Costo Anual Adicional", value: `₡ ${(costosAdicionalesAnuales).toLocaleString("en-US", { maximumFractionDigits: 0 })}`, color: "bg-purple-50 text-purple-700" }
         ].map(({ label, value, color }) => (
           <div key={label} className={`rounded-lg p-4 ${color}`}>
             <div className="text-2xl font-bold">{value}</div>
@@ -79,10 +79,10 @@ export default function ReporteCambiosSalariales() {
               <tr key={i} className={row.diferencia > 0 ? "bg-emerald-50" : "hover:bg-gray-50"}>
                 <td className="px-4 py-3 text-gray-800 font-medium">{row.empleado}</td>
                 <td className="px-4 py-3 text-gray-600 text-xs hidden lg:table-cell">{row.puesto}</td>
-                <td className="px-4 py-3 text-right font-mono text-gray-600">₡{(row.anterior / 1000000).toFixed(2)}M</td>
-                <td className="px-4 py-3 text-right font-mono text-emerald-700 font-semibold">₡{(row.nuevo / 1000000).toFixed(2)}M</td>
+                <td className="px-4 py-3 text-right font-mono text-gray-600">₡ {(row.anterior).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
+                <td className="px-4 py-3 text-right font-mono text-emerald-700 font-semibold">₡ {(row.nuevo).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                 <td className="px-4 py-3 text-right font-mono text-emerald-700 font-semibold">
-                  {row.diferencia > 0 ? "+" : ""}₡{(row.diferencia / 1000000).toFixed(2)}M
+                  {row.diferencia > 0 ? "+" : ""}₡ {(row.diferencia).toLocaleString("en-US", { maximumFractionDigits: 0 })}
                 </td>
                 <td className="px-4 py-3 text-right font-mono font-semibold text-emerald-700">
                   {row.porcentaje > 0 ? "+" : ""}{row.porcentaje.toFixed(2)}%
@@ -110,7 +110,7 @@ export default function ReporteCambiosSalariales() {
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600"><strong>{mayor.empleado}</strong></p>
                   <p className="text-sm text-gray-600">Aumento: <span className="font-bold text-emerald-700">{mayor.porcentaje.toFixed(2)}%</span></p>
-                  <p className="text-sm text-gray-600">Diferencia: <span className="font-bold text-emerald-700">₡{(mayor.diferencia / 1000000).toFixed(2)}M</span></p>
+                  <p className="text-sm text-gray-600">Diferencia: <span className="font-bold text-emerald-700">₡ {(mayor.diferencia).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span></p>
                 </div>
               );
             })()}

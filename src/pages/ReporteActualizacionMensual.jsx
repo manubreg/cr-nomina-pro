@@ -42,7 +42,7 @@ export default function ReporteActualizacionMensual() {
     if (!valor && valor !== 0) return "-";
     return moneda === "USD" 
       ? `$${Number(valor).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-      : `₡${Number(valor).toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      : `₡ ${Number(valor).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
   };
 
   return (

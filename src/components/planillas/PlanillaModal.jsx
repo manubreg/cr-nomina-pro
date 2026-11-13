@@ -2,7 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { X, Calculator, Save, AlertCircle } from "lucide-react";
 
-const formatCRC = (v) => `₡${Number(v || 0).toLocaleString("es-CR")}`;
+const formatCRC = (v) => `₡ ${Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
 export default function PlanillaModal({ periodos, empleados, conceptos, onClose, onSaved }) {
   const [form, setForm] = useState({

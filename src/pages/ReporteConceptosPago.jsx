@@ -55,9 +55,9 @@ export default function ReporteConceptosPago() {
       {/* Resumen */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { label: "Total Ingresos", value: `₡${(totalIngresos / 1000000).toFixed(2)}M`, color: "bg-emerald-50 text-emerald-700" },
-          { label: "Total Deducciones", value: `₡${(totalDeducciones / 1000000).toFixed(2)}M`, color: "bg-red-50 text-red-700" },
-          { label: "Neto", value: `₡${((totalIngresos - totalDeducciones) / 1000000).toFixed(2)}M`, color: "bg-blue-50 text-blue-700" }
+          { label: "Total Ingresos", value: `₡ ${(totalIngresos).toLocaleString("en-US", { maximumFractionDigits: 0 })}`, color: "bg-emerald-50 text-emerald-700" },
+          { label: "Total Deducciones", value: `₡ ${(totalDeducciones).toLocaleString("en-US", { maximumFractionDigits: 0 })}`, color: "bg-red-50 text-red-700" },
+          { label: "Neto", value: `₡ ${((totalIngresos - totalDeducciones)).toLocaleString("en-US", { maximumFractionDigits: 0 })}`, color: "bg-blue-50 text-blue-700" }
         ].map(({ label, value, color }) => (
           <div key={label} className={`rounded-lg p-4 ${color}`}>
             <div className="text-2xl font-bold">{value}</div>
@@ -120,13 +120,13 @@ export default function ReporteConceptosPago() {
               {ingresosData.map((row, i) => (
                 <tr key={i} className="hover:bg-gray-50">
                   <td className="px-4 py-2 text-gray-800 text-xs">{row.name}</td>
-                  <td className="px-4 py-2 text-right font-mono text-emerald-700">₡{(row.value / 1000000).toFixed(2)}M</td>
+                  <td className="px-4 py-2 text-right font-mono text-emerald-700">₡ {(row.value).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                   <td className="px-4 py-2 text-right font-mono text-gray-600">{((row.value / totalIngresos) * 100).toFixed(1)}%</td>
                 </tr>
               ))}
               <tr className="bg-emerald-50 font-semibold">
                 <td className="px-4 py-2 text-emerald-700">Total</td>
-                <td className="px-4 py-2 text-right font-mono text-emerald-700">₡{(totalIngresos / 1000000).toFixed(2)}M</td>
+                <td className="px-4 py-2 text-right font-mono text-emerald-700">₡ {(totalIngresos).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                 <td className="px-4 py-2 text-right font-mono text-emerald-700">100%</td>
               </tr>
             </tbody>
@@ -150,13 +150,13 @@ export default function ReporteConceptosPago() {
               {deduccionesData.map((row, i) => (
                 <tr key={i} className="hover:bg-gray-50">
                   <td className="px-4 py-2 text-gray-800 text-xs">{row.name}</td>
-                  <td className="px-4 py-2 text-right font-mono text-red-700">₡{(row.value / 1000000).toFixed(2)}M</td>
+                  <td className="px-4 py-2 text-right font-mono text-red-700">₡ {(row.value).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                   <td className="px-4 py-2 text-right font-mono text-gray-600">{((row.value / totalDeducciones) * 100).toFixed(1)}%</td>
                 </tr>
               ))}
               <tr className="bg-red-50 font-semibold">
                 <td className="px-4 py-2 text-red-700">Total</td>
-                <td className="px-4 py-2 text-right font-mono text-red-700">₡{(totalDeducciones / 1000000).toFixed(2)}M</td>
+                <td className="px-4 py-2 text-right font-mono text-red-700">₡ {(totalDeducciones).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                 <td className="px-4 py-2 text-right font-mono text-red-700">100%</td>
               </tr>
             </tbody>

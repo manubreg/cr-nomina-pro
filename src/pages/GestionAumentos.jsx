@@ -184,8 +184,8 @@ export default function GestionAumentos() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-gray-600">₡ {aumento.salario_anterior?.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-right font-mono font-semibold text-emerald-700">₡ {aumento.salario_nuevo?.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right font-mono text-gray-600">₡ {aumento.salario_anterior?.toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
+                      <td className="px-4 py-3 text-right font-mono font-semibold text-emerald-700">₡ {aumento.salario_nuevo?.toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                       <td className="px-4 py-3 text-right">
                         <Badge className="bg-blue-100 text-blue-700">+{aumento.porcentaje_aumento}%</Badge>
                       </td>

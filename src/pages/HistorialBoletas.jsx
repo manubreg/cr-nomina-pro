@@ -19,7 +19,7 @@ const estadoColor = {
   anulado: "bg-red-100 text-red-600",
 };
 
-const fmt = (v) => Number(v || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
+const fmt = (v) => Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 0 });
 
 export default function HistorialBoletas() {
   const { empresaId, filterByEmpresa } = useEmpresaContext();
