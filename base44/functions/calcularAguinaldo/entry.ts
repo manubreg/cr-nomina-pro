@@ -1,113 +1,73 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { resumenMensualAguinaldo } from '../../shared/resumenMensualAguinaldo.ts';
+import { calcularBaseAguinaldo, fechaCostaRica } from '../../shared/calculoAguinaldo.ts';
 
 /**
- * Cálculo automático de Aguinaldo según Ley N° 1584 Costa Rica
+ * Cálculo de aguinaldo del sector privado según Ley N° 2412, Costa Rica.
  *
  * Parámetros: { empleado_id, anio, empresa_id }
  *
  * Reglas:
  * - Período: 1 diciembre año anterior - 30 noviembre año en curso
- * - Monto = suma de salarios ordinarios recibidos en el período / 12
- * - Si no completó el año: proporcional a los meses trabajados en el período
+ * - Monto = salarios ordinarios y extraordinarios devengados en el período / 12
+ * - También se divide entre 12 cuando se trabajó menos de un año; sin doble prorrateo.
  * - El aguinaldo está exento de CCSS e impuesto de renta
  */
 
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const user = await base44.auth.me().catch(e => e.status === 401 ? null : Promise.reject(e));
     if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
-    const { empleado_id, anio, empresa_id, visualizar = false } = await req.json();
-    if (!empleado_id || !anio) {
+    const { empleado_id, anio, empresa_id, visualizar = false } = await req.json().catch(() => ({}));
+    if (!empleado_id || !Number.isInteger(Number(anio)) || Number(anio) < 1900 || Number(anio) > 9998) {
       return Response.json({ error: 'Faltan parámetros: empleado_id, anio' }, { status: 400 });
     }
 
     // Cargar empleado
-    const emp = await base44.entities.Empleado.get(empleado_id);
+    const emp = await base44.entities.Empleado.get(empleado_id).catch(e => e.status === 404 ? null : Promise.reject(e));
     if (!emp) return Response.json({ error: 'Empleado no encontrado' }, { status: 404 });
+    if ((empresa_id && empresa_id !== emp.empresa_id) || (user.role !== 'admin' && user.empresa_id !== emp.empresa_id)) return Response.json({ error: 'Empresa no autorizada' }, { status: 403 });
+    if (!emp.fecha_ingreso) return Response.json({ error: 'El empleado no tiene fecha de ingreso.' }, { status: 400 });
     if (emp.estado === 'liquidado' && !visualizar) {
       return Response.json({ error: 'No se puede calcular un aguinaldo para una persona liquidada. El aguinaldo proporcional se gestiona en su liquidación.' }, { status: 400 });
     }
 
-    // Convertir salario a CRC si está en USD, usando TC de hoy (o viernes anterior si fin de semana)
-    const salarioBaseOrig = Number(emp.salario_base) || 0;
-    let salarioBase = salarioBaseOrig;
-    if (emp.moneda === "USD") {
-      try {
-        const tcRes = await base44.functions.invoke("obtenerTipoCambio", {});
-        const tc = tcRes?.venta || tcRes?.compra || 1;
-        salarioBase = Math.round(salarioBaseOrig * tc);
-      } catch { /* usa valor original */ }
-    }
-    const fechaIngreso = new Date(emp.fecha_ingreso);
     const anioNum = Number(anio);
-
-    // Período de aguinaldo: 1 dic (anio-1) al 30 nov (anio)
-    const inicioPeriodo = new Date(anioNum - 1, 11, 1); // 1 dic año anterior
-    const finPeriodo = new Date(anioNum, 10, 30);        // 30 nov año en curso
-    const hoy = new Date();
-    const fechaRealFin = hoy < finPeriodo ? hoy : finPeriodo;
-
-    // Determinar inicio efectivo (puede ser fecha de ingreso si es posterior)
-    const inicioEfectivo = fechaIngreso > inicioPeriodo ? fechaIngreso : inicioPeriodo;
-
-    // Buscar planillas pagadas del empleado en el período para sumar salarios reales
-    const planillasDetalle = await base44.entities.PlanillaDetalle.filter({ empleado_id });
-    
-    let total_salarios_computables = 0;
-    let mesesEnPeriodo = 0;
-
-    if (planillasDetalle && planillasDetalle.length > 0) {
-      // Sumar ingresos reales de planillas en el período
-      for (const det of planillasDetalle) {
-        // Verificar si la planilla cae en el período de aguinaldo
-        // usando ingresos_totales del detalle
-        total_salarios_computables += Number(det.ingresos_totales) || 0;
-      }
-      // Si hay datos reales, calcular meses a partir de la suma
-      mesesEnPeriodo = 12;
-    } else {
-      // Sin planillas: calcular con salario base proporcional
-      const msEnPeriodo = Math.max(0, fechaRealFin - inicioEfectivo);
-      mesesEnPeriodo = Math.min(12, msEnPeriodo / (1000 * 60 * 60 * 24 * 30.44));
-      total_salarios_computables = salarioBase * mesesEnPeriodo;
-    }
-
-    // Aguinaldo = total salarios computables / 12
-    const monto_aguinaldo = total_salarios_computables / 12;
-    const mesesReales = Math.round(mesesEnPeriodo * 100) / 100;
-    const salariosMensuales = visualizar ? await resumenMensualAguinaldo(base44, planillasDetalle || []) : [];
-
+    const calculo = await calcularBaseAguinaldo(base44, emp, anioNum);
+    const salariosMensuales = visualizar ? await resumenMensualAguinaldo(base44, calculo.incluidos) : [];
     return Response.json({
       ok: true,
       resultado: {
         empleado_id,
-        empresa_id: empresa_id || emp.empresa_id,
+        empresa_id: emp.empresa_id,
         anio: anioNum,
-        total_salarios_computables: Math.round(total_salarios_computables),
-        monto_aguinaldo: Math.round(monto_aguinaldo),
-        fecha_calculo: new Date().toISOString().split('T')[0],
+        total_salarios_computables: calculo.total,
+        monto_aguinaldo: calculo.monto,
+        fecha_calculo: fechaCostaRica(),
         estado: 'calculado',
         _detalle: {
-          periodo_inicio: inicioPeriodo.toISOString().split('T')[0],
-          periodo_fin: finPeriodo.toISOString().split('T')[0],
-          meses_en_periodo: mesesReales,
+          periodo_inicio: calculo.inicio,
+          periodo_fin: calculo.fin,
+          meses_en_periodo: calculo.meses,
           salarios_mensuales: salariosMensuales,
-          salario_base: salarioBase,
-          inicio_efectivo: inicioEfectivo.toISOString().split('T')[0],
-          fin_efectivo: fechaRealFin.toISOString().split('T')[0],
-          planillas_incluidas: (planillasDetalle || []).map(det => ({
-            id: det.id,
-            planilla_id: det.planilla_id,
-            salario_base_periodo: Number(det.salario_base_periodo) || 0,
-            ingresos_totales: Number(det.ingresos_totales) || 0,
+          inicio_efectivo: calculo.desde,
+          fin_efectivo: calculo.corte,
+          provisional: calculo.provisional,
+          registrable: calculo.registrable,
+          tiene_derecho: calculo.tieneDerecho,
+          planillas_incluidas: calculo.incluidos.map(det => ({
+            id: det.id, planilla_id: det.planilla_id,
+            salario_base_periodo: det.salario_base_periodo,
+            ingresos_totales: det.ingresos_totales,
+            base_aguinaldo: det._base_computable,
           })),
-          advertencia: planillasDetalle?.length ? 'El cálculo actual suma todos los detalles de planilla del empleado, sin filtrar por período, estado de pago ni conceptos computables. Revise estos registros antes de aprobar el monto.' : 'Estimación con el salario base actual y meses proporcionales transcurridos; no corresponde a un historial de salarios pagados.',
-          fuente: planillasDetalle && planillasDetalle.length > 0 ? 'planillas' : 'salario_base',
-        }
-      }
+          advertencia: calculo.advertencia,
+          fuente: 'planillas',
+          fundamento: 'Ley 2412 y Decreto Ejecutivo 20236-TSS. Sector privado. Pago del 1 al 20 de diciembre.',
+        },
+      },
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

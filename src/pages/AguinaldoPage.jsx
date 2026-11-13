@@ -32,7 +32,20 @@ export default function AguinaldoPage() {
     mutationFn: async (data) => {
       const empleado = await base44.entities.Empleado.get(data.empleado_id);
       if (empleado.estado === "liquidado") throw new Error("No se puede registrar un aguinaldo para una persona liquidada. Su aguinaldo proporcional corresponde a la liquidación.");
-      return editing ? base44.entities.Aguinaldo.update(editing, data) : base44.entities.Aguinaldo.create(data);
+      if (editing && (await base44.entities.Aguinaldo.get(editing)).estado === 'pagado') throw new Error('No se puede recalcular un aguinaldo pagado.');
+      const repetidos = await base44.entities.Aguinaldo.count({ empleado_id: empleado.id, anio: Number(data.anio), estado: { $ne: 'anulado' }, ...(editing ? { id: { $ne: editing } } : {}) });
+      if (repetidos) throw new Error('Ya existe un aguinaldo vigente para este empleado y año. Edite el registro existente.');
+      if (!Number.isFinite(Number(data.total_salarios_computables)) || Number(data.total_salarios_computables) < 0) throw new Error('Los salarios computables deben ser un monto válido no negativo.');
+      const response = await base44.functions.invoke('calcularAguinaldo', { empleado_id: empleado.id, empresa_id: empleado.empresa_id, anio: Number(data.anio) });
+      const actual = response.data?.resultado;
+      if (!response.data?.ok) throw new Error(response.data?.error || 'No se pudo validar el cálculo.');
+      if (!actual._detalle.tiene_derecho) throw new Error('No se cumple el mínimo de un mes continuo de relación laboral al corte.');
+      if (data.estado === 'pagado' && actual._detalle.provisional) throw new Error('El período aún no ha cerrado; este cálculo es un acumulado provisional.');
+      if (detalleCalculo && !actual._detalle.registrable) throw new Error(actual._detalle.advertencia);
+      const total = detalleCalculo ? actual.total_salarios_computables : Number(data.total_salarios_computables);
+      const { _detalle, ...campos } = data;
+      const registro = { ...campos, empresa_id: empleado.empresa_id, total_salarios_computables: total, monto_aguinaldo: Math.round((total / 12 + Number.EPSILON) * 100) / 100 };
+      return editing ? base44.entities.Aguinaldo.update(editing, registro) : base44.entities.Aguinaldo.create(registro);
     },
     onSuccess: () => { qc.invalidateQueries(["aguinaldos"]); setOpen(false); },
   });
@@ -43,6 +56,7 @@ export default function AguinaldoPage() {
   });
 
   const [calculando, setCalculando] = useState(false);
+  const [errorCalculo, setErrorCalculo] = useState('');
   const [detalleCalculo, setDetalleCalculo] = useState(null);
   const [masivo, setMasivo] = useState(false);
   const [anioMasivo, setAnioMasivo] = useState(new Date().getFullYear());
@@ -52,18 +66,21 @@ export default function AguinaldoPage() {
   const calcularAuto = async () => {
     if (!form.empleado_id || !form.anio) return;
     setCalculando(true);
+    setErrorCalculo('');
     setDetalleCalculo(null);
-    const res = await base44.functions.invoke('calcularAguinaldo', {
-      empleado_id: form.empleado_id,
-      anio: form.anio,
-      empresa_id: form.empresa_id || empresaId,
-    });
-    if (res.data?.ok) {
-      const r = res.data.resultado;
-      setForm(f => ({ ...f, ...r }));
-      setDetalleCalculo(r._detalle);
+    try {
+      const res = await base44.functions.invoke('calcularAguinaldo', {
+        empleado_id: form.empleado_id, anio: form.anio, empresa_id: form.empresa_id || empresaId,
+      });
+      if (!res.data?.ok) throw new Error(res.data?.error || 'No se pudo calcular el aguinaldo.');
+      const { _detalle, ...datos } = res.data.resultado;
+      setForm(f => ({ ...f, ...datos }));
+      setDetalleCalculo(_detalle);
+    } catch (error) {
+      setErrorCalculo(error.response?.data?.error || error.message);
+    } finally {
+      setCalculando(false);
     }
-    setCalculando(false);
   };
 
   const calcularMasivo = async () => {
@@ -72,32 +89,34 @@ export default function AguinaldoPage() {
     setCalculandoMasivo(true);
     setResultadoMasivo(null);
     let ok = 0, err = 0;
-    for (const emp of activos) {
-      const res = await base44.functions.invoke('calcularAguinaldo', {
-        empleado_id: emp.id,
-        anio: anioMasivo,
-        empresa_id: empresaId,
-      });
-      if (res.data?.ok) {
-        const r = res.data.resultado;
-        const existing = aguinaldos.find(a => a.empleado_id === emp.id && a.anio === anioMasivo);
-        if (existing) {
-          await base44.entities.Aguinaldo.update(existing.id, r);
-        } else {
-          await base44.entities.Aguinaldo.create({ ...r, empresa_id: empresaId });
+    const errores = [];
+    try {
+      for (const emp of activos) {
+        try {
+          const existentes = await base44.entities.Aguinaldo.filter({ empleado_id: emp.id, anio: Number(anioMasivo) });
+          const vigentes = existentes.filter(a => a.estado !== 'anulado');
+          if (vigentes.length > 1 || existentes.some(a => ['pagado', 'anulado'].includes(a.estado))) throw new Error('Registro pagado, anulado o duplicado: no se modifica.');
+          const res = await base44.functions.invoke('calcularAguinaldo', { empleado_id: emp.id, anio: anioMasivo, empresa_id: empresaId });
+          if (!res.data?.ok) throw new Error(res.data?.error || 'No se pudo calcular.');
+          const { _detalle, ...registro } = res.data.resultado;
+          if (!_detalle.registrable) throw new Error(_detalle.advertencia);
+          if (vigentes[0]) await base44.entities.Aguinaldo.update(vigentes[0].id, registro);
+          else await base44.entities.Aguinaldo.create(registro);
+          ok++;
+        } catch (error) {
+          err++;
+          errores.push(`${emp.nombre} ${emp.apellidos}: ${error.response?.data?.error || error.message}`);
         }
-        ok++;
-      } else {
-        err++;
       }
+    } finally {
+      setCalculandoMasivo(false);
+      setResultadoMasivo({ ok, err, errores, total: activos.length });
+      qc.invalidateQueries(["aguinaldos"]);
     }
-    setCalculandoMasivo(false);
-    setResultadoMasivo({ ok, err, total: activos.length });
-    qc.invalidateQueries(["aguinaldos"]);
   };
 
-  const openNew = () => { setForm({ ...emptyAg, empresa_id: empresaId || "" }); setEditing(null); setDetalleCalculo(null); setOpen(true); };
-  const openEdit = (a) => { setForm(a); setEditing(a.id); setDetalleCalculo(null); setOpen(true); };
+  const openNew = () => { setForm({ ...emptyAg, empresa_id: empresaId || "" }); setEditing(null); setDetalleCalculo(null); setErrorCalculo(''); setOpen(true); };
+  const openEdit = (a) => { setForm(a); setEditing(a.id); setDetalleCalculo(null); setErrorCalculo(''); setOpen(true); };
 
   // Filtros
   const [busqueda, setBusqueda] = useState("");
@@ -134,7 +153,7 @@ export default function AguinaldoPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Aguinaldo</h1>
-          <p className="text-gray-500 text-sm mt-1">Cálculo y registro de aguinaldos</p>
+          <p className="text-gray-500 text-sm mt-1">Sector privado · Ley 2412: salarios ordinarios y extraordinarios del 1 de diciembre al 30 de noviembre ÷ 12. Pago del 1 al 20 de diciembre.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => { setMasivo(true); setResultadoMasivo(null); }} className="border-emerald-300 text-emerald-700 hover:bg-emerald-50">
@@ -204,7 +223,7 @@ export default function AguinaldoPage() {
                     <td className="px-4 py-3"><Badge className={estadoColor[a.estado]}>{a.estado}</Badge></td>
                     <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
                        <button onClick={() => setVisualizando(a)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline"><Eye className="h-3.5 w-3.5" />Visualizar</button>
-                       {empleados.find(e => e.id === a.empleado_id)?.estado !== "liquidado" && <button onClick={() => openEdit(a)} className="text-xs text-blue-600 hover:underline">Editar</button>}
+                       {a.estado !== 'pagado' && empleados.find(e => e.id === a.empleado_id)?.estado !== "liquidado" && <button onClick={() => openEdit(a)} className="text-xs text-blue-600 hover:underline">Editar</button>}
                        <button onClick={() => { if (confirm("¿Eliminar este aguinaldo?")) eliminar.mutate(a.id); }} className="text-red-400 hover:text-red-600 transition-colors"><Trash2 className="w-4 h-4" /></button>
                      </td>
                   </tr>
@@ -221,7 +240,7 @@ export default function AguinaldoPage() {
       <Dialog open={masivo} onOpenChange={setMasivo}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle className="flex items-center gap-2"><Users className="w-5 h-5 text-emerald-600" /> Cálculo Masivo de Aguinaldo</DialogTitle></DialogHeader>
-          <p className="text-sm text-gray-500">Calcula el aguinaldo de todos los empleados activos de la empresa para el año indicado.</p>
+          <p className="text-sm text-gray-500">Calcula salarios computables ÷ 12 para los empleados activos. Antes del cierre del 30 de noviembre se guarda únicamente el acumulado provisional. No modifica registros pagados o anulados.</p>
           <div className="space-y-3 mt-2">
             <div className="space-y-1">
               <Label>Año</Label>
@@ -231,7 +250,8 @@ export default function AguinaldoPage() {
               <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-sm text-emerald-800 space-y-1">
                 <p className="font-semibold">Proceso completado</p>
                 <p>✔ {resultadoMasivo.ok} calculados correctamente</p>
-                {resultadoMasivo.err > 0 && <p className="text-red-600">✖ {resultadoMasivo.err} con error</p>}
+                {resultadoMasivo.err > 0 && <p className="text-destructive">{resultadoMasivo.err} sin modificar; requieren revisión.</p>}
+                {resultadoMasivo.errores?.map((mensaje, index) => <p key={index} className="text-xs text-destructive">{mensaje}</p>)}
               </div>
             )}
           </div>
@@ -250,14 +270,14 @@ export default function AguinaldoPage() {
           <div className="grid grid-cols-2 gap-4 mt-2">
             <div className="col-span-2 space-y-1">
               <Label>Empleado *</Label>
-              <Select value={form.empleado_id} onValueChange={v => set("empleado_id", v)}>
+              <Select value={form.empleado_id} onValueChange={v => { setForm(f => ({ ...f, empleado_id: v, empresa_id: empleados.find(e => e.id === v)?.empresa_id || '', total_salarios_computables: 0, monto_aguinaldo: 0 })); setDetalleCalculo(null); setErrorCalculo(''); }}>
                 <SelectTrigger><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
                 <SelectContent>{empleados.filter(e => e.estado !== "liquidado").map(e => <SelectItem key={e.id} value={e.id}>{e.nombre} {e.apellidos}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
               <Label>Año *</Label>
-              <Input type="number" value={form.anio} onChange={e => set("anio", Number(e.target.value))} />
+              <Input type="number" value={form.anio} onChange={e => { setForm(f => ({ ...f, anio: Number(e.target.value), total_salarios_computables: 0, monto_aguinaldo: 0 })); setDetalleCalculo(null); setErrorCalculo(''); }} />
             </div>
             <div className="space-y-1">
               <Label>Fecha de Cálculo</Label>
@@ -266,25 +286,28 @@ export default function AguinaldoPage() {
             <div className="col-span-2">
               <Button type="button" variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
                 onClick={calcularAuto} disabled={calculando || !form.empleado_id}>
-                {calculando ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Calculando...</> : <><Calculator className="w-4 h-4 mr-2" /> Calcular Automáticamente (Ley 1584 CR)</>}
+                {calculando ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Calculando...</> : <><Calculator className="w-4 h-4 mr-2" /> Calcular Automáticamente (Ley 2412 CR)</>}
               </Button>
             </div>
+            {errorCalculo && <p role="alert" className="col-span-2 text-sm text-destructive">{errorCalculo}</p>}
             {detalleCalculo && (
               <div className="col-span-2 bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-800 space-y-1">
                 <p className="font-semibold flex items-center gap-1"><Info className="w-3 h-3" /> Detalle del cálculo</p>
                 <p>Período: <strong>{detalleCalculo.periodo_inicio}</strong> al <strong>{detalleCalculo.periodo_fin}</strong></p>
-                <p>Meses en período: <strong>{detalleCalculo.meses_en_periodo}</strong></p>
-                <p>Fuente: <strong>{detalleCalculo.fuente === 'planillas' ? 'Planillas procesadas' : 'Salario base del empleado'}</strong></p>
+                <p>Meses con planillas incluidas: <strong>{detalleCalculo.meses_en_periodo}</strong>. El divisor siempre es 12.</p>
+                <p><strong>{detalleCalculo.provisional ? 'Acumulado provisional' : 'Período cerrado'}</strong> · Corte: {detalleCalculo.fin_efectivo}</p>
+                <p>{detalleCalculo.advertencia}</p>
               </div>
             )}
             <div className="space-y-1">
               <Label>Total Salarios Comp. (₡)</Label>
-              <Input type="number" value={form.total_salarios_computables} onChange={e => set("total_salarios_computables", Number(e.target.value))} />
+              <Input type="number" min="0" step="0.01" value={form.total_salarios_computables} onChange={e => { const total = Number(e.target.value); setForm(f => ({ ...f, total_salarios_computables: total, monto_aguinaldo: Math.round((total / 12 + Number.EPSILON) * 100) / 100 })); setDetalleCalculo(null); }} />
             </div>
             <div className="space-y-1">
               <Label>Monto Aguinaldo (₡)</Label>
-              <Input type="number" value={form.monto_aguinaldo} onChange={e => set("monto_aguinaldo", Number(e.target.value))} />
+              <Input type="number" value={form.monto_aguinaldo} readOnly />
             </div>
+            <p className="col-span-2 text-xs text-muted-foreground">Registro manual: ingrese únicamente salarios computables documentados; el monto se divide siempre entre 12. No se aplican CCSS ni renta al aguinaldo legal. Las incapacidades y los períodos que cruzan el corte anual requieren revisión de sus bases salariales.</p>
             <div className="col-span-2 space-y-1">
               <Label>Estado</Label>
               <Select value={form.estado} onValueChange={v => set("estado", v)}>
@@ -300,7 +323,7 @@ export default function AguinaldoPage() {
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
             {save.error && <p role="alert" className="text-sm text-destructive">{save.error.message}</p>}
-            <Button className="bg-blue-700 hover:bg-blue-800" onClick={() => save.mutate(form)} disabled={save.isPending || !form.empleado_id}>
+            <Button className="bg-blue-700 hover:bg-blue-800" onClick={() => save.mutate(form)} disabled={save.isPending || calculando || !form.empleado_id || !!errorCalculo || (detalleCalculo && !detalleCalculo.registrable)}>
               {save.isPending ? "Guardando..." : "Guardar"}
             </Button>
           </div>

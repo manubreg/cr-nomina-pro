@@ -19,10 +19,11 @@ export async function resumenMensualAguinaldo(base44, detalles) {
     const planilla = planillas[det.planilla_id];
     const periodo = periodos[planilla?.periodo_id];
     const mes = (periodo?.fecha_fin || planilla?.fecha_pago || periodo?.fecha_pago || '').slice(0, 7) || 'sin_fecha';
-    const grupo = meses[mes] ||= { mes, ingresos_totales: 0, monto_pagado: 0, pagos: [] };
+    const grupo = meses[mes] ||= { mes, ingresos_totales: 0, base_aguinaldo: 0, monto_pagado: 0, pagos: [] };
     const pagada = planilla?.estado === 'pagado';
     const monto = pagada ? Number(det.neto_pagar || 0) : null;
     grupo.ingresos_totales += Number(det.ingresos_totales || 0);
+    grupo.base_aguinaldo += Number(det._base_computable ?? det.base_aguinaldo ?? 0);
     grupo.monto_pagado += monto || 0;
     grupo.pagos.push({
       id: det.id,
@@ -32,6 +33,7 @@ export async function resumenMensualAguinaldo(base44, detalles) {
       fecha_programada: periodo?.fecha_pago || null,
       monto_pagado: monto,
       ingresos_totales: Number(det.ingresos_totales) || 0,
+      base_aguinaldo: Number(det._base_computable ?? det.base_aguinaldo ?? 0),
       estado: planilla?.estado || 'Sin planilla disponible',
     });
   }

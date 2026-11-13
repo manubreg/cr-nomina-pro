@@ -12,7 +12,7 @@ export default function AguinaldoCalculoDetalle({ registro, resultado }) {
       <p className="text-muted-foreground">Reconstrucción con los datos actuales, sin modificar el aguinaldo guardado. No es una copia histórica del cálculo original.</p>
       <dl className="grid grid-cols-2 gap-3 rounded-lg border p-4">
         <div><dt className="text-muted-foreground">Período de referencia</dt><dd>{detalle.periodo_inicio} al {detalle.periodo_fin}</dd></div>
-        <div><dt className="text-muted-foreground">Fuente utilizada</dt><dd>{detalle.fuente === "planillas" ? "Ingresos de planillas" : "Estimación con salario base"}</dd></div>
+        <div><dt className="text-muted-foreground">Fuente utilizada</dt><dd>Bases salariales de planillas aprobadas o pagadas · {detalle.provisional ? 'Acumulado provisional' : 'Período cerrado'} · Corte: {detalle.fin_efectivo}</dd></div>
         <div><dt className="text-muted-foreground">Salarios guardados</dt><dd>{moneda(registro.total_salarios_computables)}</dd></div>
         <div><dt className="text-muted-foreground">Aguinaldo guardado</dt><dd className="font-semibold">{moneda(registro.monto_aguinaldo)}</dd></div>
       </dl>
@@ -23,7 +23,8 @@ export default function AguinaldoCalculoDetalle({ registro, resultado }) {
         <div className="rounded-lg border p-4 space-y-1"><p>Desde {detalle.inicio_efectivo} hasta {detalle.fin_efectivo}</p><p>Salario base: {moneda(detalle.salario_base)}</p><p>Meses proporcionales: {detalle.meses_en_periodo} (se usa la precisión completa para calcular).</p><p>Salarios estimados = salario base × meses proporcionales.</p></div>
       )}
       <div className="rounded-lg bg-muted p-4 space-y-2">
-        <p>Fórmula: suma de salarios computables ÷ 12.</p>
+        <p>{detalle.fundamento}</p>
+        <p>Fórmula: suma de salarios ordinarios y extraordinarios computables ÷ 12, aunque se haya trabajado menos de un año. Sin rebajos de CCSS o renta.</p>
         <p>{moneda(resultado.total_salarios_computables)} ÷ 12 = <strong>{moneda(resultado.monto_aguinaldo)}</strong> (resultado redondeado).</p>
         <p>{coincide ? "El monto y los salarios guardados coinciden con el cálculo actual; esto no certifica la validez de los datos incluidos." : `Hay diferencias con el registro guardado. Diferencia en aguinaldo (guardado − actual): ${moneda(diferencia)}.`}</p>
       </div>
